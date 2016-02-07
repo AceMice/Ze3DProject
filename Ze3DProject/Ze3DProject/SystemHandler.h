@@ -8,9 +8,11 @@ private:
 	HWND hwnd;
 	HINSTANCE hinstance;
 	LPCWSTR applicationName;
-
+	GraphicsHandler* graphicsH;
+	//InputObject
 	void InitWindow(int screenWidth, int screenHeight);
 	void ShutdownWindow();
+	bool Frame();
 public:
 	SystemHandler();
 	~SystemHandler();
@@ -19,7 +21,10 @@ public:
 	void Run();
 	void Shutdown();
 
-	LRESULT CALLBACK MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam);
+	LRESULT CALLBACK MessageHandler(HWND, UINT, WPARAM, LPARAM);
 };
+//FUNCTION PROTOTYPE
+static LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+static SystemHandler* ApplicationHandle = nullptr;
 
 #endif
