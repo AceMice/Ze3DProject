@@ -1,0 +1,10 @@
+Steps:
+http://www.directxtutorial.com/LessonList.aspx?listid=11
+
+More steps:
+http://www.rastertek.com/tutdx11.html
+	v2:
+http://www.rastertek.com/tutdx11s2.html
+
+MDSM:
+https://code.msdn.microsoft.com/windowsdesktop/Direct3D-Tutorial-Win32-829979ef
