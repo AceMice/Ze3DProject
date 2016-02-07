@@ -33,7 +33,7 @@ public:
 	D3DHandler();
 	~D3DHandler();
 
-	bool Initialize(int, int, bool, HWND, bool, float, float);
+	bool Initialize(int, int, HWND, bool, bool, float, float);
 	void Shutdown();
 
 	void BeginScence(float, float, float, float);
