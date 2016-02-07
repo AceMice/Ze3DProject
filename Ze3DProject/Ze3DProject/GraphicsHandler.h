@@ -13,6 +13,8 @@ const float SCREEN_NEAR = 0.1f;
 class GraphicsHandler {
 private:
 
+
+	bool Render();
 public:
 	GraphicsHandler();
 	~GraphicsHandler();
