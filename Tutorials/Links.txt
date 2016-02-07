@@ -1,3 +1,6 @@
+The repo:
+https://github.com/AceMice/Ze3DProject.git
+
 Steps:
 http://www.directxtutorial.com/LessonList.aspx?listid=11
 
