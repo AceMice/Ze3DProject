@@ -19,8 +19,8 @@ public:
 	GraphicsHandler();
 	~GraphicsHandler();
 
-	bool Initialize();
-	void Run();
+	bool Initialize(int, int, HWND);
+	bool Frame();
 	void Shutdown();
 };
 
