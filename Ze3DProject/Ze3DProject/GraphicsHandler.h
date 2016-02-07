@@ -12,7 +12,7 @@ const float SCREEN_NEAR = 0.1f;
 
 class GraphicsHandler {
 private:
-
+	D3DHandler* direct3D;
 
 	bool Render();
 public:
