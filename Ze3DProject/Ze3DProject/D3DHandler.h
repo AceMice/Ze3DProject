@@ -36,7 +36,7 @@ public:
 	bool Initialize(int, int, HWND, bool, bool, float, float);
 	void Shutdown();
 
-	void BeginScence(float, float, float, float);
+	void BeginScene(float, float, float, float);
 	void EndScene();
 
 	ID3D11Device* GetDevice();
