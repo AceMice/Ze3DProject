@@ -309,3 +309,54 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 
 	return true;
 }
+
+void D3DHandler::Shutdown()
+{
+	//Set to window mode before shutting down or releasing the swapchain will throw and exception
+	if (this->swapChain) {
+		this->swapChain->SetFullscreenState(false, NULL);
+	}
+
+	if (this->rasterState) {
+		this->rasterState->Release();
+		this->rasterState = nullptr;
+	}
+
+	if (this->depthStencilView) {
+		this->depthStencilView->Release();
+		this->depthStencilView = nullptr;
+	}
+
+	if (this->depthStencilState) {
+		this->depthStencilState->Release();
+		this->depthStencilState = nullptr;
+	}
+
+	if (this->depthStencilBuffer) {
+		this->depthStencilBuffer->Release();
+		this->depthStencilBuffer = nullptr;
+	}
+
+	if (this->renderTargetView) {
+		this->renderTargetView->Release();
+		this->renderTargetView = nullptr;
+	}
+
+	if (this->deviceContext) {
+		this->deviceContext->Release();
+		this->deviceContext = nullptr;
+	}
+
+	if (this->device) {
+		this->device->Release();
+		this->device = nullptr;
+	}
+
+	if (this->swapChain) {
+		this->swapChain->Release();
+		this->swapChain = nullptr;
+	}
+
+	return;
+}
+
