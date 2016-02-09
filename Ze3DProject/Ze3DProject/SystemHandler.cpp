@@ -33,8 +33,8 @@ void SystemHandler::InitWindow(int& screenWidth, int& screenHeight) {
 	wc.hIconSm = wc.hIcon;
 	wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH);
-	wc.lpszMenuName = nullptr;
-	wc.lpszMenuName = this->applicationName;
+	wc.lpszMenuName = NULL;
+	wc.lpszClassName = this->applicationName;
 	wc.cbSize = sizeof(WNDCLASSEX);
 
 	//Register the window class
