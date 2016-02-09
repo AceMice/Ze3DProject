@@ -8,7 +8,7 @@ SystemHandler::~SystemHandler() {
 	//Cleanup is in ShutDown(), since in some instances, window functions never call the destructor 
 }
 
-void SystemHandler::InitWindow(int screenWidth, int screenHeight) {
+void SystemHandler::InitWindow(int& screenWidth, int& screenHeight) {
 	WNDCLASSEX wc;
 	DEVMODE dmScreenSettings;
 	int posX;
@@ -134,8 +134,8 @@ void SystemHandler::ShutdownWindow() {
 
 
 bool SystemHandler::Initialize() {
-	int screenWidth;
-	int screenHeight;
+	int screenWidth = 0;
+	int screenHeight = 0;
 	bool result;
 
 	//Initilize the window api
@@ -184,7 +184,7 @@ void SystemHandler::Run() {
 		}
 		else {
 			//Otherwise do the frame processing
-			result = Frame();
+			result = this->Frame();
 			if(!result){
 				done = true;
 			}
@@ -204,7 +204,6 @@ void SystemHandler::Shutdown() {
 	
 	//Release the input object
 	//NOT YET IMPLEMENTED
-
 	return;
 }
 
