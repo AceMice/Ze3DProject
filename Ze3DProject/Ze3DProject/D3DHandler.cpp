@@ -187,7 +187,125 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 	backBufferPtr->Release();
 	backBufferPtr = nullptr;
 
-	//Continue with the depth stecil
+	//Depth buffer desc
+	ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
+
+	//Fill depth buffer description	
+	depthBufferDesc.Width = screenWidth;
+	depthBufferDesc.Height = screenHeight;
+	depthBufferDesc.MipLevels = 1;
+	depthBufferDesc.ArraySize = 1;
+	depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthBufferDesc.SampleDesc.Count = 1;
+	depthBufferDesc.SampleDesc.Quality = 0;
+	depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthBufferDesc.CPUAccessFlags = 0;
+	depthBufferDesc.MiscFlags = 0;
+
+	//Create depth texture
+	hresult = this->device->CreateTexture2D(&depthBufferDesc, NULL, &this->depthStencilBuffer);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"this->device->CreateTexture2D", L"Error", MB_OK);
+		return false;
+	}
+
+	//Depth stencil desc
+	ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
+
+	//Fill depth stencil descrption
+	depthStencilDesc.DepthEnable = true;
+	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	depthStencilDesc.StencilEnable = true;
+	depthStencilDesc.StencilReadMask = 0xFF;
+	depthStencilDesc.StencilWriteMask = 0xFF;
+
+	//Stencil operations if pixel is front-facing.
+	depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	//Stencil operations if pixel is back-facing.
+	depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	//Create the depth stencil state
+	hresult = this->device->CreateDepthStencilState(&depthStencilDesc, &this->depthStencilState);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"this->device->CreateDepthStencilState", L"Error", MB_OK);
+		return false;
+	}
+
+	//Set the newly created depth stencil
+	this->deviceContext->OMSetDepthStencilState(this->depthStencilState, 1);
+
+	//Init depth stencil view description
+	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
+
+	//Fill the desc
+	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	depthStencilViewDesc.Texture2D.MipSlice = 0;
+
+	//Create the depth stencil view
+	hresult = this->device->CreateDepthStencilView(this->depthStencilBuffer, &depthStencilViewDesc, &this->depthStencilView);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"this->device->CreateDepthStencilView", L"Error", MB_OK);
+		return false;
+	}
+
+	//Bind the render target view and depth stencil buffer to the output render pipeline
+	this->deviceContext->OMSetRenderTargets(1, &this->renderTargetView, this->depthStencilView);
+
+	//Setup the resterizer state for more rendering control
+	rasterDesc.AntialiasedLineEnable = false;
+	rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.DepthBias = 0;
+	rasterDesc.DepthBiasClamp = 0.0f;
+	rasterDesc.DepthClipEnable = true;
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	rasterDesc.FrontCounterClockwise = false;
+	rasterDesc.MultisampleEnable = false;
+	rasterDesc.ScissorEnable = false;
+	rasterDesc.SlopeScaledDepthBias = 0.0f;
+
+	//Create the resterizer state from description
+	hresult = this->device->CreateRasterizerState(&rasterDesc, &this->rasterState);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"this->device->CreateRasterizerState", L"Error", MB_OK);
+		return false;
+	}
+
+	//Set the rasterizer state
+	this->deviceContext->RSSetState(this->rasterState);
+
+	//Setup the viewport
+	viewport.Width = (float)screenWidth;
+	viewport.Height = (float)screenHeight;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+
+	//Create the viewport
+	this->deviceContext->RSSetViewports(1, &viewport);
+
+	//Setup projection matrix
+	fieldOfView = 3.141592654f / 4.0f;
+	screenAspect = (float)screenWidth / (float)screenHeight;
+
+	this->projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth);
+
+	//Initialize the world matrix to the identity matrix.
+	this->worldMatrix = XMMatrixIdentity();
+
+	// Create an orthographic projection matrix for 2D rendering.
+	this->orthoMatrix = XMMatrixOrthographicLH((float)screenWidth, (float)screenHeight, screenNear, screenDepth);
 
 	return true;
 }
