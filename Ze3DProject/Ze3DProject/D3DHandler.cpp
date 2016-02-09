@@ -360,7 +360,7 @@ void D3DHandler::Shutdown()
 	return;
 }
 
-void D3DHandler::BeginScence(float red, float green, float blue, float alpha)
+void D3DHandler::BeginScene(float red, float green, float blue, float alpha)
 {
 	float color[4];
 
