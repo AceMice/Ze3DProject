@@ -360,3 +360,20 @@ void D3DHandler::Shutdown()
 	return;
 }
 
+void D3DHandler::BeginScence(float red, float green, float blue, float alpha)
+{
+	float color[4];
+
+	color[0] = red;
+	color[1] = green;
+	color[2] = blue;
+	color[3] = alpha;
+
+	//Clear the back buffer
+	this->deviceContext->ClearRenderTargetView(this->renderTargetView, color);
+
+	//Clear the depth buffer
+	this->deviceContext->ClearDepthStencilView(this->depthStencilView, D3D11_CLEAR_DEPTH, 1.f, 0);
+
+	return;
+}
