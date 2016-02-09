@@ -392,3 +392,38 @@ void D3DHandler::EndScene()
 
 	return;
 }
+
+ID3D11Device* D3DHandler::GetDevice()
+{
+	return this->device;
+}
+
+ID3D11DeviceContext* D3DHandler::GetDeviceContext()
+{
+	return this->deviceContext;
+}
+
+void D3DHandler::GetProjectionMatrix(XMMATRIX& projectionMatrix)
+{
+	projectionMatrix = this->projectionMatrix;
+	return;
+}
+
+void D3DHandler::GetWorldMatrix(XMMATRIX& worldMatrix)
+{
+	worldMatrix = this->worldMatrix;
+	return;
+}
+
+void D3DHandler::GetViewMatrix(XMMATRIX& viewMatrix)
+{
+	viewMatrix = this->viewMatrix;
+	return;
+}
+
+void D3DHandler::GetVideoCardInfo(char* cardName, int& memory)
+{
+	strcpy_s(cardName, 128, this->videoCardDescription);
+	memory = this->videoCardMemory;
+	return;
+}

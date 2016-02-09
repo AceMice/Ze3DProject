@@ -27,7 +27,7 @@ private:
 	ID3D11RasterizerState* rasterState;
 	XMMATRIX projectionMatrix;
 	XMMATRIX worldMatrix;
-	XMMATRIX orthoMatrix;
+	XMMATRIX viewMatrix;
 
 public:
 	D3DHandler();
