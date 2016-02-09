@@ -8,7 +8,7 @@ SystemHandler::~SystemHandler() {
 	//Cleanup is in ShutDown(), since in some instances, window functions never call the destructor 
 }
 
-void SystemHandler::InitWindow(int screenWidth, int screenHeight) {
+void SystemHandler::InitWindow(int& screenWidth, int& screenHeight) {
 	WNDCLASSEX wc;
 	DEVMODE dmScreenSettings;
 	int posX;
@@ -204,7 +204,6 @@ void SystemHandler::Shutdown() {
 	
 	//Release the input object
 	//NOT YET IMPLEMENTED
-
 	return;
 }
 

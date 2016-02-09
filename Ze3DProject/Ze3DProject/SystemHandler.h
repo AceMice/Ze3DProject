@@ -10,7 +10,7 @@ private:
 	LPCWSTR applicationName;
 	GraphicsHandler* graphicsH;
 	//InputObject
-	void InitWindow(int screenWidth, int screenHeight);
+	void InitWindow(int& screenWidth, int& screenHeight);
 	void ShutdownWindow();
 	bool Frame();
 public:
