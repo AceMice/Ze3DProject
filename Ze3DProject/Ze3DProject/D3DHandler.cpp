@@ -187,7 +187,243 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 	backBufferPtr->Release();
 	backBufferPtr = nullptr;
 
-	//Continue with the depth stecil
+	//Depth buffer desc
+	ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
+
+	//Fill depth buffer description	
+	depthBufferDesc.Width = screenWidth;
+	depthBufferDesc.Height = screenHeight;
+	depthBufferDesc.MipLevels = 1;
+	depthBufferDesc.ArraySize = 1;
+	depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthBufferDesc.SampleDesc.Count = 1;
+	depthBufferDesc.SampleDesc.Quality = 0;
+	depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	depthBufferDesc.CPUAccessFlags = 0;
+	depthBufferDesc.MiscFlags = 0;
+
+	//Create depth texture
+	hresult = this->device->CreateTexture2D(&depthBufferDesc, NULL, &this->depthStencilBuffer);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"this->device->CreateTexture2D", L"Error", MB_OK);
+		return false;
+	}
+
+	//Depth stencil desc
+	ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
+
+	//Fill depth stencil descrption
+	depthStencilDesc.DepthEnable = true;
+	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	depthStencilDesc.StencilEnable = true;
+	depthStencilDesc.StencilReadMask = 0xFF;
+	depthStencilDesc.StencilWriteMask = 0xFF;
+
+	//Stencil operations if pixel is front-facing.
+	depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	//Stencil operations if pixel is back-facing.
+	depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	//Create the depth stencil state
+	hresult = this->device->CreateDepthStencilState(&depthStencilDesc, &this->depthStencilState);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"this->device->CreateDepthStencilState", L"Error", MB_OK);
+		return false;
+	}
+
+	//Set the newly created depth stencil
+	this->deviceContext->OMSetDepthStencilState(this->depthStencilState, 1);
+
+	//Init depth stencil view description
+	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
+
+	//Fill the desc
+	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	depthStencilViewDesc.Texture2D.MipSlice = 0;
+
+	//Create the depth stencil view
+	hresult = this->device->CreateDepthStencilView(this->depthStencilBuffer, &depthStencilViewDesc, &this->depthStencilView);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"this->device->CreateDepthStencilView", L"Error", MB_OK);
+		return false;
+	}
+
+	//Bind the render target view and depth stencil buffer to the output render pipeline
+	this->deviceContext->OMSetRenderTargets(1, &this->renderTargetView, this->depthStencilView);
+
+	//Setup the resterizer state for more rendering control
+	rasterDesc.AntialiasedLineEnable = false;
+	rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.DepthBias = 0;
+	rasterDesc.DepthBiasClamp = 0.0f;
+	rasterDesc.DepthClipEnable = true;
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
+	rasterDesc.FrontCounterClockwise = false;
+	rasterDesc.MultisampleEnable = false;
+	rasterDesc.ScissorEnable = false;
+	rasterDesc.SlopeScaledDepthBias = 0.0f;
+
+	//Create the resterizer state from description
+	hresult = this->device->CreateRasterizerState(&rasterDesc, &this->rasterState);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"this->device->CreateRasterizerState", L"Error", MB_OK);
+		return false;
+	}
+
+	//Set the rasterizer state
+	this->deviceContext->RSSetState(this->rasterState);
+
+	//Setup the viewport
+	viewport.Width = (float)screenWidth;
+	viewport.Height = (float)screenHeight;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+
+	//Create the viewport
+	this->deviceContext->RSSetViewports(1, &viewport);
+
+	//Setup projection matrix
+	fieldOfView = 3.141592654f / 4.0f;
+	screenAspect = (float)screenWidth / (float)screenHeight;
+
+	this->projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth);
+
+	//Initialize the world matrix to the identity matrix.
+	this->worldMatrix = XMMatrixIdentity();
+
+	// Create an orthographic projection matrix for 2D rendering.
+	this->orthoMatrix = XMMatrixOrthographicLH((float)screenWidth, (float)screenHeight, screenNear, screenDepth);
 
 	return true;
+}
+
+void D3DHandler::Shutdown()
+{
+	//Set to window mode before shutting down or releasing the swapchain will throw and exception
+	if (this->swapChain) {
+		this->swapChain->SetFullscreenState(false, NULL);
+	}
+
+	if (this->rasterState) {
+		this->rasterState->Release();
+		this->rasterState = nullptr;
+	}
+
+	if (this->depthStencilView) {
+		this->depthStencilView->Release();
+		this->depthStencilView = nullptr;
+	}
+
+	if (this->depthStencilState) {
+		this->depthStencilState->Release();
+		this->depthStencilState = nullptr;
+	}
+
+	if (this->depthStencilBuffer) {
+		this->depthStencilBuffer->Release();
+		this->depthStencilBuffer = nullptr;
+	}
+
+	if (this->renderTargetView) {
+		this->renderTargetView->Release();
+		this->renderTargetView = nullptr;
+	}
+
+	if (this->deviceContext) {
+		this->deviceContext->Release();
+		this->deviceContext = nullptr;
+	}
+
+	if (this->device) {
+		this->device->Release();
+		this->device = nullptr;
+	}
+
+	if (this->swapChain) {
+		this->swapChain->Release();
+		this->swapChain = nullptr;
+	}
+
+	return;
+}
+
+void D3DHandler::BeginScence(float red, float green, float blue, float alpha)
+{
+	float color[4];
+
+	color[0] = red;
+	color[1] = green;
+	color[2] = blue;
+	color[3] = alpha;
+
+	//Clear the back buffer
+	this->deviceContext->ClearRenderTargetView(this->renderTargetView, color);
+
+	//Clear the depth buffer
+	this->deviceContext->ClearDepthStencilView(this->depthStencilView, D3D11_CLEAR_DEPTH, 1.f, 0);
+
+	return;
+}
+
+void D3DHandler::EndScene()
+{
+	//Present the back buffer to the screen when rendering is complete
+	if (this->vsync_enabled) {
+		//Lock to refreshrate
+		this->swapChain->Present(1, 0);
+	}
+	else {
+		//Present asap
+		this->swapChain->Present(0, 0);
+	}
+
+	return;
+}
+
+ID3D11Device* D3DHandler::GetDevice()
+{
+	return this->device;
+}
+
+ID3D11DeviceContext* D3DHandler::GetDeviceContext()
+{
+	return this->deviceContext;
+}
+
+void D3DHandler::GetProjectionMatrix(XMMATRIX& projectionMatrix)
+{
+	projectionMatrix = this->projectionMatrix;
+	return;
+}
+
+void D3DHandler::GetWorldMatrix(XMMATRIX& worldMatrix)
+{
+	worldMatrix = this->worldMatrix;
+	return;
+}
+
+void D3DHandler::GetViewMatrix(XMMATRIX& viewMatrix)
+{
+	viewMatrix = this->viewMatrix;
+	return;
+}
+
+void D3DHandler::GetVideoCardInfo(char* cardName, int& memory)
+{
+	strcpy_s(cardName, 128, this->videoCardDescription);
+	memory = this->videoCardMemory;
+	return;
 }
