@@ -134,8 +134,8 @@ void SystemHandler::ShutdownWindow() {
 
 
 bool SystemHandler::Initialize() {
-	int screenWidth;
-	int screenHeight;
+	int screenWidth = 0;
+	int screenHeight = 0;
 	bool result;
 
 	//Initilize the window api
@@ -184,7 +184,7 @@ void SystemHandler::Run() {
 		}
 		else {
 			//Otherwise do the frame processing
-			result = Frame();
+			result = this->Frame();
 			if(!result){
 				done = true;
 			}
