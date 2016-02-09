@@ -377,3 +377,18 @@ void D3DHandler::BeginScence(float red, float green, float blue, float alpha)
 
 	return;
 }
+
+void D3DHandler::EndScene()
+{
+	//Present the back buffer to the screen when rendering is complete
+	if (this->vsync_enabled) {
+		//Lock to refreshrate
+		this->swapChain->Present(1, 0);
+	}
+	else {
+		//Present asap
+		this->swapChain->Present(0, 0);
+	}
+
+	return;
+}
