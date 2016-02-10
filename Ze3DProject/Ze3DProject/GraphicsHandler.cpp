@@ -42,7 +42,7 @@ bool GraphicsHandler::Frame()
 bool GraphicsHandler::Render()
 {
 	//Clear the buffers to begin the scene
-	this->direct3D->BeginScence(0.5f, 0.5f, 0.5f, 1.0f);
+	this->direct3D->BeginScene(0.5f, 0.5f, 0.5f, 1.0f);
 
 	//Display the rendered scene to screen
 	this->direct3D->EndScene();

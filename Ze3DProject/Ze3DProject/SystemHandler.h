@@ -2,6 +2,7 @@
 #define SYSTEMHANDLER_H
 
 #include "GraphicsHandler.h"
+#include "InputHandler.h"
 
 class SystemHandler {
 private:
