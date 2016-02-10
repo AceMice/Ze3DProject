@@ -47,3 +47,29 @@ bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, X
 
 	return true;
 }
+
+void ShaderHandler::ShutdownShader()
+{
+	//Release matrix constant buffer
+	if (this->matrixBuffer) {
+		this->matrixBuffer->Release();
+		this->matrixBuffer = nullptr;
+	}
+	//Release layout
+	if (this->layout) {
+		this->layout->Release();
+		this->layout = nullptr;
+	}
+	//Release pixel shader
+	if (this->pixelShader) {
+		this->pixelShader->Release();
+		this->pixelShader = nullptr;
+	}
+	//Release vertex shader
+	if (this->vertexShader) {
+		this->vertexShader->Release();
+		this->vertexShader = nullptr;
+	}
+
+	return;
+}
