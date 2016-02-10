@@ -10,7 +10,7 @@ private:
 	HINSTANCE hinstance;
 	LPCWSTR applicationName;
 	GraphicsHandler* graphicsH;
-	//InputObject
+	InputHandler* inputH;
 	void InitWindow(int& screenWidth, int& screenHeight);
 	void ShutdownWindow();
 	bool Frame();

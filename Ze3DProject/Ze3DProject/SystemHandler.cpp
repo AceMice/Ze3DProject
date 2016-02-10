@@ -1,6 +1,6 @@
 #include "SystemHandler.h"
 SystemHandler::SystemHandler() {
-	//this->InputObject = nullptr;
+	this->inputH = nullptr;
 	this->graphicsH = nullptr;
 }
 
@@ -98,7 +98,9 @@ bool SystemHandler::Frame() {
 	bool result;
 
 	//Cheeck if the user pressed escape and wants to exit the application
-	//INPUT OBJECT NOT IMPLEMENTED YET
+	if (this->inputH->IsKeyDown(VK_ESCAPE)) {
+		return false;
+	}
 
 	//Do the frame processing for the graphics object
 	result = this->graphicsH->Frame();
@@ -142,7 +144,13 @@ bool SystemHandler::Initialize() {
 	InitWindow(screenWidth, screenHeight);
 
 	//Create the input object. This object wil handle reading the keyboard input from the user
-	//THIS HAS NOT BEEN IMPLEMENTED YET
+	this->inputH = new InputHandler;
+	if (!this->inputH) {
+		return false;
+	}
+
+	//Initialize the Input object
+	this->inputH->Initialize();
 
 	//Create the graphics object. This object will handle rendering all the graphics for this applicaion
 	this->graphicsH = new GraphicsHandler;
@@ -203,20 +211,40 @@ void SystemHandler::Shutdown() {
 	}
 	
 	//Release the input object
-	//NOT YET IMPLEMENTED
+	if(this->inputH) {
+		delete this->inputH;
+		this->inputH = nullptr;
+	}
+
+	//Shutdown the window
+	ShutdownWindow();
+
 	return;
 }
 
 LRESULT CALLBACK SystemHandler::MessageHandler(HWND hwnd, UINT umsg, WPARAM wparam, LPARAM lparam) {
 	switch (umsg)
 	{
-		//Check if a key is pressed on the keyboard
-		//Check if a key is released on the keyboard
-		//INPUT OBJECT NOT IMPLEMENTED YET
-		defualt:
-		{
+	//Check if a key is pressed on the keyboard
+	case WM_KEYDOWN:
+	{
+		//if key is pressed send it to the input object to be recorded
+		this->inputH->KeyDown((unsigned int)wparam);
+		return 0;
+	}
+	//Check if a key is released on the keyboard
+	case WM_KEYUP :
+	{
+		//If a key is released then send it to the input object
+		this->inputH->KeyUp((unsigned)wparam);
+		return 0;
+	}
+	
+	//Any other message
+	defualt:
+	{
 			return DefWindowProc(hwnd, umsg, wparam, lparam);
-		}
+	}
 	}
 }
 
