@@ -18,7 +18,7 @@ struct PixelInput
 	float4 color : COLOR;
 };
 
-PixelInput main(VertexInput)
+PixelInput main(VertexInput input)
 {
 	PixelInput output;
 
@@ -33,5 +33,5 @@ PixelInput main(VertexInput)
 	//Store the color for output
 	output.color = input.color;
 
-	return pos;
+	return output;
 }

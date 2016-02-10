@@ -48,6 +48,22 @@ bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, X
 	return true;
 }
 
+bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
+{
+	return true;
+}
+
+bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+	XMMATRIX projectionMatrix)
+{
+	return true;
+}
+
+void ShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
+{
+	return;
+}
+
 void ShaderHandler::ShutdownShader()
 {
 	//Release matrix constant buffer
