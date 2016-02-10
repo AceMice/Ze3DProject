@@ -9,7 +9,7 @@
 using namespace DirectX;
 using namespace std;
 
-class ShaderHanlder {
+class ShaderHandler {
 private:
 	struct MatrixBuffer
 	{
@@ -30,8 +30,8 @@ private:
 	void RenderShader(ID3D11DeviceContext*, int);
 
 public:
-	ShaderHanlder();
-	~ShaderHanlder();
+	ShaderHandler();
+	~ShaderHandler();
 
 	bool Initialize(ID3D11Device*, HWND);
 	void Shutdown();
