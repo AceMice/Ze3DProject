@@ -187,9 +187,41 @@ void ShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd
 	return;
 }
 
-bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
-	XMMATRIX projectionMatrix)
+bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix)
 {
+	HRESULT hresult;
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	MatrixBuffer* dataPtr;
+	unsigned int bufferNumber;
+
+	//Transpose each matrix to prepare for shaders (requirement in directx 11)
+	worldMatrix = XMMatrixTranspose(worldMatrix);
+	viewMatrix = XMMatrixTranspose(viewMatrix);
+	projectionMatrix = XMMatrixTranspose(projectionMatrix);
+
+	//Map the constant buffer so we can write to it (denies GPU access)
+	deviceContext->Map(this->matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if (FAILED(hresult)) {
+		return false;
+	}
+
+	//Get pointer to the data
+	dataPtr = (MatrixBuffer*)mappedResource.pData;
+	
+	//Copy the matrices to the constant buffer
+	dataPtr->world = worldMatrix;
+	dataPtr->view = viewMatrix;
+	dataPtr->projection = projectionMatrix;
+
+	//Unmap the constant buffer to give the GPU access agin
+	deviceContext->Unmap(this->matrixBuffer, 0);
+
+	//Set constant buffer position in vertex shader
+	bufferNumber = 0;
+
+	//Set the constant buffer in vertex shader with updated values
+	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &this->matrixBuffer);
+
 	return true;
 }
 
