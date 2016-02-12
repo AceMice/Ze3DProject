@@ -29,7 +29,7 @@ bool ModelHandler::Initialize(ID3D11Device* device) {
 
 void ModelHandler::Shutdown() {
 	//Shutdown the vertex and index buffers
-	this->Shutdown();
+	this->ShutdownBuffers();
 
 	return;
 }
