@@ -135,9 +135,37 @@ bool ModelHandler::InitializeBuffers(ID3D11Device* device) {
 }
 
 void ModelHandler::ShutdownBuffers() {
+	//Release the index buffer
+	if (this->indexBuffer) {
+		this->indexBuffer->Release();
+		this->indexBuffer = nullptr;
+	}
 
+	//Release the vertex buffer
+	if (this->vertexBuffer) {
+		this->vertexBuffer->Release();
+		this->vertexBuffer = nullptr;
+	}
+
+	return;
 }
 
-void ModelHandler::RenderBuffers(ID3D11DeviceContext*) {
+void ModelHandler::RenderBuffers(ID3D11DeviceContext* deviceContext) {
+	unsigned int stride;
+	unsigned offset;
 
+	//Set vertex buffer stride and offset
+	stride = sizeof(Vertex);
+	offset = 0;
+
+	//Set the vertex buffer to active in the input assembly so it can rendered
+	deviceContext->IAGetVertexBuffers(0, 1, &this->vertexBuffer, &stride, &offset);
+
+	//Set the index buffer to active in the input assembler so it can be rendered
+	deviceContext->IASetIndexBuffer(this->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
+
+	//Set the type od primitiv that should be rendered from this vertex buffer, in this case triangles
+	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	return;
 }
