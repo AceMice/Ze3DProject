@@ -3,6 +3,8 @@
 
 #include "D3DHandler.h"
 #include "ShaderHandler.h"
+#include "ModelHandler.h"
+#include "CameraHandler.h"
 
 //Constants
 const bool FULL_SCREEN = false;
@@ -12,7 +14,10 @@ const float SCREEN_NEAR = 0.1f;
 
 class GraphicsHandler {
 private:
-	D3DHandler* direct3D;
+	D3DHandler* direct3DH;
+	CameraHandler* cameraH;
+	ModelHandler* modelH;
+	ShaderHandler* shaderH;
 
 	bool Render();
 public:

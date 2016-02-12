@@ -27,7 +27,7 @@ private:
 	ID3D11RasterizerState* rasterState;
 	XMMATRIX projectionMatrix;
 	XMMATRIX worldMatrix;
-	XMMATRIX viewMatrix;
+	XMMATRIX orthoMatrix;
 
 public:
 	D3DHandler();
@@ -44,7 +44,7 @@ public:
 
 	void GetProjectionMatrix(XMMATRIX&);
 	void GetWorldMatrix(XMMATRIX&);
-	void GetViewMatrix(XMMATRIX&);
+	void GetOrthoMatrix(XMMATRIX&);
 
 	void GetVideoCardInfo(char*, int&);
 };

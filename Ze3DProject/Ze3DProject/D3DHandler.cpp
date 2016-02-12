@@ -305,7 +305,7 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 	this->worldMatrix = XMMatrixIdentity();
 
 	// Create an orthographic projection matrix for 2D rendering.
-	this->viewMatrix = XMMatrixOrthographicLH((float)screenWidth, (float)screenHeight, screenNear, screenDepth);
+	this->orthoMatrix = XMMatrixOrthographicLH((float)screenWidth, (float)screenHeight, screenNear, screenDepth);
 
 	return true;
 }
@@ -415,9 +415,9 @@ void D3DHandler::GetWorldMatrix(XMMATRIX& worldMatrix)
 	return;
 }
 
-void D3DHandler::GetViewMatrix(XMMATRIX& viewMatrix)
+void D3DHandler::GetOrthoMatrix(XMMATRIX& viewMatrix)
 {
-	viewMatrix = this->viewMatrix;
+	viewMatrix = this->orthoMatrix;
 	return;
 }
 
