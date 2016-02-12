@@ -153,6 +153,40 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 	return true;
 }
 
+void ShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
+{
+	char* compileErrors;
+	unsigned long long bufferSize, i;
+	ofstream fout;
+
+	//Get a pointer to the error message text buffer
+	compileErrors = (char*)errorMessage->GetBufferPointer();
+
+	//Get the length of the message
+	bufferSize = errorMessage->GetBufferSize();
+
+	//Open a file to write error messages to
+	fout.open("shader_error.txt");
+
+	//Write the error message to the file
+	for (i = 0; i<bufferSize; i++)
+	{
+		fout << compileErrors[i];
+	}
+
+	//Close the file
+	fout.close();
+
+	//Release the error message
+	errorMessage->Release();
+	errorMessage = nullptr;
+
+	//Notify the user to check error log
+	MessageBox(hwnd, L"Error compiling shader, check shader_error.txt for message.", shaderFilename, MB_OK);
+
+	return;
+}
+
 bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
 	XMMATRIX projectionMatrix)
 {
