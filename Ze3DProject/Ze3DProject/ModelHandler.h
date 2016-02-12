@@ -9,7 +9,7 @@ class ModelHandler {
 
 private:
 	
-	struct VertexType {
+	struct Vertex {
 		XMFLOAT3 position;
 		XMFLOAT4 color;
 	};
