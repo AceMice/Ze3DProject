@@ -227,6 +227,16 @@ bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMA
 
 void ShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
 {
+	//Set the input layout for vertex
+	deviceContext->IASetInputLayout(this->layout);
+
+	//Set the vertex and pixel shaders that will be used to render this triangle
+	deviceContext->VSSetShader(this->vertexShader, NULL, 0);
+	deviceContext->PSSetShader(this->pixelShader, NULL, 0);
+
+	//Render the triangle
+	deviceContext->DrawIndexed(indexCount, 0, 0);
+
 	return;
 }
 
