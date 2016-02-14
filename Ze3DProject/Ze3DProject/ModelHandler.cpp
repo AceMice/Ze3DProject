@@ -1,21 +1,25 @@
 #include "ModelHandler.h"
 
 
-ModelHandler::ModelHandler() {
+ModelHandler::ModelHandler() 
+{
 	this->vertexBuffer = nullptr;
 	this->indexBuffer = nullptr;
+	this->texture = nullptr;
+}
+
+ModelHandler::ModelHandler(const ModelHandler& originalObj)
+{
 
 }
 
-ModelHandler::ModelHandler(const ModelHandler& originalObj) {
+ModelHandler::~ModelHandler() 
+{
 
 }
 
-ModelHandler::~ModelHandler() {
-
-}
-
-bool ModelHandler::Initialize(ID3D11Device* device) {
+bool ModelHandler::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename) 
+{
 	bool result;
 
 	//Initialze the vertex and index buffer
@@ -24,28 +28,45 @@ bool ModelHandler::Initialize(ID3D11Device* device) {
 		return false;
 	}
 
+	//Load texture for this model
+	result = this->LoadTexture(device, deviceContext, textureFilename);
+	if (!result) {
+		return false;
+	}
+
 	return true;
 }
 
-void ModelHandler::Shutdown() {
+void ModelHandler::Shutdown() 
+{
+	//Release model texute
+	this->ReleaseTexture();
 	//Shutdown the vertex and index buffers
 	this->ShutdownBuffers();
 
 	return;
 }
 
-void ModelHandler::Render(ID3D11DeviceContext* deviceContext) {
+void ModelHandler::Render(ID3D11DeviceContext* deviceContext) 
+{
 	//Put the vertex and index buffers on the graphic pipeline to prepare them for drawing
 	this->RenderBuffers(deviceContext);
 
 	return;
 }
 
-int ModelHandler::GetIndexCount() {
+int ModelHandler::GetIndexCount() 
+{
 	return this->indexCount;
 }
 
-bool ModelHandler::InitializeBuffers(ID3D11Device* device) {
+ID3D11ShaderResourceView* ModelHandler::GetTexture()
+{
+	return this->texture->GetTexture();
+}
+
+bool ModelHandler::InitializeBuffers(ID3D11Device* device) 
+{
 	Vertex* vertices;
 	unsigned long* indices;
 	D3D11_BUFFER_DESC vertexBufferDesc;
@@ -75,13 +96,13 @@ bool ModelHandler::InitializeBuffers(ID3D11Device* device) {
 	//Load the vertex array with data
 	//Order is important, otherwise the triangle will be facing the opposite direction
 	vertices[0].position = XMFLOAT3(-1.0, -1.0f, 0.0f); //Bottom left
-	vertices[0].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
 
 	vertices[1].position = XMFLOAT3(0.0, 1.0f, 0.0f); //Top Middle
-	vertices[1].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
 
 	vertices[2].position = XMFLOAT3(1.0, -1.0f, 0.0f); //Bottom right
-	vertices[2].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
 
 	//Load the index array with data
 	indices[0] = 0;	//Bottom left
@@ -134,7 +155,8 @@ bool ModelHandler::InitializeBuffers(ID3D11Device* device) {
 	return true;
 }
 
-void ModelHandler::ShutdownBuffers() {
+void ModelHandler::ShutdownBuffers() 
+{
 	//Release the index buffer
 	if (this->indexBuffer) {
 		this->indexBuffer->Release();
@@ -150,7 +172,8 @@ void ModelHandler::ShutdownBuffers() {
 	return;
 }
 
-void ModelHandler::RenderBuffers(ID3D11DeviceContext* deviceContext) {
+void ModelHandler::RenderBuffers(ID3D11DeviceContext* deviceContext) 
+{
 	unsigned int stride;
 	unsigned offset;
 
@@ -166,6 +189,37 @@ void ModelHandler::RenderBuffers(ID3D11DeviceContext* deviceContext) {
 
 	//Set the type od primitiv that should be rendered from this vertex buffer, in this case triangles
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	return;
+}
+
+bool ModelHandler::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename)
+{
+	bool result;
+
+	//Create the texture object
+	this->texture = new Texture;
+	if (this->texture) {
+		return false;
+	}
+
+	//Init texture object
+	result = this->texture->Initialize(device, deviceContext, filename);
+	if (!result) {
+		return false;
+	}
+
+	return true;
+}
+
+void ModelHandler::ReleaseTexture()
+{
+	//Release the texture object
+	if (this->texture) {
+		this->texture->Shutdown();
+		delete this->texture;
+		this->texture = nullptr;
+	}
 
 	return;
 }
