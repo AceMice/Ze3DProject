@@ -7,7 +7,10 @@
 class Texture {
 
 private:
-
+	unsigned char* targaData;
+	ID3D11Texture2D* texture;
+	ID3D11ShaderResourceView* textureView;
+	
 	struct TargaHeader
 	{
 		unsigned char data1[12];
@@ -18,16 +21,14 @@ private:
 	};
 
 	bool LoadTarga(char*, int&, int&);
-	unsigned char* targaData;
-	ID3D11Texture2D* texture;
-	ID3D11ShaderResourceView textureView;
+
 
 public:
 	Texture();
 	Texture(const Texture&);
 	~Texture();
 
-	bool Initialize(ID3D11DeviceContext*, char*);
+	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, char*);
 	void Shutdown();
 	ID3D11ShaderResourceView* GetTexture();
 };
