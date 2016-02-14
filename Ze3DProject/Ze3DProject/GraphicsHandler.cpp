@@ -45,7 +45,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Initialize the model object
-	result = this->modelH->Initialize(this->direct3DH->GetDevice());
+	result = this->modelH->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "../Ze3DProject/Textures/stone1.tga");
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->modelH->Initialize", L"Error", MB_OK);
@@ -103,7 +103,8 @@ bool GraphicsHandler::Render()
 	this->modelH->Render(this->direct3DH->GetDeviceContext());
 
 	//Render the model using the color shader
-	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->modelH->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix);
+	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->modelH->GetIndexCount(), 
+									worldMatrix, viewMatrix, projectionMatrix, this->modelH->GetTexture());
 	if (!result)
 	{
 		return false;
