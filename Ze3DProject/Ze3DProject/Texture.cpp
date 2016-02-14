@@ -162,7 +162,7 @@ bool Texture::LoadTarga(char*filename, int&height, int& width)
 
 	//Allocate memory for the targa destination data
 	this->targaData = new unsigned char[imageSize];
-	if (this->targaData) {
+	if (!this->targaData) {
 		return false;
 	}
 

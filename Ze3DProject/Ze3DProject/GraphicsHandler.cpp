@@ -45,7 +45,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Initialize the model object
-	result = this->modelH->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "../Ze3DProject/Textures/stone1.tga");
+	result = this->modelH->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "../Ze3DProject/Textures/stone01.tga");
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->modelH->Initialize", L"Error", MB_OK);

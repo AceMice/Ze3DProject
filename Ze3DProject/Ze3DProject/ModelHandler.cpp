@@ -199,7 +199,7 @@ bool ModelHandler::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* device
 
 	//Create the texture object
 	this->texture = new Texture;
-	if (this->texture) {
+	if (!this->texture) {
 		return false;
 	}
 

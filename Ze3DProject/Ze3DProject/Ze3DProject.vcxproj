@@ -154,6 +154,7 @@
     <ClCompile Include="ModelHandler.cpp" />
     <ClCompile Include="ShaderHandler.cpp" />
     <ClCompile Include="SystemHandler.cpp" />
+    <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CameraHandler.h" />
@@ -163,6 +164,7 @@
     <ClInclude Include="ModelHandler.h" />
     <ClInclude Include="ShaderHandler.h" />
     <ClInclude Include="SystemHandler.h" />
+    <ClInclude Include="Texture.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="PixelShader.hlsl">
