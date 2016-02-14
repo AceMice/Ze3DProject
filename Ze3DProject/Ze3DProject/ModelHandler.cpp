@@ -77,11 +77,11 @@ bool ModelHandler::InitializeBuffers(ID3D11Device* device) {
 	vertices[0].position = XMFLOAT3(-1.0, -1.0f, 0.0f); //Bottom left
 	vertices[0].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
 
-	vertices[0].position = XMFLOAT3(0.0, 1.0f, 0.0f); //Top Middle
-	vertices[0].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	vertices[1].position = XMFLOAT3(0.0, 1.0f, 0.0f); //Top Middle
+	vertices[1].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
 
-	vertices[0].position = XMFLOAT3(1.0, -1.0f, 0.0f); //Bottom right
-	vertices[0].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
+	vertices[2].position = XMFLOAT3(1.0, -1.0f, 0.0f); //Bottom right
+	vertices[2].color = XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f);
 
 	//Load the index array with data
 	indices[0] = 0;	//Bottom left
@@ -159,7 +159,7 @@ void ModelHandler::RenderBuffers(ID3D11DeviceContext* deviceContext) {
 	offset = 0;
 
 	//Set the vertex buffer to active in the input assembly so it can rendered
-	deviceContext->IAGetVertexBuffers(0, 1, &this->vertexBuffer, &stride, &offset);
+	deviceContext->IASetVertexBuffers(0, 1, &this->vertexBuffer, &stride, &offset);
 
 	//Set the index buffer to active in the input assembler so it can be rendered
 	deviceContext->IASetIndexBuffer(this->indexBuffer, DXGI_FORMAT_R32_UINT, 0);
