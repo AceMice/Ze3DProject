@@ -134,7 +134,6 @@ void SystemHandler::ShutdownWindow() {
 	return;
 }
 
-
 bool SystemHandler::Initialize() {
 	int screenWidth = 0;
 	int screenHeight = 0;
@@ -146,6 +145,7 @@ bool SystemHandler::Initialize() {
 	//Create the input object. This object wil handle reading the keyboard input from the user
 	this->inputH = new InputHandler;
 	if (!this->inputH) {
+		MessageBox(this->hwnd, L"new InputHandler", L"Error", MB_OK);
 		return false;
 	}
 
