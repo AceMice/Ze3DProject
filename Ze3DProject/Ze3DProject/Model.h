@@ -1,5 +1,5 @@
-#ifndef MODELHANDLER_H
-#define MODELHANDLER_H
+#ifndef Model_H
+#define Model_H
 
 #include<d3d11.h>
 #include<DirectXMath.h>
@@ -7,7 +7,7 @@ using namespace DirectX;
 
 #include "Texture.h"
 
-class ModelHandler {
+class Model {
 
 private:
 	
@@ -29,9 +29,9 @@ private:
 	void ReleaseTexture();
 
 public:
-	ModelHandler();
-	ModelHandler(const ModelHandler&);
-	~ModelHandler();
+	Model();
+	Model(const Model&);
+	~Model();
 
 	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, char*);
 	void Shutdown();

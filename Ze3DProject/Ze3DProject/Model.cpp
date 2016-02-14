@@ -1,24 +1,24 @@
-#include "ModelHandler.h"
+#include "Model.h"
 
 
-ModelHandler::ModelHandler() 
+Model::Model() 
 {
 	this->vertexBuffer = nullptr;
 	this->indexBuffer = nullptr;
 	this->texture = nullptr;
 }
 
-ModelHandler::ModelHandler(const ModelHandler& originalObj)
+Model::Model(const Model& originalObj)
 {
 
 }
 
-ModelHandler::~ModelHandler() 
+Model::~Model() 
 {
 
 }
 
-bool ModelHandler::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename) 
+bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename) 
 {
 	bool result;
 
@@ -37,7 +37,7 @@ bool ModelHandler::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceC
 	return true;
 }
 
-void ModelHandler::Shutdown() 
+void Model::Shutdown() 
 {
 	//Release model texute
 	this->ReleaseTexture();
@@ -47,7 +47,7 @@ void ModelHandler::Shutdown()
 	return;
 }
 
-void ModelHandler::Render(ID3D11DeviceContext* deviceContext) 
+void Model::Render(ID3D11DeviceContext* deviceContext) 
 {
 	//Put the vertex and index buffers on the graphic pipeline to prepare them for drawing
 	this->RenderBuffers(deviceContext);
@@ -55,17 +55,17 @@ void ModelHandler::Render(ID3D11DeviceContext* deviceContext)
 	return;
 }
 
-int ModelHandler::GetIndexCount() 
+int Model::GetIndexCount() 
 {
 	return this->indexCount;
 }
 
-ID3D11ShaderResourceView* ModelHandler::GetTexture()
+ID3D11ShaderResourceView* Model::GetTexture()
 {
 	return this->texture->GetTexture();
 }
 
-bool ModelHandler::InitializeBuffers(ID3D11Device* device) 
+bool Model::InitializeBuffers(ID3D11Device* device) 
 {
 	Vertex* vertices;
 	unsigned long* indices;
@@ -155,7 +155,7 @@ bool ModelHandler::InitializeBuffers(ID3D11Device* device)
 	return true;
 }
 
-void ModelHandler::ShutdownBuffers() 
+void Model::ShutdownBuffers() 
 {
 	//Release the index buffer
 	if (this->indexBuffer) {
@@ -172,7 +172,7 @@ void ModelHandler::ShutdownBuffers()
 	return;
 }
 
-void ModelHandler::RenderBuffers(ID3D11DeviceContext* deviceContext) 
+void Model::RenderBuffers(ID3D11DeviceContext* deviceContext) 
 {
 	unsigned int stride;
 	unsigned offset;
@@ -193,7 +193,7 @@ void ModelHandler::RenderBuffers(ID3D11DeviceContext* deviceContext)
 	return;
 }
 
-bool ModelHandler::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename)
+bool Model::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename)
 {
 	bool result;
 
@@ -212,7 +212,7 @@ bool ModelHandler::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* device
 	return true;
 }
 
-void ModelHandler::ReleaseTexture()
+void Model::ReleaseTexture()
 {
 	//Release the texture object
 	if (this->texture) {

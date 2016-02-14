@@ -3,7 +3,7 @@
 
 #include "D3DHandler.h"
 #include "ShaderHandler.h"
-#include "ModelHandler.h"
+#include "Model.h"
 #include "CameraHandler.h"
 
 //Constants
@@ -16,7 +16,7 @@ class GraphicsHandler {
 private:
 	D3DHandler* direct3DH;
 	CameraHandler* cameraH;
-	ModelHandler* modelH;
+	Model* modelH;
 	ShaderHandler* shaderH;
 
 	bool Render();

@@ -105,7 +105,7 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 	}
 
 	//Fill the vertex input layout description 
-	//This needs to match the modelHandler and shader 
+	//This needs to match the Model and shader 
 	polygonLayout[0].SemanticName = "POSITION";
 	polygonLayout[0].SemanticIndex = 0;
 	polygonLayout[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;

@@ -151,7 +151,7 @@
     <ClCompile Include="GraphicsHandler.cpp" />
     <ClCompile Include="InputHandler.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ModelHandler.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="ShaderHandler.cpp" />
     <ClCompile Include="SystemHandler.cpp" />
     <ClCompile Include="Texture.cpp" />
@@ -161,7 +161,7 @@
     <ClInclude Include="D3DHandler.h" />
     <ClInclude Include="GraphicsHandler.h" />
     <ClInclude Include="InputHandler.h" />
-    <ClInclude Include="ModelHandler.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="ShaderHandler.h" />
     <ClInclude Include="SystemHandler.h" />
     <ClInclude Include="Texture.h" />

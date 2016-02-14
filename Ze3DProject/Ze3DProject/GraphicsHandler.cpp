@@ -38,7 +38,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	this->cameraH->SetPosition(0.0f, 0.0f, -5.0f);
 
 	// Create the model object.
-	this->modelH = new ModelHandler;
+	this->modelH = new Model;
 	if (!this->modelH)
 	{
 		return false;
@@ -126,7 +126,7 @@ void GraphicsHandler::Shutdown()
 		this->shaderH = 0;
 	}
 
-	//Release the modelHandler object
+	//Release the Model object
 	if (this->modelH)
 	{
 		this->modelH->Shutdown();
