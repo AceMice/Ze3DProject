@@ -9,13 +9,13 @@ cbuffer MatrixBuffer
 struct VertexInput
 {
 	float4 position : POSITION;
-	float4 color : COLOR;
+	float2 tex : TEXCOORD0;
 };
 
 struct PixelInput
 {
 	float4 position : SV_POSITION;
-	float4 color : COLOR;
+	float2 tex : TEXCOORD0;
 };
 
 PixelInput main(VertexInput input)
@@ -31,7 +31,7 @@ PixelInput main(VertexInput input)
 	output.position = mul(output.position, projectionMatrix);
 
 	//Store the color for output
-	output.color = input.color;
+	output.tex = input.tex;
 
 	return output;
 }
