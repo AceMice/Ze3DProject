@@ -3,7 +3,6 @@
 ShaderHandler::ShaderHandler()
 {
 	this->vertexShader = nullptr;
-	this->geometryShader = nullptr;
 	this->pixelShader = nullptr;
 	this->layout = nullptr;
 	this->matrixBuffer = nullptr;
