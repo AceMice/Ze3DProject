@@ -223,3 +223,43 @@ void Model::ReleaseTexture()
 
 	return;
 }
+
+bool Model::LoadObj(char* filename)
+{
+	XMFLOAT3 tempVertex;
+	XMFLOAT2 tempUV;
+	XMFLOAT3 tempNormal;
+	XMFLOAT3X3 tempFaces;
+	std::vector<XMFLOAT3> vertices;
+	std::vector<XMFLOAT2> uvs;
+	std::vector<XMFLOAT3> normals;
+	std::vector<XMFLOAT3X3> faces;
+	std::string line;
+	std::ifstream file;
+
+	file.open(filename);
+
+	while (std::getline(file, line)) {
+		if (line.at(0) == 'v') {
+			if (line.at(1) == ' ') {
+				sscanf(line.c_str(), " %f %f %f ", &tempVertex.x, &tempVertex.y, &tempVertex.z);
+				vertices.push_back(tempVertex);
+			}
+			else if (line.at(1) == 't') {
+				sscanf(line.c_str(), " %f %f ", &tempUV.x, &tempUV.y);
+				uvs.push_back(tempUV);
+			}
+			else if (line.at(1) == 'n') {
+				sscanf(line.c_str(), " %f %f %f ", &tempNormal.x, &tempNormal.y, &tempNormal.z);
+				normals.push_back(tempNormal);
+			}
+		}
+		else if (line.at(0) == 'f') {
+			sscanf(line.c_str(), " %f %f %f %f %f %f %f %f %f ", &tempFaces._11, &tempFaces._12, &tempFaces._13, 
+				&tempFaces._21, &tempFaces._22, &tempFaces._23, &tempFaces._31, &tempFaces._32, &tempFaces._33);
+			faces.push_back(tempFaces);
+		}
+	}
+
+	return true;
+}
