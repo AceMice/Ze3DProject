@@ -16,6 +16,7 @@ struct GSInput
 {
 	float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
+	float4 worldPos : POSITION;
 };
 
 PixelInput main(VertexInput input)
@@ -26,7 +27,8 @@ PixelInput main(VertexInput input)
 	input.position.w = 1.0f;
 
 	//Multiply the position with world-, view- and projectionmatrix
-	output.position = mul(input.position, worldMatrix);
+	//Save the world-pos of the vertex
+	output.position = output.worldPos = mul(input.position, worldMatrix);
 	output.position = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix);
 
