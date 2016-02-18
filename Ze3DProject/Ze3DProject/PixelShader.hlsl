@@ -1,13 +1,15 @@
 Texture2D shaderTexture;
 SamplerState shaderSampler;
 
-struct PixelInput
+struct PSInput
 {
-	float4 position : SV_POSITION;
-	float2 tex : TEXCOORD0;
+	float4 pos : SV_POSITION;
+	float2 Tex : TEXCOORD;
+	float3 norm : NORMAL;
+	float4 worldPos : POSITION;
 };
 
-float4 main(PixelInput input) : SV_TARGET
+float4 main(PSInput input) : SV_TARGET
 {
 	return shaderTexture.Sample(shaderSampler, input.tex);
 }
