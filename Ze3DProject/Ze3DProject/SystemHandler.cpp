@@ -96,7 +96,6 @@ void SystemHandler::InitWindow(int& screenWidth, int& screenHeight) {
 
 bool SystemHandler::Frame() {
 	bool result;
-
 	//Cheeck if the user pressed escape and wants to exit the application
 	if (this->inputH->IsKeyDown(VK_ESCAPE)) {
 		return false;

@@ -1,3 +1,11 @@
+
+cbuffer MatrixBuffer
+{
+	matrix worldMatrix;
+	matrix viewMatrix;
+	matrix projectionMatrix;
+};
+
 struct GSInput
 {
 	float4 position : SV_POSITION;
@@ -23,7 +31,7 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output
 	float3 edge0 = input[1].position.xyz - input[0].position.xyz;
 	float3 edge1 = input[2].position.xyz - input[0].position.xyz;
 	normal = cross(edge0, edge1); //normalize in the future
-
+	normal = normalize(mul(worldMatrix, float4(normal,1.0f))).xyz;
 	for (uint i = 0; i < 3; i++)
 	{
 		element.position = input[i].position;

@@ -1,11 +1,4 @@
 
-cbuffer MatrixBuffer
-{
-	matrix worldMatrix;
-	matrix viewMatrix;
-	matrix projectionMatrix;
-};
-
 struct VertexInput
 {
 	float4 position : POSITION;
