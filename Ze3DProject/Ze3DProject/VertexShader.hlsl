@@ -19,9 +19,9 @@ struct GSInput
 	float4 worldPos : POSITION;
 };
 
-PixelInput main(VertexInput input)
+GSInput main(VertexInput input)
 {
-	PixelInput output;
+	GSInput output;
 
 	//Add homogencoordinates for proper matrix multiplication
 	input.position.w = 1.0f;
