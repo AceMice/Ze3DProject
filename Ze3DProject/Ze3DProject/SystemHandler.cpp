@@ -102,7 +102,7 @@ bool SystemHandler::Frame() {
 	}
 
 	//Do the frame processing for the graphics object
-	result = this->graphicsH->Frame();
+	result = this->graphicsH->Frame(this);
 	if (!result) {
 		return false;
 	}
@@ -189,6 +189,7 @@ void SystemHandler::Run() {
 		if (msg.message == WM_QUIT) {
 			done = true;
 		}
+
 		else {
 			//Otherwise do the frame processing
 			result = this->Frame();
@@ -239,7 +240,7 @@ LRESULT CALLBACK SystemHandler::MessageHandler(HWND hwnd, UINT umsg, WPARAM wpar
 			this->inputH->KeyUp((unsigned)wparam);
 			return 0;
 		}
-	
+
 		//Any other message
 		default:
 		{

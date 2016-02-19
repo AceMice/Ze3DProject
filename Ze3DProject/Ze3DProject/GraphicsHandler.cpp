@@ -73,11 +73,11 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	return true;
 }
 
-bool GraphicsHandler::Frame()
+bool GraphicsHandler::Frame(InputHandler* inputH)
 {
 	bool result;
 
-	result = this->Render();
+	result = this->Render(inputH);
 	if (!result) {
 		return false;
 	}
@@ -85,11 +85,10 @@ bool GraphicsHandler::Frame()
 	return true;
 }
 
-bool GraphicsHandler::Render()
+bool GraphicsHandler::Render(InputHandler* inputH)
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	bool result;
-
 	//Clear the buffers to begin the scene
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -107,7 +106,6 @@ bool GraphicsHandler::Render()
 	//ROTATION//
 	rotation += 0.001;
 	worldMatrix = DirectX::XMMatrixRotationY(rotation);
-	
 	//Render the model using the color shader
 	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->modelH->GetIndexCount(), 
 									worldMatrix, viewMatrix, projectionMatrix, this->modelH->GetTexture());

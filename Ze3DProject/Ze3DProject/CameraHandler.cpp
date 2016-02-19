@@ -76,7 +76,7 @@ void CameraHandler::Render()
 	pitch = this->rotationX * 0.0174532925f;
 	yaw = this->rotationY * 0.0174532925f;
 	roll = this->rotationZ * 0.0174532925f;
-
+	
 	//Create the rotation matrix from the yaw, pitch, and roll values
 	rotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
 

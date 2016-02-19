@@ -5,6 +5,7 @@
 #include "ShaderHandler.h"
 #include "Model.h"
 #include "CameraHandler.h"
+#include "Inputhandler.h"
 
 //Constants
 const bool FULL_SCREEN = false;
@@ -19,13 +20,13 @@ private:
 	Model* modelH;
 	ShaderHandler* shaderH;
 
-	bool Render();
+	bool Render(InputHandler* inputH);
 public:
 	GraphicsHandler();
 	~GraphicsHandler();
 
 	bool Initialize(int, int, HWND);
-	bool Frame();
+	bool Frame(InputHandler*);
 	void Shutdown();
 };
 
