@@ -3,6 +3,7 @@
 ShaderHandler::ShaderHandler()
 {
 	this->vertexShader = nullptr;
+	this->geoShader = nullptr;
 	this->pixelShader = nullptr;
 	this->layout = nullptr;
 	this->matrixBuffer = nullptr;
@@ -18,7 +19,7 @@ bool ShaderHandler::Initialize(ID3D11Device* device, HWND hwnd)
 	bool result = false;
 
 	//Initialize vertex and pixel shaders
-	result = this->InitializeShader(device, hwnd, L"../Ze3DProject/VertexShader.hlsl", L"../Ze3DProject/PixelShader.hlsl");
+	result = this->InitializeShader(device, hwnd, L"../Ze3DProject/VertexShader.hlsl", L"../Ze3DProject/PixelShader.hlsl", L"../Ze3DProject/GeometryShader.hlsl");
 	if (!result) {
 		return false;
 	}
@@ -50,11 +51,12 @@ bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount,
 	return true;
 }
 
-bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
+bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename, WCHAR* geoFilename)
 {
 	HRESULT hresult;
 	ID3D10Blob* errorMessage;
 	ID3D10Blob* vertexShaderBuffer;
+	ID3D10Blob* geoShaderBuffer;
 	ID3D10Blob* pixelShaderBuffer;
 	D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
 	unsigned int numElements;
@@ -90,6 +92,18 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 		return false;
 	}
 
+	//Compile the geometry shader code
+	hresult = D3DCompileFromFile(geoFilename, NULL, NULL, "main", "gs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &geoShaderBuffer, &errorMessage);
+	if (FAILED(hresult)) {
+		if (errorMessage) {
+			OutputShaderErrorMessage(errorMessage, hwnd, geoFilename);
+		}
+		else {
+			MessageBox(hwnd, L"D3DCompileFromFile(Geo)", L"Error", MB_OK);
+		}
+		return false;
+	}
+
 	//Create the vertex shader from buffer
 	hresult = device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &this->vertexShader);
 	if (FAILED(hresult)) {
@@ -99,6 +113,12 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 
 	//Create the pixel shader from buffer
 	hresult = device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &this->pixelShader);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"device->CreatePixelShader", L"Error", MB_OK);
+		return false;
+	}
+
+	hresult = device->CreateGeometryShader(geoShaderBuffer->GetBufferPointer(), geoShaderBuffer->GetBufferSize(), NULL, &this->geoShader);
 	if (FAILED(hresult)) {
 		MessageBox(hwnd, L"device->CreatePixelShader", L"Error", MB_OK);
 		return false;
@@ -262,7 +282,7 @@ void ShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int indexCo
 	//Set the vertex and pixel shaders that will be used to render this triangle
 	deviceContext->VSSetShader(this->vertexShader, NULL, 0);
 	deviceContext->PSSetShader(this->pixelShader, NULL, 0);
-
+	deviceContext->GSSetShader(this->geoShader, NULL, 0);
 	//Set the sampler state in pixel shader
 	deviceContext->PSSetSamplers(0, 1, &this->samplerState);
 
@@ -294,6 +314,13 @@ void ShaderHandler::ShutdownShader()
 		this->pixelShader->Release();
 		this->pixelShader = nullptr;
 	}
+	
+	//Release geometry shader
+	if (this->geoShader) {
+		this->geoShader->Release();
+		this->geoShader = nullptr;
+	}
+
 	//Release vertex shader
 	if (this->vertexShader) {
 		this->vertexShader->Release();
