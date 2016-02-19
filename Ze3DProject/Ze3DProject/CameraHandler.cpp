@@ -41,7 +41,7 @@ XMFLOAT3 CameraHandler::GetRotation()
 	return XMFLOAT3(this->rotationX, this->rotationY, this->rotationZ);
 }
 
-void CameraHandler::Render()
+void CameraHandler::Render(InputHandler* inputH)
 {
 	XMFLOAT3 up, position, lookAt;
 	XMVECTOR upVector, positionVector, lookAtVector;
@@ -71,6 +71,35 @@ void CameraHandler::Render()
 
 	//Load lookat into a XMVECTOR structure
 	lookAtVector = XMLoadFloat3(&lookAt);
+
+	if (inputH->IsKeyDown(87)) {	//W
+		this->SetPosition(
+			this->positionX,
+			this->positionY,
+			this->positionZ + 0.005);
+	}
+
+	if (inputH->IsKeyDown(83)) {	//S
+		this->SetPosition(
+			this->positionX,
+			this->positionY,
+			this->positionZ - 0.005);
+	}
+
+	if (inputH->IsKeyDown(65)) {	//A
+		this->SetPosition(
+			this->positionX - 0.005,
+			this->positionY,
+			this->positionZ);
+	}
+
+	if (inputH->IsKeyDown(68)) {	//D
+		this->SetPosition(
+			this->positionX + 0.005,
+			this->positionY,
+			this->positionZ);
+	}
+
 
 	//Set the yaw (Y axis), pitch (X axis), and roll (Z axis) rotations in radians
 	pitch = this->rotationX * 0.0174532925f;

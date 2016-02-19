@@ -2,6 +2,7 @@
 #define CAMERAHANDLER_H
 
 #include <DirectXMath.h>
+#include "InputHandler.h"
 using namespace DirectX;
 
 class CameraHandler
@@ -21,7 +22,7 @@ public:
 	XMFLOAT3 GetPosition();
 	XMFLOAT3 GetRotation();
 
-	void Render();
+	void Render(InputHandler*);
 	void GetViewMatrix(XMMATRIX&);
 };
 

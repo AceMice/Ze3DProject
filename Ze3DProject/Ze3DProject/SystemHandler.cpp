@@ -102,7 +102,7 @@ bool SystemHandler::Frame() {
 	}
 
 	//Do the frame processing for the graphics object
-	result = this->graphicsH->Frame(this);
+	result = this->graphicsH->Frame(this->inputH);
 	if (!result) {
 		return false;
 	}

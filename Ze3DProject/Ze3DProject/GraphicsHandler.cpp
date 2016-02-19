@@ -93,7 +93,7 @@ bool GraphicsHandler::Render(InputHandler* inputH)
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
 	//Generate the view matrix based on the camera's position
-	this->cameraH->Render();
+	this->cameraH->Render(inputH);
 
 	//Get the world, view, and projection matrices from the camera and d3d objects
 	this->direct3DH->GetWorldMatrix(worldMatrix);
