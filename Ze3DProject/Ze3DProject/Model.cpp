@@ -121,6 +121,7 @@ bool Model::InitializeBuffers(ID3D11Device* device)
 	//indices[2] = 2;	//Bottom right
 
 	//Set the description of the static vertex buffer
+	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	vertexBufferDesc.ByteWidth = sizeof(Vertex) * this->vertexCount;
 	vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
@@ -129,6 +130,7 @@ bool Model::InitializeBuffers(ID3D11Device* device)
 	vertexBufferDesc.StructureByteStride = 0;
 
 	//Give the subresource structure a pointer to the vertex data
+	ZeroMemory(&vertexData, sizeof(vertexData));
 	vertexData.pSysMem = vertices;
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
@@ -140,6 +142,7 @@ bool Model::InitializeBuffers(ID3D11Device* device)
 	}
 
 	//Set up the description of the static index buffer
+	ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
 	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	indexBufferDesc.ByteWidth = sizeof(unsigned long) * this->indexCount;
 	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
@@ -147,6 +150,7 @@ bool Model::InitializeBuffers(ID3D11Device* device)
 	indexBufferDesc.MiscFlags = 0;
 	indexBufferDesc.StructureByteStride = 0;
 
+	ZeroMemory(&indexData, sizeof(indexData));
 	indexData.pSysMem = indices;
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;
@@ -240,12 +244,15 @@ bool Model::LoadObj(char* filename, Vertex*& outputVertices, unsigned long*& out
 	XMFLOAT3 tempVertex;
 	XMFLOAT2 tempUV;
 	XMFLOAT3 tempNormal;
-	XMINT3 vertexIndex;
-	XMINT3 uvIndex;
-	XMINT3 normalIndex;
+	unsigned int vertexIndex[3];
+	unsigned int uvIndex[3];
+	unsigned int normalIndex[3];
 	std::vector<XMFLOAT3> tempVertices;
 	std::vector<XMFLOAT2> tempUvs;
 	std::vector<XMFLOAT3> tempNormals;
+	std::vector<unsigned int> vertexIndices;
+	std::vector<unsigned int> uvIndices;
+	std::vector<unsigned int> normalIndices;
 	std::string line;
 	std::string junks;
 	char junk;
@@ -274,20 +281,20 @@ bool Model::LoadObj(char* filename, Vertex*& outputVertices, unsigned long*& out
 					//sscanf_s(line.c_str(), "%f %f\n", &tempUV.x, &tempUV.y);
 					tempUvs.push_back(tempUV);
 				}
-				else if (line.at(1) == 'n') {
-					ss.clear();
-					ss.str(line);
-					ss >> junks >> tempNormal.x >> tempNormal.y >> tempNormal.z;
-					//sscanf_s(line.c_str(), "%f %f %f\n", &tempNormal.x, &tempNormal.y, &tempNormal.z);
-					tempNormals.push_back(tempNormal);
-				}
+				//else if (line.at(1) == 'n') {
+				//	ss.clear();
+				//	ss.str(line);
+				//	ss >> junks >> tempNormal.x >> tempNormal.y >> tempNormal.z;
+				//	//sscanf_s(line.c_str(), "%f %f %f\n", &tempNormal.x, &tempNormal.y, &tempNormal.z);
+				//	tempNormals.push_back(tempNormal);
+				//}
 			}
 			else if (line.at(0) == 'f') {
 				ss.clear();
 				ss.str(line);
-				ss >> junk >> vertexIndex.x >> junk >> uvIndex.x >> junk >> normalIndex.x
-					>> vertexIndex.y >> junk >> uvIndex.y >> junk >> normalIndex.y
-					>> vertexIndex.z >> junk >> uvIndex.z >> junk >> normalIndex.z;
+				ss >> junk >> vertexIndex[0] >> junk >> uvIndex[0] >> junk >> normalIndex[0]
+					>> vertexIndex[1] >> junk >> uvIndex[1] >> junk >> normalIndex[1]
+					>> vertexIndex[2] >> junk >> uvIndex[2] >> junk >> normalIndex[2];
 				/*int matches = sscanf_s(line.c_str(), "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex.x, &uvIndex.x, &normalIndex.x,
 					&vertexIndex.y, &uvIndex.y, &normalIndex.y, &vertexIndex.z, &uvIndex.z, &normalIndex.z);
 				if (matches != 9) {
@@ -296,17 +303,38 @@ bool Model::LoadObj(char* filename, Vertex*& outputVertices, unsigned long*& out
 				/*if (tempVertices.size() != tempUvs.size() || tempUvs.size() != tempNormals.size()) {
 				return false;
 				}*/
-				if (!outputVertices) {
-					size = tempVertices.size();
-					outputVertices = new Vertex[size];
-				}
-				outputVertices[vertexIndex.x - 1].position = tempVertices.at(vertexIndex.x - 1);
-				outputVertices[vertexIndex.x - 1].texture = tempUvs.at(vertexIndex.x - 1);
-				outputVertices[vertexIndex.x - 1].normal = tempNormals.at(vertexIndex.x - 1);
+				vertexIndices.push_back(vertexIndex[0]);
+				vertexIndices.push_back(vertexIndex[1]);
+				vertexIndices.push_back(vertexIndex[2]);
+				uvIndices.push_back(uvIndex[0]);
+				uvIndices.push_back(uvIndex[1]);
+				uvIndices.push_back(uvIndex[2]);
 			}
 		}
-		
+
 	}
+	
+	//outputVertices[vertexIndex.x - 1].position = tempVertices.at(vertexIndex.x - 1);
+	//outputVertices[vertexIndex.x - 1].texture = tempUvs.at(vertexIndex.x - 1);
+	////outputVertices[vertexIndex.x - 1].normal = tempNormals.at(vertexIndex.x - 1);
+	//outputVertices[vertexIndex.y - 1].position = tempVertices.at(vertexIndex.y - 1);
+	//outputVertices[vertexIndex.y - 1].texture = tempUvs.at(vertexIndex.y - 1);
+
+	//outputVertices[vertexIndex.z - 1].position = tempVertices.at(vertexIndex.z - 1);
+	//outputVertices[vertexIndex.z - 1].texture = tempUvs.at(vertexIndex.z - 1);
+
+	if (vertexIndices.size() <= 0) {
+		return false;
+	}
+
+	size = vertexIndices.size();
+	outputVertices = new Vertex[size];
+
+	for (int i = 0; i < size; i++) {
+		outputVertices[i].position = tempVertices.at(vertexIndices.at(i) - 1);
+		outputVertices[i].texture = tempUvs.at(uvIndices.at(i) - 1);
+	}
+
 	outputIndices = new unsigned long[size];
 	for (int i = 0; i < size; i++) {
 		outputIndices[i] = i;
