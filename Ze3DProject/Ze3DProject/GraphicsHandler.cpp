@@ -1,5 +1,7 @@
 #include "GraphicsHandler.h"
 
+float rotation = 0.0;
+
 GraphicsHandler::GraphicsHandler()
 {
 	this->direct3DH = nullptr;
@@ -102,6 +104,10 @@ bool GraphicsHandler::Render()
 	//Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing
 	this->modelH->Render(this->direct3DH->GetDeviceContext());
 
+	//ROTATION//
+	rotation += 0.001;
+	worldMatrix = DirectX::XMMatrixRotationY(rotation);
+	
 	//Render the model using the color shader
 	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->modelH->GetIndexCount(), 
 									worldMatrix, viewMatrix, projectionMatrix, this->modelH->GetTexture());

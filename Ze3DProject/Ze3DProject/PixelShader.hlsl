@@ -14,7 +14,7 @@ float4 main(PSInput input) : SV_TARGET
 	float3 s = shaderTexture.Sample(shaderSampler, input.tex).rgb;	//Texture color for the current pixel
 
 	float3 outVec = (float4(0,0,-6,1) - input.worldPos).xyz;	//(0,0,-6,1)Position of light i worldspace, camera is at (0,0,-5)
-	normalize(outVec);
+	outVec = normalize(outVec);
 	float value = saturate(dot(input.normal, outVec));
 
 	//Calculate new color
