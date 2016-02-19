@@ -35,7 +35,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Set the initial position of the camera
-	this->cameraH->SetPosition(0.0f, 0.0f, -5.0f);
+	this->cameraH->SetPosition(0.0f, 0.0f, -10.0f);
 
 	// Create the model object.
 	this->modelH = new Model;

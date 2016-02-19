@@ -67,8 +67,8 @@ ID3D11ShaderResourceView* Model::GetTexture()
 
 bool Model::InitializeBuffers(ID3D11Device* device) 
 {
-	Vertex* vertices;
-	unsigned long* indices;
+	Vertex* vertices = nullptr;
+	unsigned long* indices = nullptr;
 	int size = 0;
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	D3D11_BUFFER_DESC indexBufferDesc;
@@ -77,7 +77,7 @@ bool Model::InitializeBuffers(ID3D11Device* device)
 	HRESULT hresult;
 	bool result;
 
-	result = this->LoadObj("", vertices, indices, size);
+	result = this->LoadObj("../Ze3DProject/OBJ/Pyramid.obj", vertices, indices, size);
 	if (!result) {
 		return false;
 	}
@@ -235,7 +235,7 @@ void Model::ReleaseTexture()
 	return;
 }
 
-bool Model::LoadObj(char* filename, Vertex* outputVertices, unsigned long* outputIndices, int& size)
+bool Model::LoadObj(char* filename, Vertex*& outputVertices, unsigned long*& outputIndices, int& size)
 {
 	XMFLOAT3 tempVertex;
 	XMFLOAT2 tempUV;
@@ -247,46 +247,67 @@ bool Model::LoadObj(char* filename, Vertex* outputVertices, unsigned long* outpu
 	std::vector<XMFLOAT2> tempUvs;
 	std::vector<XMFLOAT3> tempNormals;
 	std::string line;
+	std::string junks;
+	char junk;
+	std::stringstream ss;
 	std::ifstream file;
 
 	file.open(filename);
+	if (!file.is_open()) {
+		return false;
+	}
 
 	while (std::getline(file, line)) {
-		if (line.at(0) == 'v') {
-			if (line.at(1) == ' ') {
-				sscanf(line.c_str(), "%f %f %f\n", &tempVertex.x, &tempVertex.y, &tempVertex.z);
-				tempVertices.push_back(tempVertex);
+		if (line.size() > 0) {
+			if (line.at(0) == 'v') {
+				if (line.at(1) == ' ') {
+					ss.clear();
+					ss.str(line);
+					ss >> junk >> tempVertex.x >> tempVertex.y >> tempVertex.z;
+					//sscanf_s(line.c_str(), "%f %f %f\n", &tempVertex.x, &tempVertex.y, &tempVertex.z);
+					tempVertices.push_back(tempVertex);
+				}
+				else if (line.at(1) == 't') {
+					ss.clear();
+					ss.str(line);
+					ss >> junks >> tempUV.x >> tempUV.y;
+					//sscanf_s(line.c_str(), "%f %f\n", &tempUV.x, &tempUV.y);
+					tempUvs.push_back(tempUV);
+				}
+				else if (line.at(1) == 'n') {
+					ss.clear();
+					ss.str(line);
+					ss >> junks >> tempNormal.x >> tempNormal.y >> tempNormal.z;
+					//sscanf_s(line.c_str(), "%f %f %f\n", &tempNormal.x, &tempNormal.y, &tempNormal.z);
+					tempNormals.push_back(tempNormal);
+				}
 			}
-			else if (line.at(1) == 't') {
-				sscanf(line.c_str(), "%f %f\n", &tempUV.x, &tempUV.y);
-				tempUvs.push_back(tempUV);
-			}
-			else if (line.at(1) == 'n') {
-				sscanf(line.c_str(), "%f %f %f\n", &tempNormal.x, &tempNormal.y, &tempNormal.z);
-				tempNormals.push_back(tempNormal);
+			else if (line.at(0) == 'f') {
+				ss.clear();
+				ss.str(line);
+				ss >> junk >> vertexIndex.x >> junk >> uvIndex.x >> junk >> normalIndex.x
+					>> vertexIndex.y >> junk >> uvIndex.y >> junk >> normalIndex.y
+					>> vertexIndex.z >> junk >> uvIndex.z >> junk >> normalIndex.z;
+				/*int matches = sscanf_s(line.c_str(), "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex.x, &uvIndex.x, &normalIndex.x,
+					&vertexIndex.y, &uvIndex.y, &normalIndex.y, &vertexIndex.z, &uvIndex.z, &normalIndex.z);
+				if (matches != 9) {
+					return false;
+				}*/
+				/*if (tempVertices.size() != tempUvs.size() || tempUvs.size() != tempNormals.size()) {
+				return false;
+				}*/
+				if (!outputVertices) {
+					size = tempVertices.size();
+					outputVertices = new Vertex[size];
+				}
+				outputVertices[vertexIndex.x - 1].position = tempVertices.at(vertexIndex.x - 1);
+				outputVertices[vertexIndex.x - 1].texture = tempUvs.at(vertexIndex.x - 1);
+				outputVertices[vertexIndex.x - 1].normal = tempNormals.at(vertexIndex.x - 1);
 			}
 		}
-		else if (line.at(0) == 'f') {
-			int matches = sscanf(line.c_str(), "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex.x, &uvIndex.x, &normalIndex.x, 
-				&vertexIndex.y, &uvIndex.y, &normalIndex.y, &vertexIndex.z, &uvIndex.z, &normalIndex.z);
-			if (matches != 9) {
-				return false;
-			}
-			if (tempVertices.size() != tempUvs.size() || tempUvs.size() != tempNormals.size()) {
-				return false;
-			}
-			if (!outputVertices) {
-				size = tempVertices.size();
-				outputVertices = new Vertex[size];
-			}
-			if (!outputIndices) {
-				outputIndices = new unsigned long[size];
-			}
-			outputVertices[vertexIndex.x - 1].position = tempVertices.at(vertexIndex.x - 1);
-			outputVertices[vertexIndex.x - 1].texture = tempUvs.at(vertexIndex.x - 1);
-			outputVertices[vertexIndex.x - 1].normal = tempNormals.at(vertexIndex.x - 1);
-		}
+		
 	}
+	outputIndices = new unsigned long[size];
 	for (int i = 0; i < size; i++) {
 		outputIndices[i] = i;
 	}

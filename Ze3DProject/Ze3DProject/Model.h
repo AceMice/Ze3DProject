@@ -5,6 +5,7 @@
 #include<DirectXMath.h>
 #include<fstream>
 #include<string>
+#include<sstream>
 #include<vector>
 using namespace DirectX;
 
@@ -31,7 +32,7 @@ private:
 	void RenderBuffers(ID3D11DeviceContext*);
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, char*);
 	void ReleaseTexture();
-	bool LoadObj(char*, Vertex*, unsigned long*, int&);
+	bool LoadObj(char*, Vertex*&, unsigned long*&, int&);
 
 public:
 	Model();
