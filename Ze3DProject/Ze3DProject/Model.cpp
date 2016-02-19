@@ -69,7 +69,8 @@ bool Model::InitializeBuffers(ID3D11Device* device)
 {
 	Vertex* vertices = nullptr;
 	unsigned long* indices = nullptr;
-	int size = 0;
+	int sizeVertices = 0;
+	int sizeIndices = 0;
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	D3D11_BUFFER_DESC indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData;
@@ -77,14 +78,14 @@ bool Model::InitializeBuffers(ID3D11Device* device)
 	HRESULT hresult;
 	bool result;
 
-	result = this->LoadObj("../Ze3DProject/OBJ/Pyramid.obj", vertices, indices, size);
+	result = this->LoadObj("../Ze3DProject/OBJ/Pyramid.obj", vertices, indices, sizeVertices, sizeIndices);
 	if (!result) {
 		return false;
 	}
 	//Set the number of vertices in the vertex array
-	this->vertexCount = size;
+	this->vertexCount = sizeVertices;
 	//Set the numer of indices in the index array
-	this->indexCount = size;
+	this->indexCount = sizeIndices;
 
 	////SUBJECT TO CHANGE//
 	////Set the number of vertices in the vertex array
@@ -239,7 +240,7 @@ void Model::ReleaseTexture()
 	return;
 }
 
-bool Model::LoadObj(char* filename, Vertex*& outputVertices, unsigned long*& outputIndices, int& size)
+bool Model::LoadObj(char* filename, Vertex*& outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices)
 {
 	XMFLOAT3 tempVertex;
 	XMFLOAT2 tempUV;
@@ -323,21 +324,21 @@ bool Model::LoadObj(char* filename, Vertex*& outputVertices, unsigned long*& out
 	//outputVertices[vertexIndex.z - 1].position = tempVertices.at(vertexIndex.z - 1);
 	//outputVertices[vertexIndex.z - 1].texture = tempUvs.at(vertexIndex.z - 1);
 
-	if (vertexIndices.size() <= 0) {
+	if (vertexIndices.size() == 0 || tempVertices.size() == 0) {
 		return false;
 	}
 
-	size = vertexIndices.size();
-	outputVertices = new Vertex[size];
+	sizeVertices = tempVertices.size();
+	sizeIndices = vertexIndices.size();
+	outputVertices = new Vertex[sizeVertices];
+	outputIndices = new unsigned long[sizeIndices];
 
-	for (int i = 0; i < size; i++) {
-		outputVertices[i].position = tempVertices.at(vertexIndices.at(i) - 1);
-		outputVertices[i].texture = tempUvs.at(uvIndices.at(i) - 1);
+	for (int i = 0; i < sizeVertices; i++) {
+		outputVertices[i].position = tempVertices.at(i);
+		outputVertices[i].texture = tempUvs.at(i);
 	}
-
-	outputIndices = new unsigned long[size];
-	for (int i = 0; i < size; i++) {
-		outputIndices[i] = i;
+	for (int i = 0; i < sizeIndices; i++) {
+		outputIndices[i] = vertexIndices.at(i) - 1;
 	}
 
 	return true;
