@@ -69,45 +69,56 @@ bool Model::InitializeBuffers(ID3D11Device* device)
 {
 	Vertex* vertices;
 	unsigned long* indices;
+	int size = 0;
 	D3D11_BUFFER_DESC vertexBufferDesc;
 	D3D11_BUFFER_DESC indexBufferDesc;
 	D3D11_SUBRESOURCE_DATA vertexData;
 	D3D11_SUBRESOURCE_DATA indexData;
 	HRESULT hresult;
+	bool result;
 
-	//SUBJECT TO CHANGE//
+	result = this->LoadObj("", vertices, indices, size);
+	if (!result) {
+		return false;
+	}
 	//Set the number of vertices in the vertex array
-	this->vertexCount = 3;
+	this->vertexCount = size;
 	//Set the numer of indices in the index array
-	this->indexCount = 3;
+	this->indexCount = size;
 
-	//Create the vertex array
-	vertices = new Vertex[this->vertexCount];
-	if (!vertices) {
-		return false;
-	}
+	////SUBJECT TO CHANGE//
+	////Set the number of vertices in the vertex array
+	//this->vertexCount = 3;
+	////Set the numer of indices in the index array
+	//this->indexCount = 3;
 
-	//Create the index array
-	indices = new unsigned long[this->indexCount];
-	if (!indices) {
-		return false;
-	}
+	////Create the vertex array
+	//vertices = new Vertex[this->vertexCount];
+	//if (!vertices) {
+	//	return false;
+	//}
 
-	//Load the vertex array with data
-	//Order is important, otherwise the triangle will be facing the opposite direction
-	vertices[0].position = XMFLOAT3(-1.0, -1.0f, 0.0f); //Bottom left
-	vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
+	////Create the index array
+	//indices = new unsigned long[this->indexCount];
+	//if (!indices) {
+	//	return false;
+	//}
 
-	vertices[1].position = XMFLOAT3(0.0, 1.0f, 0.0f); //Top Middle
-	vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
+	////Load the vertex array with data
+	////Order is important, otherwise the triangle will be facing the opposite direction
+	//vertices[0].position = XMFLOAT3(-1.0, -1.0f, 0.0f); //Bottom left
+	//vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
 
-	vertices[2].position = XMFLOAT3(1.0, -1.0f, 0.0f); //Bottom right
-	vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
+	//vertices[1].position = XMFLOAT3(0.0, 1.0f, 0.0f); //Top Middle
+	//vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
 
-	//Load the index array with data
-	indices[0] = 0;	//Bottom left
-	indices[1] = 1;	//Top Middle
-	indices[2] = 2;	//Bottom right
+	//vertices[2].position = XMFLOAT3(1.0, -1.0f, 0.0f); //Bottom right
+	//vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
+
+	////Load the index array with data
+	//indices[0] = 0;	//Bottom left
+	//indices[1] = 1;	//Top Middle
+	//indices[2] = 2;	//Bottom right
 
 	//Set the description of the static vertex buffer
 	vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -224,16 +235,17 @@ void Model::ReleaseTexture()
 	return;
 }
 
-bool Model::LoadObj(char* filename)
+bool Model::LoadObj(char* filename, Vertex* outputVertices, unsigned long* outputIndices, int& size)
 {
 	XMFLOAT3 tempVertex;
 	XMFLOAT2 tempUV;
 	XMFLOAT3 tempNormal;
-	XMFLOAT3X3 tempFaces;
-	std::vector<XMFLOAT3> vertices;
-	std::vector<XMFLOAT2> uvs;
-	std::vector<XMFLOAT3> normals;
-	std::vector<XMFLOAT3X3> faces;
+	XMINT3 vertexIndex;
+	XMINT3 uvIndex;
+	XMINT3 normalIndex;
+	std::vector<XMFLOAT3> tempVertices;
+	std::vector<XMFLOAT2> tempUvs;
+	std::vector<XMFLOAT3> tempNormals;
 	std::string line;
 	std::ifstream file;
 
@@ -242,23 +254,41 @@ bool Model::LoadObj(char* filename)
 	while (std::getline(file, line)) {
 		if (line.at(0) == 'v') {
 			if (line.at(1) == ' ') {
-				sscanf(line.c_str(), " %f %f %f ", &tempVertex.x, &tempVertex.y, &tempVertex.z);
-				vertices.push_back(tempVertex);
+				sscanf(line.c_str(), "%f %f %f\n", &tempVertex.x, &tempVertex.y, &tempVertex.z);
+				tempVertices.push_back(tempVertex);
 			}
 			else if (line.at(1) == 't') {
-				sscanf(line.c_str(), " %f %f ", &tempUV.x, &tempUV.y);
-				uvs.push_back(tempUV);
+				sscanf(line.c_str(), "%f %f\n", &tempUV.x, &tempUV.y);
+				tempUvs.push_back(tempUV);
 			}
 			else if (line.at(1) == 'n') {
-				sscanf(line.c_str(), " %f %f %f ", &tempNormal.x, &tempNormal.y, &tempNormal.z);
-				normals.push_back(tempNormal);
+				sscanf(line.c_str(), "%f %f %f\n", &tempNormal.x, &tempNormal.y, &tempNormal.z);
+				tempNormals.push_back(tempNormal);
 			}
 		}
 		else if (line.at(0) == 'f') {
-			sscanf(line.c_str(), " %f %f %f %f %f %f %f %f %f ", &tempFaces._11, &tempFaces._12, &tempFaces._13, 
-				&tempFaces._21, &tempFaces._22, &tempFaces._23, &tempFaces._31, &tempFaces._32, &tempFaces._33);
-			faces.push_back(tempFaces);
+			int matches = sscanf(line.c_str(), "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex.x, &uvIndex.x, &normalIndex.x, 
+				&vertexIndex.y, &uvIndex.y, &normalIndex.y, &vertexIndex.z, &uvIndex.z, &normalIndex.z);
+			if (matches != 9) {
+				return false;
+			}
+			if (tempVertices.size() != tempUvs.size() || tempUvs.size() != tempNormals.size()) {
+				return false;
+			}
+			if (!outputVertices) {
+				size = tempVertices.size();
+				outputVertices = new Vertex[size];
+			}
+			if (!outputIndices) {
+				outputIndices = new unsigned long[size];
+			}
+			outputVertices[vertexIndex.x - 1].position = tempVertices.at(vertexIndex.x - 1);
+			outputVertices[vertexIndex.x - 1].texture = tempUvs.at(vertexIndex.x - 1);
+			outputVertices[vertexIndex.x - 1].normal = tempNormals.at(vertexIndex.x - 1);
 		}
+	}
+	for (int i = 0; i < size; i++) {
+		outputIndices[i] = i;
 	}
 
 	return true;
