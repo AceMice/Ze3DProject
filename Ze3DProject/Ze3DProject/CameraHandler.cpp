@@ -100,6 +100,20 @@ void CameraHandler::Render(InputHandler* inputH)
 			this->positionZ);
 	}
 
+	if (inputH->IsKeyDown(69)) {	//E
+		this->SetRotation(
+			this->rotationX,
+			this->rotationY - 0.01,
+			this->rotationZ);
+	}
+	
+	if (inputH->IsKeyDown(81)) {	//Q
+		this->SetRotation(
+			this->rotationX,
+			this->rotationY + 0.01,
+			this->rotationZ);
+	}
+
 
 	//Set the yaw (Y axis), pitch (X axis), and roll (Z axis) rotations in radians
 	pitch = this->rotationX * 0.0174532925f;

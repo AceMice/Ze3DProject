@@ -104,8 +104,8 @@ bool GraphicsHandler::Render(InputHandler* inputH)
 	this->modelH->Render(this->direct3DH->GetDeviceContext());
 
 	//ROTATION//
-	rotation += 0.001;
-	worldMatrix = DirectX::XMMatrixRotationY(rotation);
+	//rotation += 0.001;
+	//worldMatrix = DirectX::XMMatrixRotationY(rotation);
 	//Render the model using the color shader
 	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->modelH->GetIndexCount(), 
 									worldMatrix, viewMatrix, projectionMatrix, this->modelH->GetTexture());
