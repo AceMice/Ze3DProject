@@ -26,6 +26,7 @@ private:
 	int vertexCount;
 	int indexCount;
 	Texture* texture;
+	XMMATRIX worldMatrix;
 
 	bool InitializeBuffers(ID3D11Device*, char*);
 	void ShutdownBuffers();
@@ -44,6 +45,8 @@ public:
 	void Render(ID3D11DeviceContext*);
 
 	int GetIndexCount();
+	void GetWorldMatrix(XMMATRIX&);
+	void SetWorldMatrix(XMMATRIX);
 
 	ID3D11ShaderResourceView* GetTexture();
 };

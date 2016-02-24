@@ -6,6 +6,7 @@ Model::Model()
 	this->vertexBuffer = nullptr;
 	this->indexBuffer = nullptr;
 	this->texture = nullptr;
+	this->worldMatrix = XMMatrixIdentity();
 }
 
 Model::Model(const Model& originalObj)
@@ -344,4 +345,16 @@ bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long
 	}
 
 	return true;
+}
+
+void Model::GetWorldMatrix(XMMATRIX& worldMatrix)
+{
+	worldMatrix = this->worldMatrix;
+	return;
+}
+
+void Model::SetWorldMatrix(XMMATRIX worldMatrix)
+{
+	this->worldMatrix = worldMatrix;
+	return;
 }

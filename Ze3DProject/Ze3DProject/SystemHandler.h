@@ -13,7 +13,7 @@ private:
 	InputHandler* inputH;
 	void InitWindow(int& screenWidth, int& screenHeight);
 	void ShutdownWindow();
-	bool Frame();
+	bool Frame(float);
 public:
 	SystemHandler();
 	~SystemHandler();

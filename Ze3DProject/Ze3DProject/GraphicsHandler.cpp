@@ -7,6 +7,8 @@ GraphicsHandler::GraphicsHandler()
 	this->model2 = nullptr;
 	this->cameraH = nullptr;
 	this->shaderH = nullptr;
+
+	this->rotY = 0.0f;
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -46,7 +48,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Initialize the model1 object
-	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "testModel");
+	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "myStar");
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->model1->Initialize", L"Error", MB_OK);
@@ -61,7 +63,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Initialize the model2 object
-	result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "myStar");
+	result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "testModel");
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->model2->Initialize", L"Error", MB_OK);
@@ -87,9 +89,14 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	return true;
 }
 
-bool GraphicsHandler::Frame()
+bool GraphicsHandler::Frame(float dTime)
 {
 	bool result;
+	XMMATRIX model1World;
+	
+	this->rotY += dTime / 700000;
+	model1World = XMMatrixRotationY(this->rotY);
+	this->model1->SetWorldMatrix(model1World);
 
 	result = this->Render();
 	if (!result) {
@@ -110,10 +117,12 @@ bool GraphicsHandler::Render()
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Render();
 
-	//Get the world, view, and projection matrices from the camera and d3d objects
-	this->direct3DH->GetWorldMatrix(worldMatrix);
+	//Get the view, and projection matrices from the camera and d3d objects
 	this->cameraH->GetViewMatrix(viewMatrix);
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
+
+	//Get the world matrix from model1
+	this->model1->GetWorldMatrix(worldMatrix);
 
 	//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
 	this->model1->Render(this->direct3DH->GetDeviceContext());
@@ -125,6 +134,9 @@ bool GraphicsHandler::Render()
 	{
 		return false;
 	}
+
+	//Get the world matrix from model2
+	this->model2->GetWorldMatrix(worldMatrix);
 
 	//Put the model2 vertex and index buffers on the graphics pipeline to prepare them for drawing
 	this->model2->Render(this->direct3DH->GetDeviceContext());

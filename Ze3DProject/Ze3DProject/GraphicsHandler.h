@@ -21,12 +21,15 @@ private:
 	ShaderHandler* shaderH;
 
 	bool Render();
+
+	//For testing
+	float rotY;
 public:
 	GraphicsHandler();
 	~GraphicsHandler();
 
 	bool Initialize(int, int, HWND);
-	bool Frame();
+	bool Frame(float);
 	void Shutdown();
 };
 

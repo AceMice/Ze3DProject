@@ -94,7 +94,7 @@ void SystemHandler::InitWindow(int& screenWidth, int& screenHeight) {
 	return;
 }
 
-bool SystemHandler::Frame() {
+bool SystemHandler::Frame(float dTime) {
 	bool result;
 
 	//Cheeck if the user pressed escape and wants to exit the application
@@ -103,7 +103,7 @@ bool SystemHandler::Frame() {
 	}
 
 	//Do the frame processing for the graphics object
-	result = this->graphicsH->Frame();
+	result = this->graphicsH->Frame(dTime);
 	if (!result) {
 		return false;
 	}
@@ -203,7 +203,7 @@ void SystemHandler::Run() {
 			elapsedTime.QuadPart /= frequency.QuadPart;
 
 			if (elapsedTime.QuadPart > (1000000 / fpsLimit)) { //If it's time to render a frame ->
-				result = this->Frame(); //do the frame processing
+				result = this->Frame((float)elapsedTime.QuadPart); //do the frame processing
 				if (!result) {
 					done = true;
 				}
