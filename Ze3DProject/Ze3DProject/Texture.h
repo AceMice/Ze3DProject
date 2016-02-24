@@ -3,6 +3,7 @@
 
 #include <d3d11.h>
 #include <stdio.h>
+#include <string>
 
 class Texture {
 
@@ -20,7 +21,7 @@ private:
 		unsigned char data2;
 	};
 
-	bool LoadTarga(char*, int&, int&);
+	bool LoadTarga(const char*, int&, int&);
 
 
 public:

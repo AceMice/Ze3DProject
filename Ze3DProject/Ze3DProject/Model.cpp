@@ -29,7 +29,7 @@ bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 	}
 
 	//Load texture for this model
-	result = this->LoadTexture(device, deviceContext, "../Ze3DProject/Textures/stone01.tga");
+	result = this->LoadTexture(device, deviceContext, modelFilename);
 	if (!result) {
 		return false;
 	}

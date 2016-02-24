@@ -28,8 +28,11 @@ bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext
 	unsigned int rowPitch;
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 
+	std::string path = "../Ze3DProject/Textures/";
+	std::string format = ".tga";
+	std::string finalPath = path + filename + format;
 	//Load the targa image data into memory
-	result = this->LoadTarga(filename, height, width);
+	result = this->LoadTarga(finalPath.c_str(), height, width);
 	if (!result) {
 		return false;
 	}
@@ -109,7 +112,7 @@ ID3D11ShaderResourceView* Texture::GetTexture()
 	return this->textureView;
 }
 
-bool Texture::LoadTarga(char*filename, int&height, int& width) 
+bool Texture::LoadTarga(const char*filename, int&height, int& width) 
 {
 	int error, bpp, imageSize, index, i, j, k;
 	FILE* filePtr;
