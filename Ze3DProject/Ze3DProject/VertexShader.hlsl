@@ -4,6 +4,9 @@ cbuffer MatrixBuffer
 	matrix worldMatrix;
 	matrix viewMatrix;
 	matrix projectionMatrix;
+
+	float4 color;
+	bool hasTexture;
 };
 
 struct VertexInput

@@ -120,7 +120,7 @@ bool GraphicsHandler::Render()
 
 	//Render the model1 using the color shader
 	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model1->GetIndexCount(), 
-									worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture());
+									worldMatrix, viewMatrix, projectionMatrix, NULL, XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
 	if (!result)
 	{
 		return false;
@@ -131,7 +131,7 @@ bool GraphicsHandler::Render()
 
 	//Render the model2 using the color shader
 	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model2->GetIndexCount(),
-		worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture());
+		worldMatrix, viewMatrix, projectionMatrix, NULL, XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f));
 	if (!result)
 	{
 		return false;

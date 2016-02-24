@@ -1,6 +1,16 @@
 Texture2D shaderTexture;
 SamplerState shaderSampler;
 
+cbuffer MatrixBuffer
+{
+	matrix worldMatrix;
+	matrix viewMatrix;
+	matrix projectionMatrix;
+
+	float4 color;
+	bool hasTexture;
+};
+
 struct PixelInput
 {
 	float4 position : SV_POSITION;
@@ -9,6 +19,9 @@ struct PixelInput
 
 float4 main(PixelInput input) : SV_TARGET
 {
-	//return shaderTexture.Sample(shaderSampler, input.tex);
-	return float4(1.0f, 1.0f, 1.0f, 1.0f);
+	if (hasTexture) {
+		return shaderTexture.Sample(shaderSampler, input.tex);
+	}
+
+	return color;
 }
