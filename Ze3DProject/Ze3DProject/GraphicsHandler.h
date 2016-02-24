@@ -16,7 +16,8 @@ class GraphicsHandler {
 private:
 	D3DHandler* direct3DH;
 	CameraHandler* cameraH;
-	Model* modelH;
+	Model* model1;
+	Model* model2;
 	ShaderHandler* shaderH;
 
 	bool Render();

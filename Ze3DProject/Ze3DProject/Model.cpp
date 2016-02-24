@@ -18,18 +18,18 @@ Model::~Model()
 
 }
 
-bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* textureFilename) 
+bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename) 
 {
 	bool result;
 
 	//Initialze the vertex and index buffer
-	result = this->InitializeBuffers(device);
+	result = this->InitializeBuffers(device, modelFilename);
 	if (!result) {
 		return false;
 	}
 
 	//Load texture for this model
-	result = this->LoadTexture(device, deviceContext, textureFilename);
+	result = this->LoadTexture(device, deviceContext, "../Ze3DProject/Textures/stone01.tga");
 	if (!result) {
 		return false;
 	}
@@ -65,7 +65,7 @@ ID3D11ShaderResourceView* Model::GetTexture()
 	return this->texture->GetTexture();
 }
 
-bool Model::InitializeBuffers(ID3D11Device* device) 
+bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename) 
 {
 	Vertex* vertices = nullptr;
 	unsigned long* indices = nullptr;
@@ -77,8 +77,10 @@ bool Model::InitializeBuffers(ID3D11Device* device)
 	D3D11_SUBRESOURCE_DATA indexData;
 	HRESULT hresult;
 	bool result;
-
-	result = this->LoadObj("../Ze3DProject/OBJ/Pyramid.obj", vertices, indices, sizeVertices, sizeIndices);
+	std::string path = "../Ze3DProject/OBJ/";
+	std::string format = ".obj";
+	std::string finalPath = path + modelFilename + format;
+	result = this->LoadObj(finalPath.c_str(), vertices, indices, sizeVertices, sizeIndices);
 	if (!result) {
 		return false;
 	}
@@ -240,7 +242,7 @@ void Model::ReleaseTexture()
 	return;
 }
 
-bool Model::LoadObj(char* filename, Vertex*& outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices)
+bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices)
 {
 	XMFLOAT3 tempVertex;
 	XMFLOAT2 tempUV;
@@ -328,17 +330,17 @@ bool Model::LoadObj(char* filename, Vertex*& outputVertices, unsigned long*& out
 		return false;
 	}
 
-	sizeVertices = tempVertices.size();
+	sizeVertices = vertexIndices.size();
 	sizeIndices = vertexIndices.size();
-	outputVertices = new Vertex[sizeVertices];
+	outputVertices = new Vertex[sizeIndices];
 	outputIndices = new unsigned long[sizeIndices];
 
-	for (int i = 0; i < sizeVertices; i++) {
-		outputVertices[i].position = tempVertices.at(i);
-		outputVertices[i].texture = tempUvs.at(i);
+	for (int i = 0; i < sizeIndices; i++) {
+		outputVertices[i].position = tempVertices.at(vertexIndices.at(i) - 1);
+		outputVertices[i].texture = tempUvs.at(uvIndices.at(i) - 1);
 	}
 	for (int i = 0; i < sizeIndices; i++) {
-		outputIndices[i] = vertexIndices.at(i) - 1;
+		outputIndices[i] = i;
 	}
 
 	return true;

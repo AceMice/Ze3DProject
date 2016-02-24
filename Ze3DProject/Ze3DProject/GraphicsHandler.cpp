@@ -3,7 +3,8 @@
 GraphicsHandler::GraphicsHandler()
 {
 	this->direct3DH = nullptr;
-	this->modelH = nullptr;
+	this->model1 = nullptr;
+	this->model2 = nullptr;
 	this->cameraH = nullptr;
 	this->shaderH = nullptr;
 }
@@ -37,18 +38,33 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	//Set the initial position of the camera
 	this->cameraH->SetPosition(0.0f, 0.0f, -20.0f);
 
-	// Create the model object.
-	this->modelH = new Model;
-	if (!this->modelH)
+	// Create the model1 object.
+	this->model1 = new Model;
+	if (!this->model1)
 	{
 		return false;
 	}
 
-	//Initialize the model object
-	result = this->modelH->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "../Ze3DProject/Textures/stone01.tga");
+	//Initialize the model1 object
+	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "testModel");
 	if (!result)
 	{
-		MessageBox(hwnd, L"this->modelH->Initialize", L"Error", MB_OK);
+		MessageBox(hwnd, L"this->model1->Initialize", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the model2 object.
+	this->model2 = new Model;
+	if (!this->model2)
+	{
+		return false;
+	}
+
+	//Initialize the model2 object
+	result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "myStar");
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->model2->Initialize", L"Error", MB_OK);
 		return false;
 	}
 
@@ -99,12 +115,23 @@ bool GraphicsHandler::Render()
 	this->cameraH->GetViewMatrix(viewMatrix);
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
 
-	//Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing
-	this->modelH->Render(this->direct3DH->GetDeviceContext());
+	//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
+	this->model1->Render(this->direct3DH->GetDeviceContext());
 
-	//Render the model using the color shader
-	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->modelH->GetIndexCount(), 
-									worldMatrix, viewMatrix, projectionMatrix, this->modelH->GetTexture());
+	//Render the model1 using the color shader
+	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model1->GetIndexCount(), 
+									worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture());
+	if (!result)
+	{
+		return false;
+	}
+
+	//Put the model2 vertex and index buffers on the graphics pipeline to prepare them for drawing
+	this->model2->Render(this->direct3DH->GetDeviceContext());
+
+	//Render the model2 using the color shader
+	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model2->GetIndexCount(),
+		worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture());
 	if (!result)
 	{
 		return false;
@@ -126,12 +153,20 @@ void GraphicsHandler::Shutdown()
 		this->shaderH = 0;
 	}
 
-	//Release the Model object
-	if (this->modelH)
+	//Release the Model1 object
+	if (this->model1)
 	{
-		this->modelH->Shutdown();
-		delete this->modelH;
-		this->modelH = 0;
+		this->model1->Shutdown();
+		delete this->model1;
+		this->model1 = 0;
+	}
+
+	//Release the Model2 object
+	if (this->model2)
+	{
+		this->model2->Shutdown();
+		delete this->model2;
+		this->model2 = 0;
 	}
 
 	//Release the cameraHandler object

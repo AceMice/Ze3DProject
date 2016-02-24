@@ -27,12 +27,12 @@ private:
 	int indexCount;
 	Texture* texture;
 
-	bool InitializeBuffers(ID3D11Device*);
+	bool InitializeBuffers(ID3D11Device*, char*);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, char*);
 	void ReleaseTexture();
-	bool LoadObj(char*, Vertex*&, unsigned long*&, int&, int&);
+	bool LoadObj(const char*, Vertex*&, unsigned long*&, int&, int&);
 
 public:
 	Model();
