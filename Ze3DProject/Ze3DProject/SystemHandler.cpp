@@ -174,6 +174,12 @@ void SystemHandler::Run() {
 	bool done = false;
 	bool result;
 
+	LARGE_INTEGER frequency, currTime, prevTime, elapsedTime;
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&prevTime);
+
+	int fpsLimit = 60; //Limit the application fps
+
 	//Initialize the message structure
 	ZeroMemory(&msg, sizeof(MSG));
 
@@ -191,10 +197,17 @@ void SystemHandler::Run() {
 			done = true;
 		}
 		else {
-			//Otherwise do the frame processing
-			result = this->Frame();
-			if(!result){
-				done = true;
+			QueryPerformanceCounter(&currTime);
+			elapsedTime.QuadPart = currTime.QuadPart - prevTime.QuadPart;
+			elapsedTime.QuadPart *= 1000000;
+			elapsedTime.QuadPart /= frequency.QuadPart;
+
+			if (elapsedTime.QuadPart > (1000000 / fpsLimit)) { //If it's time to render a frame ->
+				result = this->Frame(); //do the frame processing
+				if (!result) {
+					done = true;
+				}
+				prevTime = currTime;
 			}
 		}
 	}
