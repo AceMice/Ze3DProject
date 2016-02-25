@@ -36,12 +36,12 @@ void ShaderHandler::Shutdown()
 }
 
 bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, 
-	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture)
+	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 color)
 {
 	bool result = false;
 
 	//Set shader parameters used for rendering
-	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture);
+	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, color);
 	if (!result) {
 		return false;
 	}
@@ -142,6 +142,14 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 	polygonLayout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	polygonLayout[1].InstanceDataStepRate = 0;
 
+	/*polygonLayout[2].SemanticName = "NORMAL";
+	polygonLayout[2].SemanticIndex = 0;
+	polygonLayout[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+	polygonLayout[2].InputSlot = 0;
+	polygonLayout[2].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+	polygonLayout[2].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+	polygonLayout[2].InstanceDataStepRate = 0;*/
+
 	//Get the number of elements in the layout
 	numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
 
@@ -233,7 +241,7 @@ void ShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd
 }
 
 bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, 
-	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture)
+	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 color)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -259,18 +267,29 @@ bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMA
 	dataPtr->view = viewMatrix;
 	dataPtr->projection = projectionMatrix;
 
+	dataPtr->color = color;
+	if (!texture) {
+		dataPtr->hasTexture = false;
+	}
+	else {
+		dataPtr->hasTexture = true;
+	}
+
 	//Unmap the constant buffer to give the GPU access agin
 	deviceContext->Unmap(this->matrixBuffer, 0);
 
 	//Set constant buffer position in vertex shader
 	bufferNumber = 0;
 
-	//Set the constant buffer in vertex shader with updated values
+	//Set the constant buffer in vertex and pixel shader with updated values
 	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &this->matrixBuffer);
+	deviceContext->PSSetConstantBuffers(bufferNumber, 1, &this->matrixBuffer);
 
-	//Set shader texture resource for pixel shader
-	deviceContext->PSSetShaderResources(0, 1, &texture);
-
+	if (texture) {
+		//Set shader texture resource for pixel shader
+		deviceContext->PSSetShaderResources(0, 1, &texture);
+	}
+	
 	return true;
 }
 

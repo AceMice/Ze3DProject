@@ -94,7 +94,7 @@ void SystemHandler::InitWindow(int& screenWidth, int& screenHeight) {
 	return;
 }
 
-bool SystemHandler::Frame() {
+bool SystemHandler::Frame(float dTime) {
 	bool result;
 	//Cheeck if the user pressed escape and wants to exit the application
 	if (this->inputH->IsKeyDown(VK_ESCAPE)) {
@@ -102,7 +102,8 @@ bool SystemHandler::Frame() {
 	}
 
 	//Do the frame processing for the graphics object
-	result = this->graphicsH->Frame(this->inputH);
+	result = this->graphicsH->Frame(dTime, this->inputH);
+
 	if (!result) {
 		return false;
 	}
@@ -173,6 +174,12 @@ void SystemHandler::Run() {
 	bool done = false;
 	bool result;
 
+	LARGE_INTEGER frequency, currTime, prevTime, elapsedTime;
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&prevTime);
+
+	int fpsLimit = 60; //Limit the application fps
+
 	//Initialize the message structure
 	ZeroMemory(&msg, sizeof(MSG));
 
@@ -191,10 +198,17 @@ void SystemHandler::Run() {
 		}
 
 		else {
-			//Otherwise do the frame processing
-			result = this->Frame();
-			if(!result){
-				done = true;
+			QueryPerformanceCounter(&currTime);
+			elapsedTime.QuadPart = currTime.QuadPart - prevTime.QuadPart;
+			elapsedTime.QuadPart *= 1000000;
+			elapsedTime.QuadPart /= frequency.QuadPart;
+
+			if (elapsedTime.QuadPart > (1000000 / fpsLimit)) { //If it's time to render a frame ->
+				result = this->Frame((float)elapsedTime.QuadPart); //do the frame processing
+				if (!result) {
+					done = true;
+				}
+				prevTime = currTime;
 			}
 		}
 	}

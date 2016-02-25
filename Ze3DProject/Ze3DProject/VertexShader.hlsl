@@ -4,12 +4,16 @@ cbuffer MatrixBuffer
 	matrix worldMatrix;
 	matrix viewMatrix;
 	matrix projectionMatrix;
+
+	float4 color;
+	bool hasTexture;
 };
 
 struct VertexInput
 {
 	float4 position : POSITION;
 	float2 tex : TEXCOORD0;
+	//float3 normal : NORMAL;
 };
 
 struct GSInput

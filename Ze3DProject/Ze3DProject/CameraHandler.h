@@ -23,6 +23,7 @@ public:
 	XMFLOAT3 GetRotation();
 
 	void Render(InputHandler*);
+	void updateCamera(InputHandler*);
 	void GetViewMatrix(XMMATRIX&);
 };
 

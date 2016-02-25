@@ -1,7 +1,17 @@
 Texture2D shaderTexture;
 SamplerState shaderSampler;
 
-struct PSInput
+cbuffer MatrixBuffer
+{
+	matrix worldMatrix;
+	matrix viewMatrix;
+	matrix projectionMatrix;
+
+	float4 color;
+	bool hasTexture;
+};
+
+struct PixelInput
 {
 	float4 pos : SV_POSITION;
 	float2 tex : TEXCOORD;
@@ -9,10 +19,17 @@ struct PSInput
 	float4 worldPos : POSITION;
 };
 
-float4 main(PSInput input) : SV_TARGET
+float4 main(PixelInput input) : SV_TARGET
 {
-	float3 s = shaderTexture.Sample(shaderSampler, input.tex).rgb;	//Texture color for the current pixel
+	float3 s;	//Texture color for the current pixel
 
+	if (hasTexture) {
+		s = shaderTexture.Sample(shaderSampler, input.tex).rgb;
+	}
+	else{
+		s = color;
+	}
+	
 	float3 outVec = (float4(0,0,-6,1) - input.worldPos).xyz;	//(0,0,-6,1)Position of light i worldspace, camera is at (0,0,-5)
 	outVec = normalize(outVec);
 	float value = saturate(dot(input.normal, outVec));
@@ -23,5 +40,4 @@ float4 main(PSInput input) : SV_TARGET
 	s.b = (0.8 * s.b * value) + (0.2 * s.b);
 
 	return float4(s, 1.0f);
-	//return shaderTexture.Sample(shaderSampler, input.tex);
 }

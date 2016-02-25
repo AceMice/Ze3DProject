@@ -301,9 +301,6 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 
 	this->projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth);
 
-	//Initialize the world matrix to the identity matrix.
-	this->worldMatrix = XMMatrixIdentity();
-
 	// Create an orthographic projection matrix for 2D rendering.
 	this->orthoMatrix = XMMatrixOrthographicLH((float)screenWidth, (float)screenHeight, screenNear, screenDepth);
 
@@ -406,12 +403,6 @@ ID3D11DeviceContext* D3DHandler::GetDeviceContext()
 void D3DHandler::GetProjectionMatrix(XMMATRIX& projectionMatrix)
 {
 	projectionMatrix = this->projectionMatrix;
-	return;
-}
-
-void D3DHandler::GetWorldMatrix(XMMATRIX& worldMatrix)
-{
-	worldMatrix = this->worldMatrix;
 	return;
 }
 

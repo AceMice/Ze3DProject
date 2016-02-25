@@ -3,6 +3,10 @@
 
 #include<d3d11.h>
 #include<DirectXMath.h>
+#include<fstream>
+#include<string>
+#include<sstream>
+#include<vector>
 using namespace DirectX;
 
 #include "Texture.h"
@@ -14,6 +18,7 @@ private:
 	struct Vertex {
 		XMFLOAT3 position;
 		XMFLOAT2 texture;
+		//XMFLOAT3 normal;
 	};
 
 	ID3D11Buffer* vertexBuffer;
@@ -21,12 +26,14 @@ private:
 	int vertexCount;
 	int indexCount;
 	Texture* texture;
+	XMMATRIX worldMatrix;
 
-	bool InitializeBuffers(ID3D11Device*);
+	bool InitializeBuffers(ID3D11Device*, char*);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, char*);
 	void ReleaseTexture();
+	bool LoadObj(const char*, Vertex*&, unsigned long*&, int&, int&);
 
 public:
 	Model();
@@ -38,6 +45,8 @@ public:
 	void Render(ID3D11DeviceContext*);
 
 	int GetIndexCount();
+	void GetWorldMatrix(XMMATRIX&);
+	void SetWorldMatrix(XMMATRIX);
 
 	ID3D11ShaderResourceView* GetTexture();
 };

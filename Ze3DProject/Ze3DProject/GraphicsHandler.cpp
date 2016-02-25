@@ -5,9 +5,12 @@ float rotation = 0.0;
 GraphicsHandler::GraphicsHandler()
 {
 	this->direct3DH = nullptr;
-	this->modelH = nullptr;
+	this->model1 = nullptr;
+	this->model2 = nullptr;
 	this->cameraH = nullptr;
 	this->shaderH = nullptr;
+
+	this->rotY = 0.0f;
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -37,20 +40,35 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Set the initial position of the camera
-	this->cameraH->SetPosition(0.0f, 0.0f, -5.0f);
+	this->cameraH->SetPosition(0.0f, 0.0f, -20.0f);
 
-	// Create the model object.
-	this->modelH = new Model;
-	if (!this->modelH)
+	// Create the model1 object.
+	this->model1 = new Model;
+	if (!this->model1)
 	{
 		return false;
 	}
 
-	//Initialize the model object
-	result = this->modelH->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "../Ze3DProject/Textures/stone01.tga");
+	//Initialize the model1 object
+	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "myStar");
 	if (!result)
 	{
-		MessageBox(hwnd, L"this->modelH->Initialize", L"Error", MB_OK);
+		MessageBox(hwnd, L"this->model1->Initialize", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the model2 object.
+	this->model2 = new Model;
+	if (!this->model2)
+	{
+		return false;
+	}
+
+	//Initialize the model2 object
+	result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "testModel");
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->model2->Initialize", L"Error", MB_OK);
 		return false;
 	}
 
@@ -73,9 +91,14 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	return true;
 }
 
-bool GraphicsHandler::Frame(InputHandler* inputH)
+bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 {
 	bool result;
+	XMMATRIX model1World;
+	
+	this->rotY += dTime / 700000;
+	model1World = XMMatrixRotationY(this->rotY);
+	this->model1->SetWorldMatrix(model1World);
 
 	result = this->Render(inputH);
 	if (!result) {
@@ -95,20 +118,34 @@ bool GraphicsHandler::Render(InputHandler* inputH)
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Render(inputH);
 
-	//Get the world, view, and projection matrices from the camera and d3d objects
-	this->direct3DH->GetWorldMatrix(worldMatrix);
+	//Get the view, and projection matrices from the camera and d3d objects
 	this->cameraH->GetViewMatrix(viewMatrix);
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
 
-	//Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing
-	this->modelH->Render(this->direct3DH->GetDeviceContext());
+	//Get the world matrix from model1
+	this->model1->GetWorldMatrix(worldMatrix);
 
-	//ROTATION//
-	//rotation += 0.001;
-	//worldMatrix = DirectX::XMMatrixRotationY(rotation);
-	//Render the model using the color shader
-	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->modelH->GetIndexCount(), 
-									worldMatrix, viewMatrix, projectionMatrix, this->modelH->GetTexture());
+	//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
+	this->model1->Render(this->direct3DH->GetDeviceContext());
+
+	//Render the model1 using the color shader
+	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model1->GetIndexCount(), 
+									worldMatrix, viewMatrix, projectionMatrix, NULL, XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
+	if (!result)
+	{
+		return false;
+	}
+
+	//Get the world matrix from model2
+	this->model2->GetWorldMatrix(worldMatrix);
+
+	//Put the model2 vertex and index buffers on the graphics pipeline to prepare them for drawing
+	this->model2->Render(this->direct3DH->GetDeviceContext());
+
+	//Render the model2 using the color shader
+	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model2->GetIndexCount(),
+		worldMatrix, viewMatrix, projectionMatrix, NULL, XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f));
+
 	if (!result)
 	{
 		return false;
@@ -130,12 +167,20 @@ void GraphicsHandler::Shutdown()
 		this->shaderH = 0;
 	}
 
-	//Release the Model object
-	if (this->modelH)
+	//Release the Model1 object
+	if (this->model1)
 	{
-		this->modelH->Shutdown();
-		delete this->modelH;
-		this->modelH = 0;
+		this->model1->Shutdown();
+		delete this->model1;
+		this->model1 = 0;
+	}
+
+	//Release the Model2 object
+	if (this->model2)
+	{
+		this->model2->Shutdown();
+		delete this->model2;
+		this->model2 = 0;
 	}
 
 	//Release the cameraHandler object
