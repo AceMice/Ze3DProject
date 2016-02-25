@@ -223,7 +223,7 @@ bool Model::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext
 	}
 
 	//Init texture object
-	result = this->texture->Initialize(device, deviceContext, filename);
+	result = this->texture->Initialize(device, deviceContext, filename, true);
 	if (!result) {
 		return false;
 	}

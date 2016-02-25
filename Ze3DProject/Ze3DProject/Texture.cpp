@@ -18,7 +18,7 @@ Texture::~Texture()
 
 }
 
-bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext, char* filename) 
+bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext, char* filename, bool isTarga) 
 {
 	bool result;
 	int height;
@@ -27,59 +27,69 @@ bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext
 	HRESULT hresult;
 	unsigned int rowPitch;
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	std::string format;
+	std::string finalPath;
 
 	std::string path = "../Ze3DProject/Textures/";
-	std::string format = ".tga";
-	std::string finalPath = path + filename + format;
-	//Load the targa image data into memory
-	result = this->LoadTarga(finalPath.c_str(), height, width);
-	if (!result) {
-		return false;
+	if (isTarga) {
+		format = ".tga";
+		finalPath = path + filename + format;
+
+		//Load the targa image data into memory
+		result = this->LoadTarga(finalPath.c_str(), height, width);
+		if (!result) {
+			return false;
+		}
+
+		//Setup the description of the texture
+		textureDesc.Height = height;
+		textureDesc.Width = width;
+		textureDesc.MipLevels = 0;
+		textureDesc.ArraySize = 1;
+		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+		//Create the empty texture
+		hresult = device->CreateTexture2D(&textureDesc, NULL, &this->texture);
+		if (FAILED(hresult)) {
+			return false;
+		}
+
+		//Set the row pitch of the targa data
+		rowPitch = (width * 4) * sizeof(unsigned char);
+
+		//Copy the targa image data into the texture
+		deviceContext->UpdateSubresource(this->texture, 0, NULL, this->targaData, rowPitch, 0);
+
+		//Setup the shader resource view description
+		srvDesc.Format = textureDesc.Format;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = -1;
+
+		//Create the shader resource view for the texture
+		hresult = device->CreateShaderResourceView(this->texture, &srvDesc, &this->textureView);
+		if (FAILED(hresult)) {
+			return false;
+		}
+
+		//Release the targa image data now that the image data has been loaded into the texture
+		delete[] this->targaData;
+		this->targaData = nullptr;
 	}
+	else {
+		format = ".jpg";
+		finalPath = path + filename + format;
 
-	//Setup the description of the texture
-	textureDesc.Height = height;
-	textureDesc.Width = width;
-	textureDesc.MipLevels = 0;
-	textureDesc.ArraySize = 1;
-	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	textureDesc.SampleDesc.Count = 1;
-	textureDesc.SampleDesc.Quality = 0;
-	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-	textureDesc.CPUAccessFlags = 0;
-	textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-
-	//Create the empty texture
-	hresult = device->CreateTexture2D(&textureDesc, NULL, &this->texture);
-	if (FAILED(hresult)) {
-		return false;
-	}
-
-	//Set the row pitch of the targa data
-	rowPitch = (width * 4) * sizeof(unsigned char);
-
-	//Copy the targa image data into the texture
-	deviceContext->UpdateSubresource(this->texture, 0, NULL, this->targaData, rowPitch, 0);
-
-	//Setup the shader resource view description
-	srvDesc.Format = textureDesc.Format;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = -1;
-
-	//Create the shader resource view for the texture
-	hresult = device->CreateShaderResourceView(this->texture, &srvDesc, &this->textureView);
-	if (FAILED(hresult)) {
-		return false;
 	}
 
 	//Generate mipmaps for this texture
 	deviceContext->GenerateMips(this->textureView);
-
-	//Release the targa image data now that the image data has been loaded into the texture
-	delete[] this->targaData;
-	this->targaData = nullptr;
 
 	return true;
 }

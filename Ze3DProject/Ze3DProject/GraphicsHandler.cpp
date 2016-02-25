@@ -94,9 +94,9 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	bool result;
 	XMMATRIX model1World;
 	
-	this->rotY += dTime / 700000;
+	this->rotY += dTime / 800000;
 	model1World = XMMatrixRotationY(this->rotY);
-	//this->model1->SetWorldMatrix(model1World);
+	this->model1->SetWorldMatrix(model1World);
 
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH);
