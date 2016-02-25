@@ -31,7 +31,7 @@ bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 	}
 
 	//Load texture for this model
-	result = this->LoadTexture(device, deviceContext, materialName);
+	result = this->LoadTexture(device, deviceContext, modelFilename);
 	if (!result) {
 		return false;
 	}

@@ -48,7 +48,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Initialize the model1 object
-	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "myStar");
+	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreHead");
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->model1->Initialize", L"Error", MB_OK);
@@ -94,13 +94,14 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	bool result;
 	XMMATRIX modelWorld;
 	
-	this->rotY += dTime / 800000;
+	/*this->rotY += dTime / 800000;
 	modelWorld = XMMatrixRotationY(this->rotY);
-	this->model1->SetWorldMatrix(modelWorld);
+	this->model1->SetWorldMatrix(modelWorld);*/
 
 	modelWorld = XMMatrixRotationY(2.5f);
 	modelWorld = XMMatrixScaling(0.6f, 0.6f, 0.6f) * modelWorld;
 	modelWorld = XMMatrixTranslation(0.0f, -5.0f, -3.0f) * modelWorld;
+	this->model1->SetWorldMatrix(modelWorld);
 	this->model2->SetWorldMatrix(modelWorld);
 
 	//Generate the view matrix based on the camera's position
@@ -133,7 +134,7 @@ bool GraphicsHandler::Render()
 
 	//Render the model1 using the color shader
 	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model1->GetIndexCount(), 
-									worldMatrix, viewMatrix, projectionMatrix, NULL, XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
+								worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
 	if (!result)
 	{
 		return false;
@@ -147,7 +148,7 @@ bool GraphicsHandler::Render()
 
 	//Render the model2 using the color shader
 	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model2->GetIndexCount(),
-		worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
+								worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
 
 	if (!result)
 	{
