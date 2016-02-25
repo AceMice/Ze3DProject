@@ -349,7 +349,7 @@ bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long
 		outputIndices[i] = i;
 	}
 
-	materialName = "myStar";
+	materialName = "ogreBody";
 	return true;
 }
 

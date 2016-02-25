@@ -63,7 +63,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Initialize the model2 object
-	result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "testModel");
+	result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreBody");
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->model2->Initialize", L"Error", MB_OK);
@@ -92,11 +92,16 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 {
 	bool result;
-	XMMATRIX model1World;
+	XMMATRIX modelWorld;
 	
 	this->rotY += dTime / 800000;
-	model1World = XMMatrixRotationY(this->rotY);
-	this->model1->SetWorldMatrix(model1World);
+	modelWorld = XMMatrixRotationY(this->rotY);
+	this->model1->SetWorldMatrix(modelWorld);
+
+	modelWorld = XMMatrixRotationY(2.5f);
+	modelWorld = XMMatrixScaling(0.6f, 0.6f, 0.6f) * modelWorld;
+	modelWorld = XMMatrixTranslation(0.0f, -5.0f, -3.0f) * modelWorld;
+	this->model2->SetWorldMatrix(modelWorld);
 
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH);
@@ -142,7 +147,7 @@ bool GraphicsHandler::Render()
 
 	//Render the model2 using the color shader
 	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model2->GetIndexCount(),
-		worldMatrix, viewMatrix, projectionMatrix, NULL, XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
+		worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
 
 	if (!result)
 	{
