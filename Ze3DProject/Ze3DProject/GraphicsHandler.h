@@ -21,7 +21,7 @@ private:
 	Model* model2;
 	ShaderHandler* shaderH;
 
-	bool Render(InputHandler* inputH);
+	bool Render();
 	//For testing
 	float rotY;
 public:

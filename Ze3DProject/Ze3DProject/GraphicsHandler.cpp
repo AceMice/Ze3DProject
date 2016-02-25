@@ -1,7 +1,5 @@
 #include "GraphicsHandler.h"
 
-float rotation = 0.0;
-
 GraphicsHandler::GraphicsHandler()
 {
 	this->direct3DH = nullptr;
@@ -98,9 +96,12 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	
 	this->rotY += dTime / 700000;
 	model1World = XMMatrixRotationY(this->rotY);
-	this->model1->SetWorldMatrix(model1World);
+	//this->model1->SetWorldMatrix(model1World);
 
-	result = this->Render(inputH);
+	//Generate the view matrix based on the camera's position
+	this->cameraH->Frame(dTime, inputH);
+
+	result = this->Render();
 	if (!result) {
 		return false;
 	}
@@ -108,15 +109,12 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	return true;
 }
 
-bool GraphicsHandler::Render(InputHandler* inputH)
+bool GraphicsHandler::Render()
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	bool result;
 	//Clear the buffers to begin the scene
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
-
-	//Generate the view matrix based on the camera's position
-	this->cameraH->Render(inputH);
 
 	//Get the view, and projection matrices from the camera and d3d objects
 	this->cameraH->GetViewMatrix(viewMatrix);
