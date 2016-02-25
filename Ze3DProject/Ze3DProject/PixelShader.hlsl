@@ -30,7 +30,7 @@ float4 main(PixelInput input) : SV_TARGET
 		s = color;
 	}
 	
-	float3 outVec = (float4(0,0,-6,1) - input.worldPos).xyz;	//(0,0,-6,1)Position of light i worldspace, camera is at (0,0,-5)
+	float3 outVec = (float4(0,5,-6,1) - input.worldPos).xyz;	//(0,0,-6,1)Position of light i worldspace, camera is at (0,0,-5)
 	outVec = normalize(outVec);
 	float value = saturate(dot(input.normal, outVec));
 

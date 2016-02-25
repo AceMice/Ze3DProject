@@ -21,6 +21,7 @@ private:
 	XMVECTOR camRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 	float moveLeftRight;
 	float moveBackForward;
+	float moveUpDown;
 	float camYaw;
 	float camPitch;
 

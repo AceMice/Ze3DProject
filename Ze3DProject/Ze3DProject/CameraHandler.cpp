@@ -13,6 +13,7 @@ CameraHandler::CameraHandler()
 	this->lookAt = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 	this->moveLeftRight = 0.0f;
 	this->moveBackForward = 0.0f;
+	this->moveUpDown = 0.0f;
 	this->camYaw = 0.0f;
 	this->camPitch = 0.0f;
 
@@ -36,7 +37,7 @@ XMVECTOR CameraHandler::GetPosition()
 
 void CameraHandler::updateCamera(float dt, InputHandler* inputH) {
 	
-	float speed = 100000;
+	float speed = 90000;
 
 	if (inputH->IsKeyDown(87)) {	//W
 		this->moveBackForward += dt/speed;
@@ -62,6 +63,14 @@ void CameraHandler::updateCamera(float dt, InputHandler* inputH) {
 		this->camYaw -= 0.01;
 	}
 
+	if (inputH->IsKeyDown(49)) {	//1
+		this->moveUpDown += dt/speed;
+	}
+
+	if (inputH->IsKeyDown(50)) {	//2
+		this->moveUpDown -= dt/speed;
+	}
+
 	return;
 }
 
@@ -74,21 +83,19 @@ void CameraHandler::Frame(float dt, InputHandler* inputH)
 
 	this->lookAt = XMVector3Normalize(this->lookAt);
 
-	XMMATRIX RotateYTempMatrix;
-	RotateYTempMatrix = XMMatrixRotationY(this->camPitch);
-
-	this->camRight = XMVector3TransformCoord(DefaultRight, RotateYTempMatrix);
-	this->up = XMVector3TransformCoord(this->up, RotateYTempMatrix);
-	this->camForward = XMVector3TransformCoord(this->DefaultForward, RotateYTempMatrix);
-	
+	this->camRight = XMVector3TransformCoord(DefaultRight, this->camRotationMatrix);
+	this->up = XMVector3TransformCoord(this->up, this->camRotationMatrix);
+	this->camForward = XMVector3TransformCoord(this->DefaultForward, this->camRotationMatrix);
 	
 	//Set new camPos
 	this->camPos += this->moveLeftRight * this->camRight;
 	this->camPos += this->moveBackForward * this->camForward;
+	this->camPos += this->moveUpDown * this->up;
 
 	//Reset
 	this->moveLeftRight = 0.0f;
 	this->moveBackForward = 0.0f;
+	this->moveUpDown = 0.0f;
 
 	this->lookAt = this->camPos + this->lookAt;
 

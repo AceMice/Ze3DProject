@@ -41,7 +41,7 @@ GSInput main(VertexInput input)
 	output.tex = input.tex;
 	
 	//Store the normal for output
-	output.normal = input.normal;
+	output.normal = normalize(mul(input.normal, worldMatrix));
 
 	return output;
 }

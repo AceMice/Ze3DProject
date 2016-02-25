@@ -28,12 +28,12 @@ private:
 	Texture* texture;
 	XMMATRIX worldMatrix;
 
-	bool InitializeBuffers(ID3D11Device*, char*);
+	bool InitializeBuffers(ID3D11Device*, char*, char*&);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, char*);
 	void ReleaseTexture();
-	bool LoadObj(const char*, Vertex*&, unsigned long*&, int&, int&);
+	bool LoadObj(const char*, Vertex*&, unsigned long*&, int&, int&, char*&);
 
 public:
 	Model();

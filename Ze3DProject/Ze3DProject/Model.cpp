@@ -22,19 +22,20 @@ Model::~Model()
 bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename) 
 {
 	bool result;
+	char* materialName;
 
 	//Initialze the vertex and index buffer
-	result = this->InitializeBuffers(device, modelFilename);
+	result = this->InitializeBuffers(device, modelFilename, materialName);
 	if (!result) {
 		return false;
 	}
 
 	//Load texture for this model
-	result = this->LoadTexture(device, deviceContext, modelFilename);
+	result = this->LoadTexture(device, deviceContext, materialName);
 	if (!result) {
 		return false;
 	}
-
+	
 	return true;
 }
 
@@ -66,7 +67,7 @@ ID3D11ShaderResourceView* Model::GetTexture()
 	return this->texture->GetTexture();
 }
 
-bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename) 
+bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, char*& materialName) 
 {
 	Vertex* vertices = nullptr;
 	unsigned long* indices = nullptr;
@@ -81,7 +82,7 @@ bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename)
 	std::string path = "../Ze3DProject/OBJ/";
 	std::string format = ".obj";
 	std::string finalPath = path + modelFilename + format;
-	result = this->LoadObj(finalPath.c_str(), vertices, indices, sizeVertices, sizeIndices);
+	result = this->LoadObj(finalPath.c_str(), vertices, indices, sizeVertices, sizeIndices, materialName);
 	if (!result) {
 		return false;
 	}
@@ -243,7 +244,7 @@ void Model::ReleaseTexture()
 	return;
 }
 
-bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices)
+bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices, char*& materialName)
 {
 	XMFLOAT3 tempVertex;
 	XMFLOAT2 tempUV;
@@ -348,6 +349,7 @@ bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long
 		outputIndices[i] = i;
 	}
 
+	materialName = "myStar";
 	return true;
 }
 
