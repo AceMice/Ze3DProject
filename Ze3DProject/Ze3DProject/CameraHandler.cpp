@@ -2,13 +2,20 @@
 
 CameraHandler::CameraHandler()
 {
-	this->positionX = 0.0f;
-	this->positionY = 0.0f;
-	this->positionZ = 0.0f;
+	this->camPos = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+	this->up = XMVectorSet(0.0f,1.0f,0.0f,0.0f);
 
-	this->rotationX = 0.0f;
-	this->rotationY = 0.0f;
-	this->rotationZ = 0.0f;
+	this->DefaultForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	this->DefaultRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+	this->camForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	this->camRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+
+	this->lookAt = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	this->moveLeftRight = 0.0f;
+	this->moveBackForward = 0.0f;
+	this->camYaw = 0.0f;
+	this->camPitch = 0.0f;
+
 }
 
 CameraHandler::~CameraHandler()
@@ -17,109 +24,75 @@ CameraHandler::~CameraHandler()
 
 void CameraHandler::SetPosition(float x, float y, float z)
 {
-	this->positionX = x;
-	this->positionY = y;
-	this->positionZ = z;
+	this->camPos = XMVectorSet(x, y, z, 0);
 
 	return;
 }
 
-void CameraHandler::SetRotation(float x, float y, float z)
+XMVECTOR CameraHandler::GetPosition()
 {
-	this->rotationX = x;
-	this->rotationY = y;
-	this->rotationZ = z;
+	return this->camPos;
 }
 
-XMFLOAT3 CameraHandler::GetPosition()
-{
-	return XMFLOAT3(this->positionX, this->positionY, this->positionZ);
-}
-
-XMFLOAT3 CameraHandler::GetRotation()
-{
-	return XMFLOAT3(this->rotationX, this->rotationY, this->rotationZ);
-}
-
-void CameraHandler::updateCamera(InputHandler* inputH) {
+void CameraHandler::updateCamera(float dt, InputHandler* inputH) {
 	
+	float speed = 100000;
+
 	if (inputH->IsKeyDown(87)) {	//W
-	
+		this->moveBackForward += dt/speed;
 	}
 
 	if (inputH->IsKeyDown(83)) {	//S
-	
+		this->moveBackForward -= dt/speed;
 	}
 
 	if (inputH->IsKeyDown(65)) {	//A
-	
+		this->moveLeftRight -= dt/speed;
 	}
 
 	if (inputH->IsKeyDown(68)) {	//D
-		
+		this->moveLeftRight += dt/speed;
 	}
 
 	if (inputH->IsKeyDown(69)) {	//E
-		
+		this->camYaw += 0.01;
 	}
 
 	if (inputH->IsKeyDown(81)) {	//Q
-	
+		this->camYaw -= 0.01;
 	}
 
 	return;
 }
 
-void CameraHandler::Render(InputHandler* inputH)
+void CameraHandler::Frame(float dt, InputHandler* inputH)
 {
-	XMFLOAT3 up, position, lookAt;
-	XMVECTOR upVector, positionVector, lookAtVector;
-	float yaw, pitch, roll;
-	XMMATRIX rotationMatrix;
+	this->updateCamera(dt, inputH);
 
-	//Setup vector that point up
-	up.x = 0.0f;
-	up.y = 1.0f;
-	up.z = 0.0f;
+	this->camRotationMatrix = XMMatrixRotationRollPitchYaw(this->camPitch, this->camYaw, 0);
+	this->lookAt = XMVector3TransformCoord(this->DefaultForward, this->camRotationMatrix);
 
-	//Load up into a XMVECTOR structure
-	upVector = XMLoadFloat3(&up);
+	this->lookAt = XMVector3Normalize(this->lookAt);
 
-	//Setup the position of the camera in the world
-	position.x = this->positionX;
-	position.y = this->positionY;
-	position.z = this->positionZ;
+	XMMATRIX RotateYTempMatrix;
+	RotateYTempMatrix = XMMatrixRotationY(this->camPitch);
 
-	//Load pos into a XMVECTOR structure
-	positionVector = XMLoadFloat3(&position);
-
-	//Setup where the camera is looking default
-	lookAt.x = 0.0f;
-	lookAt.y = 0.0f;
-	lookAt.z = 1.0f;
-
-	//Load lookat into a XMVECTOR structure
-	lookAtVector = XMLoadFloat3(&lookAt);
+	this->camRight = XMVector3TransformCoord(DefaultRight, RotateYTempMatrix);
+	this->up = XMVector3TransformCoord(this->up, RotateYTempMatrix);
+	this->camForward = XMVector3TransformCoord(this->DefaultForward, RotateYTempMatrix);
 	
-	this->updateCamera(inputH);
 	
-	//Set the yaw (Y axis), pitch (X axis), and roll (Z axis) rotations in radians
-	pitch = this->rotationX * 0.0174532925f;
-	yaw = this->rotationY * 0.0174532925f;
-	roll = this->rotationZ * 0.0174532925f;
-	
-	//Create the rotation matrix from the yaw, pitch, and roll values
-	rotationMatrix = XMMatrixRotationRollPitchYaw(pitch, yaw, roll);
+	//Set new camPos
+	this->camPos += this->moveLeftRight * this->camRight;
+	this->camPos += this->moveBackForward * this->camForward;
 
-	//Transform the lookAt and up vector by the rotation matrix so the view is correctly rotated at the origin.
-	lookAtVector = XMVector3TransformCoord(lookAtVector, rotationMatrix);
-	upVector = XMVector3TransformCoord(upVector, rotationMatrix);
+	//Reset
+	this->moveLeftRight = 0.0f;
+	this->moveBackForward = 0.0f;
 
-	//Translate the rotated camera position to the location of the viewer
-	lookAtVector = XMVectorAdd(positionVector, lookAtVector);
+	this->lookAt = this->camPos + this->lookAt;
 
-	//Finally create the view matrix from the three updated vectors
-	this->viewMatrix = XMMatrixLookAtLH(positionVector, lookAtVector, upVector);
+	this->viewMatrix = XMMatrixLookAtLH(this->camPos, this->lookAt, this->up);
 
 	return;
 }
