@@ -13,7 +13,7 @@ struct VertexInput
 {
 	float4 position : POSITION;
 	float2 tex : TEXCOORD0;
-	//float3 normal : NORMAL;
+	float3 normal : NORMAL;
 };
 
 struct GSInput
@@ -21,6 +21,7 @@ struct GSInput
 	float4 position : SV_POSITION;
 	float2 tex : TEXCOORD0;
 	float4 worldPos : POSITION;
+	float3 normal : NORMAL;
 };
 
 GSInput main(VertexInput input)
@@ -38,6 +39,9 @@ GSInput main(VertexInput input)
 
 	//Store the color for output
 	output.tex = input.tex;
+	
+	//Store the normal for output
+	output.normal = input.normal;
 
 	return output;
 }

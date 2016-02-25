@@ -285,13 +285,13 @@ bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long
 					//sscanf_s(line.c_str(), "%f %f\n", &tempUV.x, &tempUV.y);
 					tempUvs.push_back(tempUV);
 				}
-				//else if (line.at(1) == 'n') {
-				//	ss.clear();
-				//	ss.str(line);
-				//	ss >> junks >> tempNormal.x >> tempNormal.y >> tempNormal.z;
-				//	//sscanf_s(line.c_str(), "%f %f %f\n", &tempNormal.x, &tempNormal.y, &tempNormal.z);
-				//	tempNormals.push_back(tempNormal);
-				//}
+				else if (line.at(1) == 'n') {
+					ss.clear();
+					ss.str(line);
+					ss >> junks >> tempNormal.x >> tempNormal.y >> tempNormal.z;
+					//sscanf_s(line.c_str(), "%f %f %f\n", &tempNormal.x, &tempNormal.y, &tempNormal.z);
+					tempNormals.push_back(tempNormal);
+				}
 			}
 			else if (line.at(0) == 'f') {
 				ss.clear();
@@ -313,6 +313,9 @@ bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long
 				uvIndices.push_back(uvIndex[0]);
 				uvIndices.push_back(uvIndex[1]);
 				uvIndices.push_back(uvIndex[2]);
+				normalIndices.push_back(normalIndex[0]);
+				normalIndices.push_back(normalIndex[1]);
+				normalIndices.push_back(normalIndex[2]);
 			}
 		}
 
@@ -339,6 +342,7 @@ bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long
 	for (int i = 0; i < sizeIndices; i++) {
 		outputVertices[i].position = tempVertices.at(vertexIndices.at(i) - 1);
 		outputVertices[i].texture = tempUvs.at(uvIndices.at(i) - 1);
+		outputVertices[i].normal = tempNormals.at(normalIndices.at(i) - 1);
 	}
 	for (int i = 0; i < sizeIndices; i++) {
 		outputIndices[i] = i;

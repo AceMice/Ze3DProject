@@ -18,7 +18,7 @@ private:
 	struct Vertex {
 		XMFLOAT3 position;
 		XMFLOAT2 texture;
-		//XMFLOAT3 normal;
+		XMFLOAT3 normal;
 	};
 
 	ID3D11Buffer* vertexBuffer;
