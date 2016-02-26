@@ -32,8 +32,10 @@ XMVECTOR CameraHandler::GetPosition()
 }
 
 void CameraHandler::updateCamera(float dt, InputHandler* inputH) {
-	
+	DIMOUSESTATE mouseCurrState;
 	float speed = 90000;
+
+	inputH->getNewMouseState(mouseCurrState);
 
 	if (inputH->IsKeyDown(87)) {	//W
 		this->moveBackForward += dt/speed;
@@ -65,6 +67,15 @@ void CameraHandler::updateCamera(float dt, InputHandler* inputH) {
 
 	if (inputH->IsKeyDown(50)) {	//2
 		this->moveUpDown -= dt/speed;
+	}
+
+	//MOUSE POSITION INPUT
+	if (mouseCurrState.lX != inputH->getMouseState().lX) {
+
+	}
+
+	if (mouseCurrState.lY != inputH->getMouseState().lY) {
+
 	}
 
 	return;

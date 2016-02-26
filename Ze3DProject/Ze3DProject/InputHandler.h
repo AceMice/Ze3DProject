@@ -1,6 +1,8 @@
 #ifndef INPUTHANDLER_H
 #define INPUTHANDLER_H
 
+#pragma comment (lib, "dinput8.lib")
+#pragma comment (lib, "dxguid.lib")
 #include <dinput.h>
 
 class InputHandler {
@@ -21,6 +23,7 @@ public:
 	void KeyUp(unsigned int);
 	bool IsKeyDown(unsigned int);
 	DIMOUSESTATE getMouseState();
+	void getNewMouseState(DIMOUSESTATE&);
 };
 
 

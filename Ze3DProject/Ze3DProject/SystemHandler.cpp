@@ -134,7 +134,7 @@ void SystemHandler::ShutdownWindow() {
 	return;
 }
 
-bool SystemHandler::Initialize(HINSTANCE hInstance) {
+bool SystemHandler::Initialize() {
 	int screenWidth = 0;
 	int screenHeight = 0;
 	bool result;
@@ -150,7 +150,7 @@ bool SystemHandler::Initialize(HINSTANCE hInstance) {
 	}
 
 	//Initialize the Input object
-	this->inputH->Initialize(hInstance, this->hwnd);
+	this->inputH->Initialize(this->hinstance, this->hwnd);
 
 	//Create the graphics object. This object will handle rendering all the graphics for this applicaion
 	this->graphicsH = new GraphicsHandler;

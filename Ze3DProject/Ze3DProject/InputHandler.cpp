@@ -45,6 +45,9 @@ void InputHandler::Initialize(HINSTANCE hInstance, HWND hwnd) {
 		MessageBox(hwnd, L"DIMouse->SetCooperativeLevel", L"Error", MB_OK);
 	}
 
+
+	this->DIMouse->GetDeviceState(sizeof(DIMOUSESTATE), &this->mouseLastState);
+
 	return;
 }
 
@@ -73,4 +76,11 @@ bool InputHandler::IsKeyDown(unsigned int key) {
 
 DIMOUSESTATE InputHandler::getMouseState() {
 	return this->mouseLastState;
+}
+
+
+void InputHandler::getNewMouseState(DIMOUSESTATE &mouseCurrentState) {
+	
+	this->DIMouse->GetDeviceState(sizeof(DIMOUSESTATE), &mouseCurrentState);
+
 }
