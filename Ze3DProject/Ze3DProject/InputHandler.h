@@ -22,7 +22,7 @@ public:
 	void KeyDown(unsigned int);
 	void KeyUp(unsigned int);
 	bool IsKeyDown(unsigned int);
-	DIMOUSESTATE getMouseState();
+	DIMOUSESTATE getOldMouseState();
 	void getNewMouseState(DIMOUSESTATE&);
 };
 
