@@ -29,7 +29,7 @@ private:
 	{
 		std::string name;
 		XMFLOAT4 difColor;
-		int materialIndex;
+		int textureIndex;
 		bool hasTexture;
 	};
 
@@ -37,6 +37,7 @@ private:
 	ID3D11Texture2D* texture;
 	std::vector<ID3D11ShaderResourceView*> textureViews;
 	std::vector<Material> materials;
+	std::vector<std::string> textureNames;
 
 	bool LoadTarga(const char*, int&, int&);
 	bool LoadMtl(char*);
@@ -49,6 +50,7 @@ public:
 	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, char*);
 	void Shutdown();
 	ID3D11ShaderResourceView* GetTexture(std::string);
+	Material GetMaterial(std::string);
 };
 
 

@@ -113,11 +113,11 @@ ID3D11ShaderResourceView* Texture::GetTexture(std::string matName)
 {
 	for (int i = 0; i < this->textureViews.size(); i++) {
 		if (this->materials.at(i).name == matName) {
-			return this->textureViews.at(this->materials.at(i).materialIndex);
+			return this->textureViews.at(this->materials.at(i).textureIndex);
 		}
 	}
-	//If no texture found, retuern the first one
-	return this->textureViews.at(0);
+	//If no texture found, return NULL
+	return NULL;
 }
 
 bool Texture::LoadTarga(const char*filename, int&height, int& width) 
@@ -215,6 +215,7 @@ bool Texture::LoadMtl(char* materialLib)
 	std::string junk;
 	std::stringstream ss;
 	int nrOfMaterials = 0;
+	bool difSet = false;
 
 	file.open(materialLib);
 	if (!file.is_open()) {
@@ -230,10 +231,57 @@ bool Texture::LoadMtl(char* materialLib)
 				this->materials.push_back(tempMat);
 				ss >> junk >> this->materials.at(nrOfMaterials).name;
 				this->materials.at(nrOfMaterials).hasTexture = false;
-				this->materials.at(nrOfMaterials).materialIndex = 0;
+				this->materials.at(nrOfMaterials).textureIndex = 0;
+				nrOfMaterials++;
+				difSet = false;
+			}
+			else if(line.at(0) == 'K'){
+				ss.clear();
+				ss.str(line);
+				if (line.at(1) == 'd') {
+					ss >> junk >> this->materials.at(nrOfMaterials - 1).difColor.x
+						>> this->materials.at(nrOfMaterials - 1).difColor.y
+						>> this->materials.at(nrOfMaterials - 1).difColor.z;
+					difSet = true;
+				}
+				else if (!difSet && line.at(1) == 'a') {
+					ss >> junk >> this->materials.at(nrOfMaterials - 1).difColor.x
+						>> this->materials.at(nrOfMaterials - 1).difColor.y
+						>> this->materials.at(nrOfMaterials - 1).difColor.z;
+				}
+			}
+			else if (line.substr(0, 6) == "map_Kd") {
+				bool beenLoaded = false;
+				std::string textureFilename;
+				ss.clear();
+				ss.str(line);
+				ss >> junk >> textureFilename;
+				
+				for (int i = 0; !beenLoaded && i < this->textureNames.size(); i++) {
+					if (this->textureNames.at(i) == textureFilename) {
+						this->materials.at(nrOfMaterials).hasTexture = true;
+						this->materials.at(nrOfMaterials).textureIndex = i;
+						beenLoaded = true;
+					}
+				}
+				if (!beenLoaded) {
+
+				}
 			}
 		}
 	}
 
 	return true;
+}
+
+Texture::Material Texture::GetMaterial(std::string materialName)
+{
+	for (int i = 0; i < this->materials.size(); i++) {
+		if (this->materials.at(i).name == materialName) {
+			return this->materials.at(i);
+		}
+	}
+	Material defaultMaterial;
+	defaultMaterial.name = "Not found";
+	return defaultMaterial;
 }
