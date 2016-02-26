@@ -22,7 +22,7 @@ Model::~Model()
 bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename) 
 {
 	bool result;
-	char* materialLib;
+	std::string materialLib;
 
 	//Initialze the vertex and index buffer
 	result = this->InitializeBuffers(device, modelFilename, materialLib);
@@ -67,7 +67,7 @@ ID3D11ShaderResourceView* Model::GetTexture(int textureIndex)
 	return this->texture->GetTexture(textureIndex);
 }
 
-bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, char*& materialName) 
+bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::string& materialName)
 {
 	std::vector<Vertex> vertices;
 	unsigned long* indices = nullptr;
@@ -136,7 +136,7 @@ bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, char*& 
 
 	//Give the subresource structure a pointer to the vertex data
 	ZeroMemory(&vertexData, sizeof(vertexData));
-	vertexData.pSysMem = &vertices.at(0);
+	vertexData.pSysMem = &vertices; ////////////////////////////////////////// Causing chrash
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
@@ -211,7 +211,7 @@ void Model::RenderBuffers(ID3D11DeviceContext* deviceContext)
 	return;
 }
 
-bool Model::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* materialLib)
+bool Model::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, std::string materialLib)
 {
 	bool result;
 
@@ -242,7 +242,7 @@ void Model::ReleaseTexture()
 	return;
 }
 
-bool Model::LoadObj(const char* filename, std::vector<Vertex> outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices, char*& materialLib)
+bool Model::LoadObj(const char* filename, std::vector<Vertex> outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices, std::string& materialLib)
 {
 	XMFLOAT3 tempVertex;
 	XMFLOAT2 tempUV;

@@ -17,7 +17,7 @@ Texture::~Texture()
 
 }
 
-bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext, char* materialLib) 
+bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext, std::string materialLib)
 {
 	bool result;
 
@@ -156,7 +156,7 @@ bool Texture::LoadTarga(const char*filename, int&height, int& width)
 	return true;
 }
 
-bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* materialLib)
+bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, std::string materialLib)
 {
 	std::ifstream file;
 	std::string line;
@@ -173,9 +173,11 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
 	std::string path = "../Ze3DProject/Textures/";
 	std::string finalPath;
+	std::string mtlPath = "../Ze3DProject/OBJ/";
+	std::string finalMtlPath = mtlPath + materialLib;
 	bool result;
 
-	file.open(materialLib);
+	file.open(finalMtlPath);
 	if (!file.is_open()) {
 		return false;
 	}
@@ -206,6 +208,7 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 					ss >> junk >> this->materials.at(nrOfMaterials - 1).difColor.x
 						>> this->materials.at(nrOfMaterials - 1).difColor.y
 						>> this->materials.at(nrOfMaterials - 1).difColor.z;
+					difSet = true;
 				}
 			}
 			else if (line.substr(0, 6) == "map_Kd") {

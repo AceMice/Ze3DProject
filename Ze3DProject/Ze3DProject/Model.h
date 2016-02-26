@@ -1,8 +1,6 @@
 #ifndef Model_H
 #define Model_H
 
-using namespace DirectX;
-
 #include "Texture.h"
 
 class Model {
@@ -24,12 +22,12 @@ private:
 	Texture* texture;
 	XMMATRIX worldMatrix;
 
-	bool InitializeBuffers(ID3D11Device*, char*, char*&);
+	bool InitializeBuffers(ID3D11Device*, char*, std::string&);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
-	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, char*);
+	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, std::string);
 	void ReleaseTexture();
-	bool LoadObj(const char*, std::vector<Vertex>, unsigned long*&, int&, int&, char*&);
+	bool LoadObj(const char*, std::vector<Vertex>, unsigned long*&, int&, int&, std::string&);
 
 public:
 	Model();

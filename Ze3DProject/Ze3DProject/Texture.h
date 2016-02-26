@@ -40,14 +40,14 @@ private:
 	std::vector<std::string> textureNames;
 
 	bool LoadTarga(const char*, int&, int&);
-	bool LoadMtl(ID3D11Device*, ID3D11DeviceContext*, char*);
+	bool LoadMtl(ID3D11Device*, ID3D11DeviceContext*, std::string);
 
 public:
 	Texture();
 	Texture(const Texture&);
 	~Texture();
 
-	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, char*);
+	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, std::string);
 	void Shutdown();
 	ID3D11ShaderResourceView* GetTexture(int);
 	Material GetMaterial(std::string);

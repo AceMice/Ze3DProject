@@ -4,7 +4,6 @@ GraphicsHandler::GraphicsHandler()
 {
 	this->direct3DH = nullptr;
 	this->model1 = nullptr;
-	this->model2 = nullptr;
 	this->cameraH = nullptr;
 	this->shaderH = nullptr;
 
@@ -55,20 +54,6 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	// Create the model2 object.
-	this->model2 = new Model;
-	if (!this->model2)
-	{
-		return false;
-	}
-
-	////Initialize the model2 object
-	//result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreBody");
-	//if (!result)
-	//{
-	//	MessageBox(hwnd, L"this->model2->Initialize", L"Error", MB_OK);
-	//	return false;
-	//}
 
 	// Create the color shader object.
 	this->shaderH = new ShaderHandler;
@@ -102,7 +87,6 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	modelWorld = XMMatrixScaling(0.6f, 0.6f, 0.6f) * modelWorld;
 	modelWorld = XMMatrixTranslation(0.0f, -5.0f, -3.0f) * modelWorld;
 	this->model1->SetWorldMatrix(modelWorld);
-	this->model2->SetWorldMatrix(modelWorld);
 
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH);
@@ -160,21 +144,6 @@ bool GraphicsHandler::Render()
 	//	return false;
 	//}
 
-	////Get the world matrix from model2
-	//this->model2->GetWorldMatrix(worldMatrix);
-
-	////Put the model2 vertex and index buffers on the graphics pipeline to prepare them for drawing
-	//this->model2->Render(this->direct3DH->GetDeviceContext());
-
-	////Render the model2 using the color shader
-	//result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model2->GetIndexCount(),
-	//							worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
-
-	//if (!result)
-	//{
-	//	return false;
-	//}
-
 	//Display the rendered scene to screen
 	this->direct3DH->EndScene();
 
@@ -197,14 +166,6 @@ void GraphicsHandler::Shutdown()
 		this->model1->Shutdown();
 		delete this->model1;
 		this->model1 = 0;
-	}
-
-	//Release the Model2 object
-	if (this->model2)
-	{
-		this->model2->Shutdown();
-		delete this->model2;
-		this->model2 = 0;
 	}
 
 	//Release the cameraHandler object
