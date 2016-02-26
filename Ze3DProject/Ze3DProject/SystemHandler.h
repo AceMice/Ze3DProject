@@ -18,7 +18,7 @@ public:
 	SystemHandler();
 	~SystemHandler();
 
-	bool Initialize();
+	bool Initialize(HINSTANCE);
 	void Run();
 	void Shutdown();
 
