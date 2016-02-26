@@ -62,9 +62,9 @@ int Model::GetIndexCount()
 	return this->indexCount;
 }
 
-ID3D11ShaderResourceView* Model::GetTexture(int subsetIndex)
+ID3D11ShaderResourceView* Model::GetTexture(int textureIndex)
 {
-	return this->texture->GetTexture(this->materialNames.at(subsetIndex));
+	return this->texture->GetTexture(textureIndex);
 }
 
 bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, char*& materialName) 
@@ -211,7 +211,7 @@ void Model::RenderBuffers(ID3D11DeviceContext* deviceContext)
 	return;
 }
 
-bool Model::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* filename)
+bool Model::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* materialLib)
 {
 	bool result;
 
@@ -222,7 +222,7 @@ bool Model::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext
 	}
 
 	//Init texture object
-	result = this->texture->Initialize(device, deviceContext, filename);
+	result = this->texture->Initialize(device, deviceContext, materialLib);
 	if (!result) {
 		return false;
 	}
@@ -262,6 +262,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex> outputVertices, un
 	char junk;
 	std::stringstream ss;
 	std::ifstream file;
+	bool firstFace = true;
 
 	file.open(filename);
 	if (!file.is_open()) {
@@ -299,8 +300,14 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex> outputVertices, un
 				ss >> junks >> tempLine;
 				this->materialNames.push_back(tempLine);
 				this->subsetIndices.push_back(vertexIndices.size());
+				firstFace = false;
 			}
 			else if (line.at(0) == 'f') {
+				if (firstFace) {
+					this->materialNames.push_back("noMat");
+					this->subsetIndices.push_back(0);
+					firstFace = false;
+				}
 				ss.clear();
 				ss.str(line);
 				ss >> junk >> vertexIndex[0] >> junk >> uvIndex[0] >> junk >> normalIndex[0]
@@ -389,10 +396,20 @@ int Model::NrOfSubsets()
 	return this->subsetIndices.size();
 }
 
-void Model::GetSubsetInfo(int subsetIndex, int& indexStart, std::string& matName)
+void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int& textureIndex, XMFLOAT4& color)
 {
 	indexStart = this->subsetIndices.at(subsetIndex);
-	matName = this->materialNames.at(subsetIndex);
+
+	if (this->subsetIndices.size() > subsetIndex + 1) {
+		indexCount = this->subsetIndices.at(subsetIndex + 1) - indexStart;
+	}
+	else {
+		indexCount = this->GetIndexCount() - indexStart;
+	}
+	Texture::Material tempMaterial = this->texture->GetMaterial(this->materialNames.at(subsetIndex));
+
+	textureIndex = tempMaterial.textureIndex;
+	color = tempMaterial.difColor;
 
 	return;
 }

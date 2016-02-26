@@ -17,61 +17,11 @@ Texture::~Texture()
 
 }
 
-bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext, char* filename) 
+bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext, char* materialLib) 
 {
 	bool result;
-	int height;
-	int width;
-	D3D11_TEXTURE2D_DESC textureDesc;
-	HRESULT hresult;
-	unsigned int rowPitch;
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	std::string path = "../Ze3DProject/Textures/";
-	std::string format = ".tga";
-	std::string finalPath = path + filename + format;
-	
-	//Load the targa image data into memory
-	result = this->LoadTarga(finalPath.c_str(), height, width);
-	if (!result) {
-		return false;
-	}
 
-	//Setup the description of the texture
-	textureDesc.Height = height;
-	textureDesc.Width = width;
-	textureDesc.MipLevels = 0;
-	textureDesc.ArraySize = 1;
-	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	textureDesc.SampleDesc.Count = 1;
-	textureDesc.SampleDesc.Quality = 0;
-	textureDesc.Usage = D3D11_USAGE_DEFAULT;
-	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-	textureDesc.CPUAccessFlags = 0;
-	textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-
-	//Create the empty texture
-	hresult = device->CreateTexture2D(&textureDesc, NULL, &this->texture);
-	if (FAILED(hresult)) {
-		return false;
-	}
-
-	//Set the row pitch of the targa data
-	rowPitch = (width * 4) * sizeof(unsigned char);
-
-	//Copy the targa image data into the texture
-	deviceContext->UpdateSubresource(this->texture, 0, NULL, this->targaData, rowPitch, 0);
-
-	//Setup the shader resource view description
-	srvDesc.Format = textureDesc.Format;
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = -1;
-
-	//Create the shader resource view for the texture
-	hresult = device->CreateShaderResourceView(this->texture, &srvDesc, &this->textureViews.at(0));
-	if (FAILED(hresult)) {
-		return false;
-	}
+	result = this->LoadMtl(device, deviceContext, materialLib);
 
 	//Release the targa image data now that the image data has been loaded into the texture
 	delete[] this->targaData;
@@ -109,14 +59,12 @@ void Texture::Shutdown()
 	return;
 }
 
-ID3D11ShaderResourceView* Texture::GetTexture(std::string matName) 
+ID3D11ShaderResourceView* Texture::GetTexture(int textureIndex) 
 {
-	for (int i = 0; i < this->textureViews.size(); i++) {
-		if (this->materials.at(i).name == matName) {
-			return this->textureViews.at(this->materials.at(i).textureIndex);
-		}
+	if (this->textureViews.size() > textureIndex) {
+		return this->textureViews.at(textureIndex);
 	}
-	//If no texture found, return NULL
+	//Safe return just in case
 	return NULL;
 }
 
@@ -208,14 +156,24 @@ bool Texture::LoadTarga(const char*filename, int&height, int& width)
 	return true;
 }
 
-bool Texture::LoadMtl(char* materialLib)
+bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* materialLib)
 {
 	std::ifstream file;
 	std::string line;
 	std::string junk;
 	std::stringstream ss;
 	int nrOfMaterials = 0;
-	bool difSet = false;
+	bool difSet;
+	bool firstTextureLoad = true;
+	int height;
+	int width;
+	D3D11_TEXTURE2D_DESC textureDesc;
+	HRESULT hresult;
+	unsigned int rowPitch;
+	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+	std::string path = "../Ze3DProject/Textures/";
+	std::string finalPath;
+	bool result;
 
 	file.open(materialLib);
 	if (!file.is_open()) {
@@ -259,13 +217,72 @@ bool Texture::LoadMtl(char* materialLib)
 				
 				for (int i = 0; !beenLoaded && i < this->textureNames.size(); i++) {
 					if (this->textureNames.at(i) == textureFilename) {
-						this->materials.at(nrOfMaterials).hasTexture = true;
-						this->materials.at(nrOfMaterials).textureIndex = i;
+						this->materials.at(nrOfMaterials - 1).hasTexture = true;
+						this->materials.at(nrOfMaterials - 1).textureIndex = i;
 						beenLoaded = true;
 					}
 				}
 				if (!beenLoaded) {
+					//Load the targa image data into memory
+					finalPath = path + textureFilename;
+					result = this->LoadTarga(finalPath.c_str(), height, width);
+					if (!result) {
+						return false;
+					}
 
+					//If it's the first texture, init some general desc values
+					if (firstTextureLoad) {
+						//Setup the description of the texture
+						textureDesc.MipLevels = 0;
+						textureDesc.ArraySize = 1;
+						textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+						textureDesc.SampleDesc.Count = 1;
+						textureDesc.SampleDesc.Quality = 0;
+						textureDesc.Usage = D3D11_USAGE_DEFAULT;
+						textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+						textureDesc.CPUAccessFlags = 0;
+						textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+						//Setup the shader resource view description
+						srvDesc.Format = textureDesc.Format;
+						srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+						srvDesc.Texture2D.MostDetailedMip = 0;
+						srvDesc.Texture2D.MipLevels = -1;
+					}
+					//Set the teexture specific description values
+					textureDesc.Height = height;
+					textureDesc.Width = width;
+					
+
+					//Release the previous texture if set
+					if (this->texture) {
+						this->texture->Release();
+						this->texture = nullptr;
+					}
+
+					//Create the empty texture
+					hresult = device->CreateTexture2D(&textureDesc, NULL, &this->texture);
+					if (FAILED(hresult)) {
+						return false;
+					}
+
+					//Set the row pitch of the targa data
+					rowPitch = (width * 4) * sizeof(unsigned char);
+
+					//Copy the targa image data into the texture
+					deviceContext->UpdateSubresource(this->texture, 0, NULL, this->targaData, rowPitch, 0);
+
+					//Create the shader resource view for the texture
+					ID3D11ShaderResourceView* tempTextureView;
+
+					hresult = device->CreateShaderResourceView(this->texture, &srvDesc, &tempTextureView);
+					if (FAILED(hresult)) {
+						return false;
+					}
+					this->textureNames.push_back(textureFilename);
+					this->materials.at(nrOfMaterials - 1).hasTexture = true;
+					this->materials.at(nrOfMaterials - 1).textureIndex = this->textureViews.size();
+					this->textureViews.push_back(tempTextureView);
 				}
 			}
 		}
@@ -283,5 +300,9 @@ Texture::Material Texture::GetMaterial(std::string materialName)
 	}
 	Material defaultMaterial;
 	defaultMaterial.name = "Not found";
+	defaultMaterial.difColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
+	defaultMaterial.hasTexture = false;
+	defaultMaterial.textureIndex = -1;
+
 	return defaultMaterial;
 }

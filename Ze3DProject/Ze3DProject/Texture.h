@@ -13,6 +13,14 @@
 using namespace DirectX;
 
 class Texture {
+public:
+	struct Material
+	{
+		std::string name;
+		XMFLOAT4 difColor;
+		int textureIndex;
+		bool hasTexture;
+	};
 
 private:
 	
@@ -25,14 +33,6 @@ private:
 		unsigned char data2;
 	};
 
-	struct Material
-	{
-		std::string name;
-		XMFLOAT4 difColor;
-		int textureIndex;
-		bool hasTexture;
-	};
-
 	unsigned char* targaData;
 	ID3D11Texture2D* texture;
 	std::vector<ID3D11ShaderResourceView*> textureViews;
@@ -40,7 +40,7 @@ private:
 	std::vector<std::string> textureNames;
 
 	bool LoadTarga(const char*, int&, int&);
-	bool LoadMtl(char*);
+	bool LoadMtl(ID3D11Device*, ID3D11DeviceContext*, char*);
 
 public:
 	Texture();
@@ -49,7 +49,7 @@ public:
 
 	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, char*);
 	void Shutdown();
-	ID3D11ShaderResourceView* GetTexture(std::string);
+	ID3D11ShaderResourceView* GetTexture(int);
 	Material GetMaterial(std::string);
 };
 

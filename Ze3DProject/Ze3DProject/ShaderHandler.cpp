@@ -35,7 +35,7 @@ void ShaderHandler::Shutdown()
 	return;
 }
 
-bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, 
+bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, int indexStart,
 	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 color)
 {
 	bool result = false;
@@ -46,7 +46,7 @@ bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount,
 		return false;
 	}
 
-	this->RenderShader(deviceContext, indexCount);
+	this->RenderShader(deviceContext, indexCount, indexStart);
 
 	return true;
 }
@@ -293,7 +293,7 @@ bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMA
 	return true;
 }
 
-void ShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
+void ShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount, int indexStart)
 {
 	//Set the input layout for vertex
 	deviceContext->IASetInputLayout(this->layout);
@@ -306,7 +306,7 @@ void ShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int indexCo
 	deviceContext->PSSetSamplers(0, 1, &this->samplerState);
 
 	//Render the triangle
-	deviceContext->DrawIndexed(indexCount, 0, 0);
+	deviceContext->DrawIndexed(indexCount, indexStart, 0);
 
 	return;
 }

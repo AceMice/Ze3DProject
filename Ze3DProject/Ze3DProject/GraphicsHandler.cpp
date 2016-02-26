@@ -48,7 +48,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Initialize the model1 object
-	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreHead");
+	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreFull");
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->model1->Initialize", L"Error", MB_OK);
@@ -62,13 +62,13 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	//Initialize the model2 object
-	result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreBody");
-	if (!result)
-	{
-		MessageBox(hwnd, L"this->model2->Initialize", L"Error", MB_OK);
-		return false;
-	}
+	////Initialize the model2 object
+	//result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreBody");
+	//if (!result)
+	//{
+	//	MessageBox(hwnd, L"this->model2->Initialize", L"Error", MB_OK);
+	//	return false;
+	//}
 
 	// Create the color shader object.
 	this->shaderH = new ShaderHandler;
@@ -119,6 +119,12 @@ bool GraphicsHandler::Render()
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	bool result;
+	int indexCount;
+	int indexStart;
+	int modelSubsets;
+	int textureIndex;
+	XMFLOAT4 color;
+
 	//Clear the buffers to begin the scene
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -132,28 +138,42 @@ bool GraphicsHandler::Render()
 	//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
 	this->model1->Render(this->direct3DH->GetDeviceContext());
 
-	//Render the model1 using the color shader
-	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model1->GetIndexCount(), 
-								worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
-	if (!result)
-	{
-		return false;
+	modelSubsets = this->model1->NrOfSubsets();
+	for (int i = 0; i < modelSubsets; i++) {
+		model1->GetSubsetInfo(i, indexStart, indexCount, textureIndex, color);
+
+
+		//Render the model1 using the color shader
+		result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+			worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(textureIndex), color);
+		if (!result)
+		{
+			return false;
+		}
 	}
 
-	//Get the world matrix from model2
-	this->model2->GetWorldMatrix(worldMatrix);
+	////Render the model1 using the color shader
+	//result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model1->GetIndexCount(), 
+	//							worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
+	//if (!result)
+	//{
+	//	return false;
+	//}
 
-	//Put the model2 vertex and index buffers on the graphics pipeline to prepare them for drawing
-	this->model2->Render(this->direct3DH->GetDeviceContext());
+	////Get the world matrix from model2
+	//this->model2->GetWorldMatrix(worldMatrix);
 
-	//Render the model2 using the color shader
-	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model2->GetIndexCount(),
-								worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
+	////Put the model2 vertex and index buffers on the graphics pipeline to prepare them for drawing
+	//this->model2->Render(this->direct3DH->GetDeviceContext());
 
-	if (!result)
-	{
-		return false;
-	}
+	////Render the model2 using the color shader
+	//result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model2->GetIndexCount(),
+	//							worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
+
+	//if (!result)
+	//{
+	//	return false;
+	//}
 
 	//Display the rendered scene to screen
 	this->direct3DH->EndScene();
