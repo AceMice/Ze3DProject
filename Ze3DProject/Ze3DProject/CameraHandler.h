@@ -9,22 +9,17 @@ class CameraHandler
 {
 private:
 
-	XMVECTOR lookAt;
-	XMVECTOR up;
 	XMVECTOR camPos;
-	XMMATRIX viewMatrix;
 
+	XMMATRIX viewMatrix;
 	XMMATRIX camRotationMatrix;
-	XMVECTOR DefaultForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	XMVECTOR DefaultRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-	XMVECTOR camForward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	XMVECTOR camRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
+	
 	float moveLeftRight;
 	float moveBackForward;
 	float moveUpDown;
 	float camYaw;
 	float camPitch;
-
+	float camRoll;
 public:
 	CameraHandler();
 	~CameraHandler();
