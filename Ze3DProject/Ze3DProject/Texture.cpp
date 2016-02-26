@@ -5,7 +5,6 @@ Texture::Texture()
 {
 	this->targaData = nullptr;
 	this->texture = nullptr;
-	this->textureView = nullptr;
 }
 
 Texture::Texture(const Texture&) 
@@ -18,7 +17,7 @@ Texture::~Texture()
 
 }
 
-bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext, char* filename, bool isTarga) 
+bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext, char* filename) 
 {
 	bool result;
 	int height;
@@ -27,69 +26,62 @@ bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext
 	HRESULT hresult;
 	unsigned int rowPitch;
 	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	std::string format;
-	std::string finalPath;
-
 	std::string path = "../Ze3DProject/Textures/";
-	if (isTarga) {
-		format = ".tga";
-		finalPath = path + filename + format;
-
-		//Load the targa image data into memory
-		result = this->LoadTarga(finalPath.c_str(), height, width);
-		if (!result) {
-			return false;
-		}
-
-		//Setup the description of the texture
-		textureDesc.Height = height;
-		textureDesc.Width = width;
-		textureDesc.MipLevels = 0;
-		textureDesc.ArraySize = 1;
-		textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		textureDesc.SampleDesc.Count = 1;
-		textureDesc.SampleDesc.Quality = 0;
-		textureDesc.Usage = D3D11_USAGE_DEFAULT;
-		textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-		textureDesc.CPUAccessFlags = 0;
-		textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-
-		//Create the empty texture
-		hresult = device->CreateTexture2D(&textureDesc, NULL, &this->texture);
-		if (FAILED(hresult)) {
-			return false;
-		}
-
-		//Set the row pitch of the targa data
-		rowPitch = (width * 4) * sizeof(unsigned char);
-
-		//Copy the targa image data into the texture
-		deviceContext->UpdateSubresource(this->texture, 0, NULL, this->targaData, rowPitch, 0);
-
-		//Setup the shader resource view description
-		srvDesc.Format = textureDesc.Format;
-		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MostDetailedMip = 0;
-		srvDesc.Texture2D.MipLevels = -1;
-
-		//Create the shader resource view for the texture
-		hresult = device->CreateShaderResourceView(this->texture, &srvDesc, &this->textureView);
-		if (FAILED(hresult)) {
-			return false;
-		}
-
-		//Release the targa image data now that the image data has been loaded into the texture
-		delete[] this->targaData;
-		this->targaData = nullptr;
-	}
-	else {
-		format = ".jpg";
-		finalPath = path + filename + format;
-
+	std::string format = ".tga";
+	std::string finalPath = path + filename + format;
+	
+	//Load the targa image data into memory
+	result = this->LoadTarga(finalPath.c_str(), height, width);
+	if (!result) {
+		return false;
 	}
 
-	//Generate mipmaps for this texture
-	deviceContext->GenerateMips(this->textureView);
+	//Setup the description of the texture
+	textureDesc.Height = height;
+	textureDesc.Width = width;
+	textureDesc.MipLevels = 0;
+	textureDesc.ArraySize = 1;
+	textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+	textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+	//Create the empty texture
+	hresult = device->CreateTexture2D(&textureDesc, NULL, &this->texture);
+	if (FAILED(hresult)) {
+		return false;
+	}
+
+	//Set the row pitch of the targa data
+	rowPitch = (width * 4) * sizeof(unsigned char);
+
+	//Copy the targa image data into the texture
+	deviceContext->UpdateSubresource(this->texture, 0, NULL, this->targaData, rowPitch, 0);
+
+	//Setup the shader resource view description
+	srvDesc.Format = textureDesc.Format;
+	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = -1;
+
+	//Create the shader resource view for the texture
+	hresult = device->CreateShaderResourceView(this->texture, &srvDesc, &this->textureViews.at(0));
+	if (FAILED(hresult)) {
+		return false;
+	}
+
+	//Release the targa image data now that the image data has been loaded into the texture
+	delete[] this->targaData;
+	this->targaData = nullptr;
+
+	for (int i = 0; i < this->textureViews.size(); i++) {
+		//Generate mipmaps for this texture
+		deviceContext->GenerateMips(this->textureViews.at(i));
+	}
+	
 
 	return true;
 }
@@ -97,9 +89,9 @@ bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext
 void Texture::Shutdown() 
 {
 	//Release the texture view resource
-	if (this->textureView) {
-		this->textureView->Release();
-		this->textureView = nullptr;
+	for (int i = 0; i < this->textureViews.size(); i++) {
+		this->textureViews.at(i)->Release();
+		this->textureViews.at(i) = nullptr;
 	}
 
 	//Release the texture
@@ -117,9 +109,15 @@ void Texture::Shutdown()
 	return;
 }
 
-ID3D11ShaderResourceView* Texture::GetTexture() 
+ID3D11ShaderResourceView* Texture::GetTexture(std::string matName) 
 {
-	return this->textureView;
+	for (int i = 0; i < this->textureViews.size(); i++) {
+		if (this->materials.at(i).name == matName) {
+			return this->textureViews.at(this->materials.at(i).materialIndex);
+		}
+	}
+	//If no texture found, retuern the first one
+	return this->textureViews.at(0);
 }
 
 bool Texture::LoadTarga(const char*filename, int&height, int& width) 
@@ -210,4 +208,32 @@ bool Texture::LoadTarga(const char*filename, int&height, int& width)
 	return true;
 }
 
+bool Texture::LoadMtl(char* materialLib)
+{
+	std::ifstream file;
+	std::string line;
+	std::string junk;
+	std::stringstream ss;
+	int nrOfMaterials = 0;
 
+	file.open(materialLib);
+	if (!file.is_open()) {
+		return false;
+	}
+
+	while (std::getline(file, line)) {
+		if (line.size() > 0) {
+			if (line.substr(0, 6) == "newmtl") {
+				ss.clear();
+				ss.str(line);
+				Material tempMat;
+				this->materials.push_back(tempMat);
+				ss >> junk >> this->materials.at(nrOfMaterials).name;
+				this->materials.at(nrOfMaterials).hasTexture = false;
+				this->materials.at(nrOfMaterials).materialIndex = 0;
+			}
+		}
+	}
+
+	return true;
+}

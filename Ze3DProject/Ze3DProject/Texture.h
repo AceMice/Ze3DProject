@@ -4,13 +4,17 @@
 #include <d3d11.h>
 #include <stdio.h>
 #include <string>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <d3d11.h>
+#include <DirectXMath.h>
+
+using namespace DirectX;
 
 class Texture {
 
 private:
-	unsigned char* targaData;
-	ID3D11Texture2D* texture;
-	ID3D11ShaderResourceView* textureView;
 	
 	struct TargaHeader
 	{
@@ -21,17 +25,30 @@ private:
 		unsigned char data2;
 	};
 
-	bool LoadTarga(const char*, int&, int&);
+	struct Material
+	{
+		std::string name;
+		XMFLOAT4 difColor;
+		int materialIndex;
+		bool hasTexture;
+	};
 
+	unsigned char* targaData;
+	ID3D11Texture2D* texture;
+	std::vector<ID3D11ShaderResourceView*> textureViews;
+	std::vector<Material> materials;
+
+	bool LoadTarga(const char*, int&, int&);
+	bool LoadMtl(char*);
 
 public:
 	Texture();
 	Texture(const Texture&);
 	~Texture();
 
-	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, char*, bool);
+	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, char*);
 	void Shutdown();
-	ID3D11ShaderResourceView* GetTexture();
+	ID3D11ShaderResourceView* GetTexture(std::string);
 };
 
 

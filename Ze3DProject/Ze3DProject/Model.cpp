@@ -22,16 +22,16 @@ Model::~Model()
 bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename) 
 {
 	bool result;
-	char* materialName;
+	char* materialLib;
 
 	//Initialze the vertex and index buffer
-	result = this->InitializeBuffers(device, modelFilename, materialName);
+	result = this->InitializeBuffers(device, modelFilename, materialLib);
 	if (!result) {
 		return false;
 	}
 
 	//Load texture for this model
-	result = this->LoadTexture(device, deviceContext, modelFilename);
+	result = this->LoadTexture(device, deviceContext, materialLib);
 	if (!result) {
 		return false;
 	}
@@ -62,14 +62,14 @@ int Model::GetIndexCount()
 	return this->indexCount;
 }
 
-ID3D11ShaderResourceView* Model::GetTexture()
+ID3D11ShaderResourceView* Model::GetTexture(int subsetIndex)
 {
-	return this->texture->GetTexture();
+	return this->texture->GetTexture(this->materialNames.at(subsetIndex));
 }
 
 bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, char*& materialName) 
 {
-	Vertex* vertices = nullptr;
+	std::vector<Vertex> vertices;
 	unsigned long* indices = nullptr;
 	int sizeVertices = 0;
 	int sizeIndices = 0;
@@ -136,7 +136,7 @@ bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, char*& 
 
 	//Give the subresource structure a pointer to the vertex data
 	ZeroMemory(&vertexData, sizeof(vertexData));
-	vertexData.pSysMem = vertices;
+	vertexData.pSysMem = &vertices.at(0);
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
@@ -167,8 +167,6 @@ bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, char*& 
 	}
 
 	//Release the arrays now that the vertex and index buffers ave been created and loaded
-	delete[] vertices;
-	vertices = nullptr;
 	delete[] indices;
 	indices = nullptr;
 
@@ -224,7 +222,7 @@ bool Model::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext
 	}
 
 	//Init texture object
-	result = this->texture->Initialize(device, deviceContext, filename, true);
+	result = this->texture->Initialize(device, deviceContext, filename);
 	if (!result) {
 		return false;
 	}
@@ -244,7 +242,7 @@ void Model::ReleaseTexture()
 	return;
 }
 
-bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices, char*& materialName)
+bool Model::LoadObj(const char* filename, std::vector<Vertex> outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices, char*& materialLib)
 {
 	XMFLOAT3 tempVertex;
 	XMFLOAT2 tempUV;
@@ -260,6 +258,7 @@ bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long
 	std::vector<unsigned int> normalIndices;
 	std::string line;
 	std::string junks;
+	std::string tempLine;
 	char junk;
 	std::stringstream ss;
 	std::ifstream file;
@@ -294,6 +293,13 @@ bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long
 					tempNormals.push_back(tempNormal);
 				}
 			}
+			else if (line.substr(0, 6) == "usemlt") {
+				ss.clear();
+				ss.str(line);
+				ss >> junks >> tempLine;
+				this->materialNames.push_back(tempLine);
+				this->subsetIndices.push_back(vertexIndices.size());
+			}
 			else if (line.at(0) == 'f') {
 				ss.clear();
 				ss.str(line);
@@ -318,6 +324,11 @@ bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long
 				normalIndices.push_back(normalIndex[1]);
 				normalIndices.push_back(normalIndex[2]);
 			}
+			else if (line.substr(0, 6) == "mtllib") {
+				ss.clear();
+				ss.str(line);
+				ss >> junks >> materialLib;
+			}
 		}
 
 	}
@@ -337,19 +348,27 @@ bool Model::LoadObj(const char* filename, Vertex*& outputVertices, unsigned long
 
 	sizeVertices = vertexIndices.size();
 	sizeIndices = vertexIndices.size();
-	outputVertices = new Vertex[sizeIndices];
 	outputIndices = new unsigned long[sizeIndices];
 
-	for (int i = 0; i < sizeIndices; i++) {
+	/*for (int i = 0; i < sizeIndices; i++) {
 		outputVertices[i].position = tempVertices.at(vertexIndices.at(i) - 1);
 		outputVertices[i].texture = tempUvs.at(uvIndices.at(i) - 1);
 		outputVertices[i].normal = tempNormals.at(normalIndices.at(i) - 1);
+	}*/
+	for (int i = 1; i < this->subsetIndices.size(); i++) {
+		for (int j = 0; j < this->subsetIndices.at(i); j++) {
+			Vertex tempVertex;
+			int position = ((i - 1) * this->subsetIndices.size()) + j;
+			tempVertex.position = tempVertices.at(vertexIndices.at(position) - 1);
+			tempVertex.texture = tempUvs.at(uvIndices.at(position) - 1);
+			tempVertex.normal = tempNormals.at(normalIndices.at(position) - 1);
+			outputVertices.push_back(tempVertex);
+		}
 	}
 	for (int i = 0; i < sizeIndices; i++) {
 		outputIndices[i] = i;
 	}
 
-	materialName = "ogreBody";
 	return true;
 }
 
@@ -362,5 +381,18 @@ void Model::GetWorldMatrix(XMMATRIX& worldMatrix)
 void Model::SetWorldMatrix(XMMATRIX worldMatrix)
 {
 	this->worldMatrix = worldMatrix;
+	return;
+}
+
+int Model::NrOfSubsets()
+{
+	return this->subsetIndices.size();
+}
+
+void Model::GetSubsetInfo(int subsetIndex, int& indexStart, std::string& matName)
+{
+	indexStart = this->subsetIndices.at(subsetIndex);
+	matName = this->materialNames.at(subsetIndex);
+
 	return;
 }
