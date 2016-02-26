@@ -71,3 +71,6 @@ bool InputHandler::IsKeyDown(unsigned int key) {
 	return this->keys[key];
 }
 
+DIMOUSESTATE InputHandler::getMouseState() {
+	return this->mouseLastState;
+}
