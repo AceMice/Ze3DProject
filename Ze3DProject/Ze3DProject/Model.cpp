@@ -264,7 +264,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 	char junk;
 	std::stringstream ss;
 	std::ifstream file;
-	bool firstFace = true;
+	bool newGroup = false;
 
 	file.open(filename);
 	if (!file.is_open()) {
@@ -297,19 +297,26 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 					tempNormals.push_back(tempNormal);
 				}
 			}
+			else if (line.at(0) == 'g') {
+				this->subsetIndices.push_back(vertexIndices.size());
+				newGroup = true;
+			}
 			else if (line.substr(0, 6) == "usemtl") {
 				ss.clear();
 				ss.str(line);
 				ss >> junks >> tempLine;
 				this->materialNames.push_back(tempLine);
-				this->subsetIndices.push_back(vertexIndices.size());
-				firstFace = false;
+				if (!newGroup) {
+					this->subsetIndices.push_back(vertexIndices.size());
+				}
+				else {
+					newGroup = false;
+				}
 			}
 			else if (line.at(0) == 'f') {
-				if (firstFace) {
-					this->materialNames.push_back("noMat");
-					this->subsetIndices.push_back(0);
-					firstFace = false;
+				if (newGroup) {
+					this->materialNames.push_back(this->materialNames.back());
+					newGroup = false;
 				}
 				ss.clear();
 				ss.str(line);
