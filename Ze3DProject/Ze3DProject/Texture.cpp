@@ -22,6 +22,9 @@ bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext
 	bool result;
 
 	result = this->LoadMtl(device, deviceContext, materialLib);
+	if (!result) {
+		return false;
+	}
 
 	//Release the targa image data now that the image data has been loaded into the texture
 	delete[] this->targaData;

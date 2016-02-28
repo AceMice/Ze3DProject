@@ -69,7 +69,7 @@ ID3D11ShaderResourceView* Model::GetTexture(int textureIndex)
 
 bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::string& materialName)
 {
-	std::vector<Vertex> vertices;
+	std::vector<Vertex>* vertices = new std::vector<Vertex>;
 	unsigned long* indices = nullptr;
 	int sizeVertices = 0;
 	int sizeIndices = 0;
@@ -136,7 +136,7 @@ bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::st
 
 	//Give the subresource structure a pointer to the vertex data
 	ZeroMemory(&vertexData, sizeof(vertexData));
-	vertexData.pSysMem = &vertices; ////////////////////////////////////////// Causing chrash
+	vertexData.pSysMem = &((*vertices)[0]); ////////////////////////////////////////// Causing chrash
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
@@ -169,6 +169,8 @@ bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::st
 	//Release the arrays now that the vertex and index buffers ave been created and loaded
 	delete[] indices;
 	indices = nullptr;
+	delete vertices;
+	vertices = nullptr;
 
 	return true;
 }
@@ -242,7 +244,7 @@ void Model::ReleaseTexture()
 	return;
 }
 
-bool Model::LoadObj(const char* filename, std::vector<Vertex> outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices, std::string& materialLib)
+bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices, std::string& materialLib)
 {
 	XMFLOAT3 tempVertex;
 	XMFLOAT2 tempUV;
@@ -294,7 +296,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex> outputVertices, un
 					tempNormals.push_back(tempNormal);
 				}
 			}
-			else if (line.substr(0, 6) == "usemlt") {
+			else if (line.substr(0, 6) == "usemtl") {
 				ss.clear();
 				ss.str(line);
 				ss >> junks >> tempLine;
@@ -362,17 +364,23 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex> outputVertices, un
 		outputVertices[i].texture = tempUvs.at(uvIndices.at(i) - 1);
 		outputVertices[i].normal = tempNormals.at(normalIndices.at(i) - 1);
 	}*/
-	for (int i = 1; i < this->subsetIndices.size(); i++) {
-		for (int j = 0; j < this->subsetIndices.at(i); j++) {
-			Vertex tempVertex;
-			int position = ((i - 1) * this->subsetIndices.size()) + j;
-			tempVertex.position = tempVertices.at(vertexIndices.at(position) - 1);
-			tempVertex.texture = tempUvs.at(uvIndices.at(position) - 1);
-			tempVertex.normal = tempNormals.at(normalIndices.at(position) - 1);
-			outputVertices.push_back(tempVertex);
-		}
-	}
+	//for (int i = 0; i < this->subsetIndices.size(); i++) {
+	//	for (int j = 0; j < this->subsetIndices.at(i); j++) {
+	//		Vertex tempVertex;
+	//		int position = ((i - 1) * this->subsetIndices.size()) + j;
+	//		tempVertex.position = tempVertices.at(vertexIndices.at(position) - 1);
+	//		tempVertex.texture = tempUvs.at(uvIndices.at(position) - 1);
+	//		tempVertex.normal = tempNormals.at(normalIndices.at(position) - 1);
+	//		outputVertices->push_back(tempVertex);
+	//	}
+	//}
 	for (int i = 0; i < sizeIndices; i++) {
+		Vertex tempVertex;
+		tempVertex.position = tempVertices.at(vertexIndices.at(i) - 1);
+		tempVertex.texture = tempUvs.at(uvIndices.at(i) - 1);
+		tempVertex.normal = tempNormals.at(normalIndices.at(i) - 1);
+		outputVertices->push_back(tempVertex);
+
 		outputIndices[i] = i;
 	}
 

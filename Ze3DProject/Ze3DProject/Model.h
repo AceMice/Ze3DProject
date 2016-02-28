@@ -27,7 +27,7 @@ private:
 	void RenderBuffers(ID3D11DeviceContext*);
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, std::string);
 	void ReleaseTexture();
-	bool LoadObj(const char*, std::vector<Vertex>, unsigned long*&, int&, int&, std::string&);
+	bool LoadObj(const char*, std::vector<Vertex>*, unsigned long*&, int&, int&, std::string&);
 
 public:
 	Model();
