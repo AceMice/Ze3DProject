@@ -13,8 +13,14 @@ InputHandler::~InputHandler() {
 
 }
 
-void InputHandler::Initialize(HINSTANCE hInstance, HWND hwnd) {
+void InputHandler::Initialize(HINSTANCE hInstance, HWND hwnd, int screenWidth, int screenHeight) {
 	HRESULT hr;
+
+	this->mouseX = 0;
+	this->mouseY = 0;
+	this->screenWidth = screenWidth;
+	this->screenHeight = screenHeight;
+
 	//Initialize all the keys to being released and not pressed
 	for (int i = 0; i < 256; i++) {
 		this->keys[i] = false;
@@ -45,15 +51,42 @@ void InputHandler::Initialize(HINSTANCE hInstance, HWND hwnd) {
 		MessageBox(hwnd, L"DIMouse->SetCooperativeLevel", L"Error", MB_OK);
 	}
 
-
-	this->DIMouse->GetDeviceState(sizeof(DIMOUSESTATE), &this->mouseLastState);
+	hr = this->DIMouse->Acquire();
+	if (FAILED(hr)) {
+		MessageBox(hwnd, L"DIMouse->Acquire", L"Error", MB_OK);
+	}
 
 	return;
 }
 
 void InputHandler::Shutdown() {
-	this->DIMouse->Unacquire();
-	this->DirectInput->Release();
+	
+	if (this->DIMouse) {
+		this->DIMouse->Unacquire();
+		this->DIMouse->Release();
+		this->DIMouse = nullptr;
+	}
+
+	if (this->DirectInput) {
+		this->DirectInput->Release();
+		this->DirectInput = nullptr;
+	}
+
+	return;
+}
+
+bool InputHandler::Frame() {
+	bool result;
+
+	//Read the current state of the mouse
+	result = this->readMouse();
+	
+	//Even if we cant read the mouse, we will still use the old information
+	
+	//Process the changes in the mouse
+	this->ProcessInput();
+
+	return true;
 }
 
 void InputHandler::KeyDown(unsigned int input) {
@@ -74,13 +107,49 @@ bool InputHandler::IsKeyDown(unsigned int key) {
 	return this->keys[key];
 }
 
-DIMOUSESTATE InputHandler::getOldMouseState() {
-	return this->mouseLastState;
+bool InputHandler::readMouse() {
+	HRESULT hr;
+
+	//Read the mouse device
+	hr = this->DIMouse->GetDeviceState(sizeof(DIMOUSESTATE), &this->mouseLastState);
+	if (FAILED(hr)) {
+		
+		//If the mouse lost focus or was not acquired, try to get control back
+		if (hr == DIERR_INPUTLOST || hr == DIERR_NOTACQUIRED) {
+			this->DIMouse->Acquire();
+		}
+		else {
+			return false;
+		}
+	}
+
+	return true;
 }
 
+void InputHandler::ProcessInput() {
 
-void InputHandler::getNewMouseState(DIMOUSESTATE &mouseCurrentState) {
-	
-	this->DIMouse->GetDeviceState(sizeof(DIMOUSESTATE), &mouseCurrentState);
+	//Update the location of the mouse cursor based on the change of the mouse location during frame
+	this->mouseX += this->mouseLastState.lX;
+	this->mouseY += this->mouseLastState.lY;
 
+	//Check if the mouse exits the screen
+	if (this->mouseX < 0) {
+		this->mouseX = 0;
+	}
+	if (this->mouseX > this->screenWidth) {
+		this->mouseX = this->screenWidth;
+	}
+	if (this->mouseY < 0) {
+		this->mouseY = 0;
+	}
+	if (this->mouseY > this->screenHeight) {
+		this->mouseY = this->screenHeight;
+	}
+
+	return;
+}
+
+void InputHandler::getMousePos(int &mouseX, int &mouseY) {
+	mouseX = this->mouseX;
+	mouseY = this->mouseY;
 }

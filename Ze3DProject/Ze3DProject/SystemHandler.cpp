@@ -101,6 +101,11 @@ bool SystemHandler::Frame(float dTime) {
 		return false;
 	}
 
+	//Do the frame processing for the input object
+	result = this->inputH->Frame();
+
+	//OPS! RIGHT NOW INPUT->FRAME() CANT RETURN FALSE SINCE WE WANT THE PROGRAM TO WORK EVEN IF WE LOSE CONTACT WITH THE MOUSE //
+
 	//Do the frame processing for the graphics object
 	result = this->graphicsH->Frame(dTime, this->inputH);
 
@@ -150,7 +155,7 @@ bool SystemHandler::Initialize() {
 	}
 
 	//Initialize the Input object
-	this->inputH->Initialize(this->hinstance, this->hwnd);
+	this->inputH->Initialize(this->hinstance, this->hwnd, screenWidth, screenHeight);
 
 	//Create the graphics object. This object will handle rendering all the graphics for this applicaion
 	this->graphicsH = new GraphicsHandler;

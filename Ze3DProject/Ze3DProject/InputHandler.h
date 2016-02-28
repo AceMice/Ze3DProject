@@ -11,19 +11,25 @@ private:
 	IDirectInputDevice8* DIMouse;
 	DIMOUSESTATE mouseLastState;
 	LPDIRECTINPUT8 DirectInput;
+	int mouseX;
+	int mouseY;
+	int screenWidth;
+	int screenHeight;
 
 public:
 	InputHandler();
 	InputHandler(const InputHandler&);
 	~InputHandler();
 
-	void Initialize(HINSTANCE, HWND);
+	void Initialize(HINSTANCE, HWND, int, int);
 	void Shutdown();
+	bool Frame();
 	void KeyDown(unsigned int);
 	void KeyUp(unsigned int);
 	bool IsKeyDown(unsigned int);
-	DIMOUSESTATE getOldMouseState();
-	void getNewMouseState(DIMOUSESTATE&);
+	bool readMouse();
+	void ProcessInput();
+	void getMousePos(int&, int&);
 };
 
 
