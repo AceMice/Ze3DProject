@@ -285,6 +285,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 					ss.clear();
 					ss.str(line);
 					ss >> junks >> tempUV.x >> tempUV.y;
+					tempUV.y = 1.0f - tempUV.y;
 					//sscanf_s(line.c_str(), "%f %f\n", &tempUV.x, &tempUV.y);
 					tempUvs.push_back(tempUV);
 				}
