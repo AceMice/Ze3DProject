@@ -323,6 +323,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 				ss >> junk >> vertexIndex[0] >> junk >> uvIndex[0] >> junk >> normalIndex[0]
 					>> vertexIndex[1] >> junk >> uvIndex[1] >> junk >> normalIndex[1]
 					>> vertexIndex[2] >> junk >> uvIndex[2] >> junk >> normalIndex[2];
+
 				/*int matches = sscanf_s(line.c_str(), "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex.x, &uvIndex.x, &normalIndex.x,
 					&vertexIndex.y, &uvIndex.y, &normalIndex.y, &vertexIndex.z, &uvIndex.z, &normalIndex.z);
 				if (matches != 9) {
@@ -347,8 +348,8 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 				ss >> junks >> materialLib;
 			}
 		}
-
 	}
+	file.close();
 	
 	//outputVertices[vertexIndex.x - 1].position = tempVertices.at(vertexIndex.x - 1);
 	//outputVertices[vertexIndex.x - 1].texture = tempUvs.at(vertexIndex.x - 1);
@@ -423,8 +424,16 @@ void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int
 		indexCount = this->GetIndexCount() - indexStart;
 	}
 	Texture::Material tempMaterial = this->texture->GetMaterial(this->materialNames.at(subsetIndex));
-
-	textureIndex = tempMaterial.textureIndex;
+	if (tempMaterial.name == "body_paint1SG") {
+		bool cool = true;
+	}
+	if (tempMaterial.hasTexture) {
+		textureIndex = tempMaterial.textureIndex;
+	}
+	else {
+		textureIndex = -1;
+	}
+	
 	color = tempMaterial.difColor;
 
 	return;

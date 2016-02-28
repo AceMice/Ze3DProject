@@ -47,7 +47,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Initialize the model1 object
-	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreFullG");
+	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "carSLS");
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->model1->Initialize", L"Error", MB_OK);
