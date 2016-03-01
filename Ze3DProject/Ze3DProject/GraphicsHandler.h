@@ -18,6 +18,7 @@ private:
 	D3DHandler* direct3DH;
 	CameraHandler* cameraH;
 	Model* model1;
+	Model* model2;
 	ShaderHandler* shaderH;
 
 	bool Render();
