@@ -111,7 +111,7 @@ bool InputHandler::readMouse() {
 	HRESULT hr;
 
 	//Read the mouse device
-	hr = this->DIMouse->GetDeviceState(sizeof(DIMOUSESTATE), &this->mouseLastState);
+	hr = this->DIMouse->GetDeviceState(sizeof(DIMOUSESTATE), &this->mouseState);
 	if (FAILED(hr)) {
 		
 		//If the mouse lost focus or was not acquired, try to get control back
@@ -121,6 +121,7 @@ bool InputHandler::readMouse() {
 		else {
 			return false;
 		}
+
 	}
 
 	return true;
@@ -129,8 +130,8 @@ bool InputHandler::readMouse() {
 void InputHandler::ProcessInput() {
 
 	//Update the location of the mouse cursor based on the change of the mouse location during frame
-	this->mouseX += this->mouseLastState.lX;
-	this->mouseY += this->mouseLastState.lY;
+	this->mouseX += this->mouseState.lX;
+	this->mouseY += this->mouseState.lY;
 
 	//Check if the mouse exits the screen
 	if (this->mouseX < 0) {
@@ -149,7 +150,9 @@ void InputHandler::ProcessInput() {
 	return;
 }
 
-void InputHandler::getMousePos(int &mouseX, int &mouseY) {
-	mouseX = this->mouseX;
-	mouseY = this->mouseY;
+DirectX::XMVECTOR InputHandler::GetMouseDeltaPos() {
+	
+	DirectX::XMVECTOR result = DirectX::XMVectorSet(this->mouseState.lX, this->mouseState.lY,0,1);
+
+	return result;
 }

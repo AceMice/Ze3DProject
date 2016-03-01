@@ -4,12 +4,13 @@
 #pragma comment (lib, "dinput8.lib")
 #pragma comment (lib, "dxguid.lib")
 #include <dinput.h>
+#include <DirectXMath.h>
 
 class InputHandler {
 private:
 	bool keys[256];
 	IDirectInputDevice8* DIMouse;
-	DIMOUSESTATE mouseLastState;
+	DIMOUSESTATE mouseState;
 	LPDIRECTINPUT8 DirectInput;
 	int mouseX;
 	int mouseY;
@@ -29,7 +30,7 @@ public:
 	bool IsKeyDown(unsigned int);
 	bool readMouse();
 	void ProcessInput();
-	void getMousePos(int&, int&);
+	DirectX::XMVECTOR GetMouseDeltaPos();
 };
 
 

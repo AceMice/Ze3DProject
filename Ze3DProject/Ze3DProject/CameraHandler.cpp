@@ -33,10 +33,6 @@ XMVECTOR CameraHandler::GetPosition()
 
 void CameraHandler::updateCamera(float dt, InputHandler* inputH) {
 
-	int mouseX;
-	int mouseY;
-	inputH->getMousePos(mouseX, mouseY);
-
 	float speed = 90000;
 
 	if (inputH->IsKeyDown(87)) {	//W
@@ -71,10 +67,8 @@ void CameraHandler::updateCamera(float dt, InputHandler* inputH) {
 		this->moveUpDown -= dt/speed;
 	}
 
-	//MOUSE POSITION INPUT
-	if (mouseX >= 400 & mouseY >= 300) {
-		this->moveBackForward += dt / speed;
-	}
+	this->camPitch = this->camPitch + (XMVectorGetY(inputH->GetMouseDeltaPos()) * 0.005);
+	this->camYaw = this->camYaw + (XMVectorGetX(inputH->GetMouseDeltaPos()) * 0.005);
 
 	return;
 }
@@ -88,6 +82,7 @@ void CameraHandler::Frame(float dt, InputHandler* inputH)
 	this->updateCamera(dt, inputH);
 
 	this->camRotationMatrix = XMMatrixRotationRollPitchYaw(this->camPitch, this->camYaw, 0);
+
 	lookAt = XMVector3TransformCoord(lookAt, this->camRotationMatrix);
 
 	lookAt = XMVector3Normalize(lookAt);
