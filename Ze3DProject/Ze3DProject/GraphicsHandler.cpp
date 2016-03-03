@@ -4,7 +4,6 @@ GraphicsHandler::GraphicsHandler()
 {
 	this->direct3DH = nullptr;
 	this->model1 = nullptr;
-	this->model2 = nullptr;
 	this->cameraH = nullptr;
 	this->shaderH = nullptr;
 
@@ -48,27 +47,26 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Initialize the model1 object
-	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreHead");
+	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "OgreFullG");
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->model1->Initialize", L"Error", MB_OK);
+		return false;
+	}
+	// Create the model1 object.
+	this->model2 = new Model;
+	if (!this->model2)
+	{
+		return false;
+	}
+	//Initialize the model2 object
+	result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "OgreFullG");
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->model1->Initialize", L"Error", MB_OK);
 		return false;
 	}
 
-	// Create the model2 object.
-	this->model2 = new Model;
-	if (!this->model2)
-	{
-		return false;
-	}
-
-	//Initialize the model2 object
-	result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreBody");
-	if (!result)
-	{
-		MessageBox(hwnd, L"this->model2->Initialize", L"Error", MB_OK);
-		return false;
-	}
 
 	// Create the color shader object.
 	this->shaderH = new ShaderHandler;
@@ -94,15 +92,15 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	bool result;
 	XMMATRIX modelWorld;
 	
-	/*this->rotY += dTime / 800000;
-	modelWorld = XMMatrixRotationY(this->rotY);
-	this->model1->SetWorldMatrix(modelWorld);*/
-
-	modelWorld = XMMatrixRotationY(2.5f);
-	modelWorld = XMMatrixScaling(0.6f, 0.6f, 0.6f) * modelWorld;
-	modelWorld = XMMatrixTranslation(0.0f, -5.0f, -3.0f) * modelWorld;
-	this->model1->SetWorldMatrix(modelWorld);
+	this->rotY += dTime / 800000;
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixRotationY(2.8f) * modelWorld;
+	modelWorld = XMMatrixTranslation(-8.0f, -5.0f, -5.0f) * modelWorld;
 	this->model2->SetWorldMatrix(modelWorld);
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixRotationY(2.0f) * modelWorld;
+	modelWorld = XMMatrixTranslation(6.0f, -5.0f, -3.0f) * modelWorld;
+	this->model1->SetWorldMatrix(modelWorld);
 
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH);
@@ -119,6 +117,12 @@ bool GraphicsHandler::Render()
 {
 	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
 	bool result;
+	int indexCount;
+	int indexStart;
+	int modelSubsets;
+	int textureIndex;
+	XMFLOAT4 color;
+
 	//Clear the buffers to begin the scene
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -132,28 +136,46 @@ bool GraphicsHandler::Render()
 	//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
 	this->model1->Render(this->direct3DH->GetDeviceContext());
 
-	//Render the model1 using the color shader
-	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model1->GetIndexCount(), 
-								worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
-	if (!result)
-	{
-		return false;
+	modelSubsets = this->model1->NrOfSubsets();
+	for (int i = 0; i < modelSubsets; i++) {
+		model1->GetSubsetInfo(i, indexStart, indexCount, textureIndex, color);
+
+
+		//Render the model1 using the color shader
+		result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+			worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(textureIndex), color);
+		if (!result)
+		{
+			return false;
+		}
 	}
 
-	//Get the world matrix from model2
+	//Get the world matrix from model1
 	this->model2->GetWorldMatrix(worldMatrix);
 
-	//Put the model2 vertex and index buffers on the graphics pipeline to prepare them for drawing
+	//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
 	this->model2->Render(this->direct3DH->GetDeviceContext());
 
-	//Render the model2 using the color shader
-	result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model2->GetIndexCount(),
-								worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f));
+	modelSubsets = this->model2->NrOfSubsets();
+	for (int i = 0; i < modelSubsets; i++) {
+		model2->GetSubsetInfo(i, indexStart, indexCount, textureIndex, color);
 
-	if (!result)
-	{
-		return false;
+
+		//Render the model1 using the color shader
+		result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+			worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(textureIndex), color);
+		if (!result)
+		{
+			return false;
+		}
 	}
+	////Render the model1 using the color shader
+	//result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model1->GetIndexCount(), 
+	//							worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
+	//if (!result)
+	//{
+	//	return false;
+	//}
 
 	//Display the rendered scene to screen
 	this->direct3DH->EndScene();
@@ -179,7 +201,7 @@ void GraphicsHandler::Shutdown()
 		this->model1 = 0;
 	}
 
-	//Release the Model2 object
+	//Release the Model1 object
 	if (this->model2)
 	{
 		this->model2->Shutdown();

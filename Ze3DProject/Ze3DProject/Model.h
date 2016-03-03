@@ -1,14 +1,6 @@
 #ifndef Model_H
 #define Model_H
 
-#include<d3d11.h>
-#include<DirectXMath.h>
-#include<fstream>
-#include<string>
-#include<sstream>
-#include<vector>
-using namespace DirectX;
-
 #include "Texture.h"
 
 class Model {
@@ -25,15 +17,17 @@ private:
 	ID3D11Buffer* indexBuffer;
 	int vertexCount;
 	int indexCount;
+	std::vector<int> subsetIndices;
+	std::vector<std::string> materialNames;
 	Texture* texture;
 	XMMATRIX worldMatrix;
 
-	bool InitializeBuffers(ID3D11Device*, char*, char*&);
+	bool InitializeBuffers(ID3D11Device*, char*, std::string&);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
-	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, char*);
+	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, std::string);
 	void ReleaseTexture();
-	bool LoadObj(const char*, Vertex*&, unsigned long*&, int&, int&, char*&);
+	bool LoadObj(const char*, std::vector<Vertex>*, unsigned long*&, int&, int&, std::string&);
 
 public:
 	Model();
@@ -48,7 +42,9 @@ public:
 	void GetWorldMatrix(XMMATRIX&);
 	void SetWorldMatrix(XMMATRIX);
 
-	ID3D11ShaderResourceView* GetTexture();
+	ID3D11ShaderResourceView* GetTexture(int);
+	int NrOfSubsets();
+	void GetSubsetInfo(int, int&, int&, int&, XMFLOAT4&);
 };
 
 
