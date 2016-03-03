@@ -5,7 +5,8 @@ cbuffer MatrixBuffer
 	matrix viewMatrix;
 	matrix projectionMatrix;
 
-	float4 color;
+	float4 difColor;
+	float4 specColor;
 	bool hasTexture;
 };
 

@@ -18,6 +18,7 @@ public:
 	{
 		std::string name;
 		XMFLOAT4 difColor;
+		XMFLOAT4 specColor;
 		int textureIndex;
 		bool hasTexture;
 	};
