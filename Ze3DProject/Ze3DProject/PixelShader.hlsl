@@ -22,6 +22,8 @@ struct PixelInput
 float4 main(PixelInput input) : SV_TARGET
 {
 	float3 s;	//Texture color for the current pixel
+	float ambientStr = 0.2;
+	float diffuseStr = 0.8;
 
 	if (hasTexture) {
 		s = shaderTexture.Sample(shaderSampler, input.tex).rgb;
@@ -31,20 +33,13 @@ float4 main(PixelInput input) : SV_TARGET
 	}
 	
 	//Ambient color
-	float aRed = 0.2 * s.r;
-	float aGreen = 0.2 * s.g;
-	float aBlue = 0.2 * s.b;
-	float3 ambient = float3(aRed, aGreen, aBlue);
+	float3 ambient = float3(ambientStr * s.r, ambientStr * s.g, ambientStr * s.b);
 	
 	//Calculate Diffuse color
 	float3 outVec = (float4(0,5,-6,1) - input.worldPos).xyz;	//(0,0,-6,1)Position of light i worldspace, camera is at (0,0,-5)
 	outVec = normalize(outVec);
 	float value = saturate(dot(input.normal, outVec));
-
-	float dRed = (0.8 * s.r * value);
-	float dGreen = (0.8 * s.g * value);
-	float dBlue = (0.8 * s.b * value);
-	float3 diffuse = float3(dRed, dGreen, dBlue);
+	float3 diffuse = float3(diffuseStr * s.r * value, diffuseStr * s.g * value, diffuseStr * s.b * value);
 
 	float3 result = ambient + diffuse;
 
