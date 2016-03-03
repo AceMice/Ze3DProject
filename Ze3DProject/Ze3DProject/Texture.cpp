@@ -198,6 +198,7 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 				ss >> junk >> this->materials.at(nrOfMaterials).name;
 				this->materials.at(nrOfMaterials).hasTexture = false;
 				this->materials.at(nrOfMaterials).textureIndex = 0;
+				this->materials.at(nrOfMaterials).specColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 				nrOfMaterials++;
 				difSet = false;
 			}
@@ -215,6 +216,11 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 						>> this->materials.at(nrOfMaterials - 1).difColor.y
 						>> this->materials.at(nrOfMaterials - 1).difColor.z;
 					difSet = true;
+				}
+				else if (line.at(1) == 's') {
+					ss >> junk >> this->materials.at(nrOfMaterials - 1).specColor.x
+						>> this->materials.at(nrOfMaterials - 1).specColor.y
+						>> this->materials.at(nrOfMaterials - 1).specColor.z;
 				}
 			}
 			else if (line.substr(0, 6) == "map_Kd") {

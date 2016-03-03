@@ -413,7 +413,7 @@ int Model::NrOfSubsets()
 	return this->subsetIndices.size();
 }
 
-void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int& textureIndex, XMFLOAT4& color)
+void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int& textureIndex, XMFLOAT4& difColor, XMFLOAT4& specColor)
 {
 	indexStart = this->subsetIndices.at(subsetIndex);
 
@@ -424,9 +424,7 @@ void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int
 		indexCount = this->GetIndexCount() - indexStart;
 	}
 	Texture::Material tempMaterial = this->texture->GetMaterial(this->materialNames.at(subsetIndex));
-	if (tempMaterial.name == "body_paint1SG") {
-		bool cool = true;
-	}
+
 	if (tempMaterial.hasTexture) {
 		textureIndex = tempMaterial.textureIndex;
 	}
@@ -434,7 +432,8 @@ void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int
 		textureIndex = -1;
 	}
 	
-	color = tempMaterial.difColor;
+	difColor = tempMaterial.difColor;
+	specColor = tempMaterial.specColor;
 
 	return;
 }

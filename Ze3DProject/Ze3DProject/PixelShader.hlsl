@@ -7,7 +7,8 @@ cbuffer MatrixBuffer
 	matrix viewMatrix;
 	matrix projectionMatrix;
 
-	float4 color;
+	float4 difColor;
+	float4 specColor;
 	bool hasTexture;
 };
 
@@ -29,7 +30,7 @@ float4 main(PixelInput input) : SV_TARGET
 		s = shaderTexture.Sample(shaderSampler, input.tex).rgb;
 	}
 	else{
-		s = color;
+		s = difColor;
 	}
 	
 	//Ambient color

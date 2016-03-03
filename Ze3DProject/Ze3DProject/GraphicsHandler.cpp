@@ -122,7 +122,8 @@ bool GraphicsHandler::Render()
 	int indexStart;
 	int modelSubsets;
 	int textureIndex;
-	XMFLOAT4 color;
+	XMFLOAT4 difColor;
+	XMFLOAT4 specColor;
 
 	//Clear the buffers to begin the scene
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
@@ -139,12 +140,12 @@ bool GraphicsHandler::Render()
 
 	modelSubsets = this->model1->NrOfSubsets();
 	for (int i = 0; i < modelSubsets; i++) {
-		model1->GetSubsetInfo(i, indexStart, indexCount, textureIndex, color);
+		model1->GetSubsetInfo(i, indexStart, indexCount, textureIndex, difColor, specColor);
 
 
 		//Render the model1 using the color shader
 		result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-			worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(textureIndex), color);
+			worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(textureIndex), difColor, specColor);
 		if (!result)
 		{
 			return false;
@@ -159,12 +160,12 @@ bool GraphicsHandler::Render()
 
 	modelSubsets = this->model2->NrOfSubsets();
 	for (int i = 0; i < modelSubsets; i++) {
-		model2->GetSubsetInfo(i, indexStart, indexCount, textureIndex, color);
+		model2->GetSubsetInfo(i, indexStart, indexCount, textureIndex, difColor, specColor);
 
 
 		//Render the model1 using the color shader
 		result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-			worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(textureIndex), color);
+			worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(textureIndex), difColor, specColor);
 		if (!result)
 		{
 			return false;

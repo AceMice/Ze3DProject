@@ -36,12 +36,12 @@ void ShaderHandler::Shutdown()
 }
 
 bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, int indexStart,
-	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 color)
+	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 difColor, XMFLOAT4 specColor)
 {
 	bool result = false;
 
 	//Set shader parameters used for rendering
-	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, color);
+	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, difColor, specColor);
 	if (!result) {
 		return false;
 	}
@@ -242,7 +242,7 @@ void ShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd
 }
 
 bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, 
-	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 color)
+	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 difColor, XMFLOAT4 specColor)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -268,7 +268,8 @@ bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMA
 	dataPtr->view = viewMatrix;
 	dataPtr->projection = projectionMatrix;
 
-	dataPtr->color = color;
+	dataPtr->difColor = difColor;
+	dataPtr->specColor = specColor;
 	if (!texture) {
 		dataPtr->hasTexture = false;
 	}
