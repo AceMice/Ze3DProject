@@ -4,6 +4,7 @@ GraphicsHandler::GraphicsHandler()
 {
 	this->direct3DH = nullptr;
 	this->model1 = nullptr;
+	this->model2 = nullptr;
 	this->cameraH = nullptr;
 	this->shaderH = nullptr;
 
