@@ -67,8 +67,9 @@ void CameraHandler::updateCamera(float dt, InputHandler* inputH) {
 		this->moveUpDown -= dt/speed;
 	}
 
-	this->camPitch = this->camPitch + (XMVectorGetY(inputH->GetMouseDeltaPos()) * 0.005);
-	this->camYaw = this->camYaw + (XMVectorGetX(inputH->GetMouseDeltaPos()) * 0.005);
+	//Change Pitch/yaw values depending on mouse movement
+	this->camPitch += (XMVectorGetY(inputH->GetMouseDeltaPos()) * 0.005);
+	this->camYaw += (XMVectorGetX(inputH->GetMouseDeltaPos()) * 0.005);
 
 	return;
 }
@@ -79,6 +80,7 @@ void CameraHandler::Frame(float dt, InputHandler* inputH)
 	XMVECTOR camRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 	XMVECTOR camUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
+	//Get input from keyboard and mouse movement to change camera values
 	this->updateCamera(dt, inputH);
 
 	this->camRotationMatrix = XMMatrixRotationRollPitchYaw(this->camPitch, this->camYaw, 0);

@@ -151,8 +151,6 @@ void InputHandler::ProcessInput() {
 }
 
 DirectX::XMVECTOR InputHandler::GetMouseDeltaPos() {
-	
-	DirectX::XMVECTOR result = DirectX::XMVectorSet(this->mouseState.lX, this->mouseState.lY,0,1);
 
-	return result;
+	return DirectX::XMVectorSet(this->mouseState.lX, this->mouseState.lY, 0, 0);	//z,y is not used so set to 0;
 }
