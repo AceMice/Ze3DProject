@@ -47,7 +47,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Initialize the model1 object
-	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "M4A1");
+	result = this->model1->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "OgreFullG");
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->model1->Initialize", L"Error", MB_OK);
@@ -92,18 +92,14 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	bool result;
 	XMMATRIX modelWorld;
 	
-	/*this->rotY += dTime / 800000;
-	modelWorld = XMMatrixRotationY(this->rotY);
-	this->model1->SetWorldMatrix(modelWorld);*/
-
-	modelWorld = XMMatrixRotationY(2.5f);
-	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f) * modelWorld;
-	modelWorld = XMMatrixTranslation(0.0f, -5.0f, -3.0f) * modelWorld;
+	this->rotY += dTime / 800000;
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixRotationY(2.8f) * modelWorld;
+	modelWorld = XMMatrixTranslation(-8.0f, -5.0f, -5.0f) * modelWorld;
 	this->model2->SetWorldMatrix(modelWorld);
-	modelWorld = XMMatrixScaling(0.3f, 0.3f, 0.3f);
-	modelWorld = XMMatrixRotationX(2.0f) * modelWorld;
-	modelWorld = XMMatrixRotationZ(1.5f) * modelWorld;
-	modelWorld = XMMatrixTranslation(3.0f, -5.0f, -3.5f) * modelWorld;
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixRotationY(2.0f) * modelWorld;
+	modelWorld = XMMatrixTranslation(6.0f, -5.0f, -3.0f) * modelWorld;
 	this->model1->SetWorldMatrix(modelWorld);
 
 	//Generate the view matrix based on the camera's position

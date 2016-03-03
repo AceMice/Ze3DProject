@@ -136,7 +136,7 @@ bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::st
 
 	//Give the subresource structure a pointer to the vertex data
 	ZeroMemory(&vertexData, sizeof(vertexData));
-	vertexData.pSysMem = &((*vertices)[0]); ////////////////////////////////////////// Causing chrash
+	vertexData.pSysMem = &((*vertices)[0]);
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
