@@ -5,6 +5,7 @@ struct GSInput
 	float2 tex : TEXCOORD0;
 	float4 worldPos : POSITION;
 	float3 normal : NORMAL;
+	float3 viewDir : TEXCOORD1;
 };
 
 struct PSInput
@@ -13,6 +14,7 @@ struct PSInput
 	float2 tex : TEXCOORD;
 	float3 normal : NORMAL;
 	float4 worldPos : POSITION;
+	float3 viewDir : TEXCOORD1;
 };
 
 [maxvertexcount(3)]
@@ -26,6 +28,7 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output
 	float3 edge1 = input[2].position.xyz - input[0].position.xyz;
 	normal = cross(edge0, edge1);
 	normal = normalize(normal);*/
+	element.viewDir = input[0].viewDir;
 	for (uint i = 0; i < 3; i++)
 	{
 		element.position = input[i].position;

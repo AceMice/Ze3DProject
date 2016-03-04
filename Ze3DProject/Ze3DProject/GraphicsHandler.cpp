@@ -145,7 +145,7 @@ bool GraphicsHandler::Render()
 
 		//Render the model1 using the color shader
 		result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-			worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(textureIndex), difColor, specColor);
+			worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(textureIndex), difColor, specColor, this->cameraH->GetPosition());
 		if (!result)
 		{
 			return false;
@@ -165,7 +165,7 @@ bool GraphicsHandler::Render()
 
 		//Render the model1 using the color shader
 		result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-			worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(textureIndex), difColor, specColor);
+			worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(textureIndex), difColor, specColor, this->cameraH->GetPosition());
 		if (!result)
 		{
 			return false;
