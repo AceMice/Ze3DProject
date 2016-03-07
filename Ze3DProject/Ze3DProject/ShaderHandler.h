@@ -21,7 +21,7 @@ private:
 		XMFLOAT4 difColor;
 		XMFLOAT4 specColor;
 		bool hasTexture;
-		XMFLOAT3 cameraPos;
+		XMFLOAT4 cameraPos;
 	};
 
 	ID3D11VertexShader* vertexShader;

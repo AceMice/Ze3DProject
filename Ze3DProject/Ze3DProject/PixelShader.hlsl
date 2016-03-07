@@ -26,7 +26,8 @@ float4 main(PixelInput input) : SV_TARGET
 	float3 s;	//Texture color for the current pixel
 	float ambientStr = 0.2;
 	float diffuseStr = 0.8;
-	float sf = 5;
+	float shineFactor = 5;
+	float lightSpecular = 0.5;
 
 	if (hasTexture) {
 		s = shaderTexture.Sample(shaderSampler, input.tex).rgb;
@@ -41,9 +42,9 @@ float4 main(PixelInput input) : SV_TARGET
 	
 	float3 inVec = ((input.worldPos).xyz - float4(0, 5, -6, 1));	//lightVec towards the object
 	
-	//Specular ????????(?? ? ??)^s
+	//Specular
 	float3 refVec = normalize(reflect(inVec, input.normal));	//Create the the reflection
-	float3 specular = 1 * 10 * pow( dot( refVec, normalize(input.viewDir) ), sf);
+	float3 specular = specColor * lightSpecular * pow( dot( refVec, normalize(input.viewDir) ), shineFactor);
 	
 	//Calculate Diffuse color
 	float3 outVec = normalize(-inVec);	//Reversing the vector to point outwards

@@ -279,7 +279,7 @@ bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMA
 
 	
 	//CAMERA POS
-	dataPtr->cameraPos = XMFLOAT3(XMVectorGetIntX(camPos), XMVectorGetIntY(camPos), XMVectorGetIntZ(camPos));
+	dataPtr->cameraPos = XMFLOAT4(XMVectorGetIntX(camPos), XMVectorGetIntY(camPos), XMVectorGetIntZ(camPos),XMVectorGetIntW(camPos));
 
 	//Unmap the constant buffer to give the GPU access agin
 	deviceContext->Unmap(this->matrixBuffer, 0);
