@@ -289,14 +289,12 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		}
 		file.close();
 		path = filename;
-		path.append(".bin");
+		path.append("V.bin");
 		file.open(path, std::ios::binary | std::ios::in);
 		if (!file.is_open()) {
 			return false;
 		}
 		Vertex* tempVerticesArray = new Vertex[sizeVertices];
-
-		int size = sizeof(Vertex) * sizeVertices;
 
 		file.read((char*)tempVerticesArray, sizeof(Vertex) * sizeVertices);
 		file.close();
@@ -305,10 +303,21 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 
 		delete[] tempVerticesArray;
 
+		path = filename;
+		path.append("I.bin");
+		file.open(path, std::ios::binary | std::ios::in);
+		if (!file.is_open()) {
+			return false;
+		}
+		
 		outputIndices = new unsigned long[sizeIndices];
+		file.read((char*)outputIndices, sizeof(unsigned long) * sizeVertices);
+		file.close();
+
+		/*outputIndices = new unsigned long[sizeIndices];
 		for (int i = 0; i < sizeIndices; i++) {
 			outputIndices[i] = i;
-		}
+		}*/
 	}
 	else {
 		format = ".obj";
@@ -452,13 +461,22 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		}
 		file.close();
 
-		format = ".bin";
+		format = "V.bin"; //Save the vericies as binary
 		path = filename + format;
 		file.open(path, std::ios::out | std::ios::binary);
 		if (!file.is_open()) {
 			return false;
 		}
 		file.write((char*)&(outputVertices[0]), sizeof(Vertex) * outputVertices.size());
+		file.close();
+
+		format = "I.bin"; //save the indices as binary
+		path = filename + format;
+		file.open(path, std::ios::out | std::ios::binary);
+		if (!file.is_open()) {
+			return false;
+		}
+		file.write((char*)outputIndices, sizeof(unsigned long) * sizeIndices);
 		file.close();
 	}
 
