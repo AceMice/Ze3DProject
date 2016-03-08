@@ -265,15 +265,54 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 	std::string tempLine;
 	char junk;
 	std::stringstream ss;
-	std::ifstream file;
+	std::fstream file;
 	bool newGroup = false;
+	int tempSubset = 0;
 	std::string format = ".bin";
-	std::string path = filename + format;
-	//file.open(path, std::ios::binary);
-	if (!file.is_open()) {
+	std::string path = filename;
+	path.append("ACE.txt");
+	file.open(path, std::ios::in);
+	if (file.is_open()) {
+		std::getline(file, line);
+		ss.clear();
+		ss.str(line);
+		ss >> sizeVertices >> sizeIndices;
+		std::getline(file, line);
+		ss.clear();
+		ss.str(line);
+		ss >> materialLib;
+		while (std::getline(file, line)) {
+			ss.clear();
+			ss.str(line);
+			ss >> tempSubset >> tempLine;
+			subsetIndices.push_back(tempSubset);
+			materialNames.push_back(tempLine);
+		}
+		file.close();
+		path = filename;
+		path.append(".bin");
+		file.open(path, std::ios::binary | std::ios::in);
+		if (!file.is_open()) {
+			return false;
+		}
+		Vertex* tempVerticesArray = new Vertex[sizeVertices];
+
+		file.read((char*)tempVerticesArray, sizeof(Vertex) * sizeVertices);
+		file.close();
+
+		outputVertices->insert(outputVertices->end(), &tempVerticesArray[0], &tempVerticesArray[sizeVertices]);
+
+		delete[] tempVerticesArray;
+
+		outputIndices = new unsigned long[sizeIndices];
+		for (int i = 0; i < sizeIndices; i++) {
+			outputIndices[i] = i;
+		}
+	}
+	else {
 		format = ".obj";
 		path = filename + format;
-		file.open(path);
+		file.open(path, std::ios::in);
 		if (!file.is_open()) {
 			return false;
 		}
@@ -390,7 +429,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 		//		outputVertices->push_back(tempVertex);
 		//	}
 		//}
-		for (int i = 0; i < sizeIndices; i++) {
+		for (int i = 0; i < sizeVertices; i++) {
 			Vertex tempVertex;
 			tempVertex.position = tempVertices.at(vertexIndices.at(i) - 1);
 			tempVertex.texture = tempUvs.at(uvIndices.at(i) - 1);
@@ -399,18 +438,28 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 
 			outputIndices[i] = i;
 		}
-		/*format = ".bin";
-		path = filename + format;
-		std::ofstream ofs(path, std::ios::binary);
-		ofs.write((char*)outputVertices, sizeof(std::vector<Vertex>) * outputVertices->size());
-		ofs.close();*/
-	}
-	else {
-		/*file.read((char*)outputVertices, sizeof(std::vector<Vertex>) * 9234);
-		file.close();*/
-	}
+		path = filename;
+		path.append("ACE.txt");
+		file.open(path, std::ios::out);
+		if (!file.is_open()) {
+			return false;
+		}
+		file << sizeVertices << " " << sizeIndices << "\n";
+		file << materialLib << "\n";
+		for (int i = 0; i < subsetIndices.size(); i++) {
+			file << subsetIndices.at(i) << " " << materialNames.at(i) << "\n";
+		}
+		file.close();
 
-	
+		format = ".bin";
+		path = filename + format;
+		file.open(path, std::ios::out | std::ios::binary);
+		if (!file.is_open()) {
+			return false;
+		}
+		file.write((char*)&((*outputVertices)[0]), sizeof(Vertex) * outputVertices->size());
+		file.close();
+	}
 
 	return true;
 }
