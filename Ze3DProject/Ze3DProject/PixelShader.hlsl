@@ -22,10 +22,10 @@ struct PixelInput
 
 float4 main(PixelInput input) : SV_TARGET
 {
-	float3 s;	//Texture color for the current pixel
+	float4 s;	//Texture color for the current pixel
 
 	if (hasTexture) {
-		s = shaderTexture.Sample(shaderSampler, input.tex).rgb;
+		s = shaderTexture.Sample(shaderSampler, input.tex).rgba;
 	}
 	else{
 		s = difColor;
@@ -40,5 +40,5 @@ float4 main(PixelInput input) : SV_TARGET
 	s.g = (0.8 * s.g * value) + (0.2 * s.g);
 	s.b = (0.8 * s.b * value) + (0.2 * s.b);
 
-	return float4(s, 1.0f);
+	return s;
 }

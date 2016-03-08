@@ -270,7 +270,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 	int tempSubset = 0;
 	std::string format = ".bin";
 	std::string path = filename;
-	path.append("ACE.txt");
+	path.append(".ace");
 	file.open(path, std::ios::in);
 	if (file.is_open()) {
 		std::getline(file, line);
@@ -439,7 +439,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 			outputIndices[i] = i;
 		}
 		path = filename;
-		path.append("ACE.txt");
+		path.append(".ace");
 		file.open(path, std::ios::out);
 		if (!file.is_open()) {
 			return false;
