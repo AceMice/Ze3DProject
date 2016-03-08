@@ -151,6 +151,8 @@ bool GraphicsHandler::Render()
 	this->cameraH->GetViewMatrix(viewMatrix);
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
 
+	//**NON TRANSPARENT RENDER**\\
+
 	//Get the world matrix from modelGround
 	this->modelGround->GetWorldMatrix(worldMatrix);
 
@@ -190,21 +192,7 @@ bool GraphicsHandler::Render()
 			}
 		}
 	}
-	modelSubsets = this->model1->NrOfSubsets();
-	for (int i = 0; i < modelSubsets; i++) { //Draw all transparent subsets
-		model1->GetSubsetInfo(i, indexStart, indexCount, textureIndex, difColor, specColor, transparent);
-
-		if (transparent) {
-			result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart, //Render the model1 using the color shader
-				worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(textureIndex), difColor, specColor, transparent);
-			if (!result)
-			{
-				return false;
-			}
-		}
-	}
 		
-
 	//Get the world matrix from model1
 	this->model2->GetWorldMatrix(worldMatrix);
 
@@ -224,6 +212,36 @@ bool GraphicsHandler::Render()
 			}
 		}
 	}
+
+	//**TRANSPARENT RENDER**\\
+
+	//Get the world matrix from model1
+	this->model1->GetWorldMatrix(worldMatrix);
+
+	//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
+	this->model1->Render(this->direct3DH->GetDeviceContext());
+
+	modelSubsets = this->model1->NrOfSubsets();
+	for (int i = 0; i < modelSubsets; i++) { //Draw all transparent subsets
+		model1->GetSubsetInfo(i, indexStart, indexCount, textureIndex, difColor, specColor, transparent);
+
+		if (transparent) {
+			result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart, //Render the model1 using the color shader
+				worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(textureIndex), difColor, specColor, transparent);
+			if (!result)
+			{
+				return false;
+			}
+		}
+	}
+
+	//Get the world matrix from model1
+	this->model2->GetWorldMatrix(worldMatrix);
+
+	//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
+	this->model2->Render(this->direct3DH->GetDeviceContext());
+
+	modelSubsets = this->model2->NrOfSubsets();
 	for (int i = 0; i < modelSubsets; i++) { //Draw all transparent subsets
 		model2->GetSubsetInfo(i, indexStart, indexCount, textureIndex, difColor, specColor, transparent);
 
