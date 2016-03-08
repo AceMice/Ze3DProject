@@ -279,9 +279,6 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 						textureDesc.Height = height;
 						textureDesc.Width = width;
 
-
-						
-
 						//Create the empty texture
 						hresult = device->CreateTexture2D(&textureDesc, NULL, &this->texture);
 						if (FAILED(hresult)) {

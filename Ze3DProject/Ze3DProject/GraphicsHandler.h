@@ -19,6 +19,7 @@ private:
 	CameraHandler* cameraH;
 	Model* model1;
 	Model* model2;
+	Model* modelGround;
 	ShaderHandler* shaderH;
 
 	bool Render();

@@ -5,6 +5,7 @@ GraphicsHandler::GraphicsHandler()
 	this->direct3DH = nullptr;
 	this->model1 = nullptr;
 	this->model2 = nullptr;
+	this->modelGround = nullptr;
 	this->cameraH = nullptr;
 	this->shaderH = nullptr;
 
@@ -68,6 +69,20 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// Create the modelGround object.
+	this->modelGround = new Model;
+	if (!this->modelGround)
+	{
+		return false;
+	}
+	//Initialize the modelGround object
+	result = this->modelGround->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ground");
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelGround->Initialize", L"Error", MB_OK);
+		return false;
+	}
+
 
 	// Create the color shader object.
 	this->shaderH = new ShaderHandler;
@@ -94,14 +109,16 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	XMMATRIX modelWorld;
 	
 	this->rotY += dTime / 800000;
-	modelWorld = XMMatrixScaling(6.0f, 6.0f, 6.0f);
+	modelWorld = XMMatrixScaling(5.0f, 5.0f, 5.0f);
 	modelWorld = XMMatrixRotationY(3.0f) * modelWorld;
-	modelWorld = XMMatrixTranslation(-1.5f, -0.2f, 1.0f) * modelWorld;
+	modelWorld = XMMatrixTranslation(-1.5f, -0.33f, 1.0f) * modelWorld;
 	this->model2->SetWorldMatrix(modelWorld);
 	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
 	modelWorld = XMMatrixRotationY(2.0f) * modelWorld;
-	modelWorld = XMMatrixTranslation(6.0f, -5.0f, -3.0f) * modelWorld;
+	modelWorld = XMMatrixTranslation(6.0f, -5.75f, -3.0f) * modelWorld;
 	this->model1->SetWorldMatrix(modelWorld);
+	modelWorld = XMMatrixTranslation(0.0f, -4.0f, 0.0f);
+	this->modelGround->SetWorldMatrix(modelWorld);
 
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH);
@@ -199,6 +216,26 @@ bool GraphicsHandler::Render()
 			}
 		}
 	}
+
+	//Get the world matrix from modelGround
+	this->modelGround->GetWorldMatrix(worldMatrix);
+
+	//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
+	this->modelGround->Render(this->direct3DH->GetDeviceContext());
+
+	modelSubsets = this->modelGround->NrOfSubsets();
+	for (int i = 0; i < modelSubsets; i++) { //Draw all non transparent subsets
+		modelGround->GetSubsetInfo(i, indexStart, indexCount, textureIndex, difColor, specColor, transparent);
+
+		
+		result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart, //Render the model2 using the shader-handler
+			worldMatrix, viewMatrix, projectionMatrix, this->modelGround->GetTexture(textureIndex), difColor, specColor, false);
+		if (!result)
+		{
+			return false;
+		}
+		
+	}
 	////Render the model1 using the color shader
 	//result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), this->model1->GetIndexCount(), 
 	//							worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f));
@@ -237,6 +274,14 @@ void GraphicsHandler::Shutdown()
 		this->model2->Shutdown();
 		delete this->model2;
 		this->model2 = 0;
+	}
+
+	//Release the ModelGround object
+	if (this->modelGround)
+	{
+		this->modelGround->Shutdown();
+		delete this->modelGround;
+		this->modelGround = 0;
 	}
 
 	//Release the cameraHandler object
