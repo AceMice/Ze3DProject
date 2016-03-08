@@ -69,7 +69,7 @@ ID3D11ShaderResourceView* Model::GetTexture(int textureIndex)
 
 bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::string& materialName)
 {
-	std::vector<Vertex>* vertices = new std::vector<Vertex>;
+	std::vector<Vertex> vertices;
 	unsigned long* indices = nullptr;
 	int sizeVertices = 0;
 	int sizeIndices = 0;
@@ -138,7 +138,7 @@ bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::st
 
 	//Give the subresource structure a pointer to the vertex data
 	ZeroMemory(&vertexData, sizeof(vertexData));
-	vertexData.pSysMem = &((*vertices)[0]);
+	vertexData.pSysMem = &(vertices[0]);
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
@@ -171,8 +171,7 @@ bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::st
 	//Release the arrays now that the vertex and index buffers ave been created and loaded
 	delete[] indices;
 	indices = nullptr;
-	delete vertices;
-	vertices = nullptr;
+	vertices.clear();
 
 	return true;
 }
@@ -246,7 +245,7 @@ void Model::ReleaseTexture()
 	return;
 }
 
-bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices, std::string& materialLib)
+bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices, std::string& materialLib)
 {
 	XMFLOAT3 tempVertex;
 	XMFLOAT2 tempUV;
@@ -297,10 +296,12 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 		}
 		Vertex* tempVerticesArray = new Vertex[sizeVertices];
 
+		int size = sizeof(Vertex) * sizeVertices;
+
 		file.read((char*)tempVerticesArray, sizeof(Vertex) * sizeVertices);
 		file.close();
 
-		outputVertices->insert(outputVertices->end(), &tempVerticesArray[0], &tempVerticesArray[sizeVertices]);
+		outputVertices.insert(outputVertices.end(), &tempVerticesArray[0], &tempVerticesArray[sizeVertices]);
 
 		delete[] tempVerticesArray;
 
@@ -434,7 +435,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 			tempVertex.position = tempVertices.at(vertexIndices.at(i) - 1);
 			tempVertex.texture = tempUvs.at(uvIndices.at(i) - 1);
 			tempVertex.normal = tempNormals.at(normalIndices.at(i) - 1);
-			outputVertices->push_back(tempVertex);
+			outputVertices.push_back(tempVertex);
 
 			outputIndices[i] = i;
 		}
@@ -457,7 +458,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 		if (!file.is_open()) {
 			return false;
 		}
-		file.write((char*)&((*outputVertices)[0]), sizeof(Vertex) * outputVertices->size());
+		file.write((char*)&(outputVertices[0]), sizeof(Vertex) * outputVertices.size());
 		file.close();
 	}
 

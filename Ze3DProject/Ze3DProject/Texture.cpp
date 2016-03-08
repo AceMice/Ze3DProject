@@ -26,10 +26,6 @@ bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext
 		return false;
 	}
 
-	//Release the targa image data now that the image data has been loaded into the texture
-	delete[] this->targaData;
-	this->targaData = nullptr;
-
 	for (int i = 0; i < this->textureViews.size(); i++) {
 		//Generate mipmaps for this texture
 		deviceContext->GenerateMips(this->textureViews.at(i));
@@ -284,11 +280,7 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 						textureDesc.Width = width;
 
 
-						//Release the previous texture if set
-						if (this->texture) {
-							this->texture->Release();
-							this->texture = nullptr;
-						}
+						
 
 						//Create the empty texture
 						hresult = device->CreateTexture2D(&textureDesc, NULL, &this->texture);
@@ -313,6 +305,15 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 						this->materials.at(nrOfMaterials - 1).hasTexture = true;
 						this->materials.at(nrOfMaterials - 1).textureIndex = this->textureViews.size();
 						this->textureViews.push_back(tempTextureView);
+
+						//Release the texture
+						if (this->texture) {
+							this->texture->Release();
+							this->texture = nullptr;
+						}
+						//Release the targa image data now that the image data has been loaded into the texture
+						delete[] this->targaData;
+						this->targaData = nullptr;
 					}
 				}
 				

@@ -11,6 +11,27 @@ private:
 		XMFLOAT3 position;
 		XMFLOAT2 texture;
 		XMFLOAT3 normal;
+
+		Vertex()
+		{
+			position = XMFLOAT3(0.0f, 0.0f, 0.0f);
+			texture = XMFLOAT2(0.0f, 0.0f);
+			normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		}
+		Vertex(const Vertex& other) 
+		{
+			position = other.position;
+			texture = other.texture;
+			normal = other.normal;
+		}
+		Vertex& operator=(const Vertex& other)
+		{
+			position = other.position;
+			texture = other.texture;
+			normal = other.normal;
+
+			return *this;
+		}
 	};
 
 	ID3D11Buffer* vertexBuffer;
@@ -27,7 +48,7 @@ private:
 	void RenderBuffers(ID3D11DeviceContext*);
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, std::string);
 	void ReleaseTexture();
-	bool LoadObj(const char*, std::vector<Vertex>*, unsigned long*&, int&, int&, std::string&);
+	bool LoadObj(const char*, std::vector<Vertex>&, unsigned long*&, int&, int&, std::string&);
 
 public:
 	Model();

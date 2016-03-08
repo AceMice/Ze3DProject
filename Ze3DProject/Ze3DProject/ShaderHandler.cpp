@@ -8,6 +8,7 @@ ShaderHandler::ShaderHandler()
 	this->layout = nullptr;
 	this->matrixBuffer = nullptr;
 	this->samplerState = nullptr;
+	this->transparencyBlendState = nullptr;
 }
 
 ShaderHandler::~ShaderHandler()
@@ -67,6 +68,7 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 	errorMessage = nullptr;
 	vertexShaderBuffer = nullptr;
 	pixelShaderBuffer = nullptr;
+	geoShaderBuffer = nullptr;
 
 	//Compile the vertex shader code
 	hresult = D3DCompileFromFile(vsFilename, NULL, NULL, "main", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
@@ -120,7 +122,7 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 
 	hresult = device->CreateGeometryShader(geoShaderBuffer->GetBufferPointer(), geoShaderBuffer->GetBufferSize(), NULL, &this->geoShader);
 	if (FAILED(hresult)) {
-		MessageBox(hwnd, L"device->CreatePixelShader", L"Error", MB_OK);
+		MessageBox(hwnd, L"device->CreateGeometryShader", L"Error", MB_OK);
 		return false;
 	}
 
@@ -166,6 +168,8 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 	vertexShaderBuffer = nullptr;
 	pixelShaderBuffer->Release();
 	pixelShaderBuffer = nullptr;
+	geoShaderBuffer->Release();
+	geoShaderBuffer = nullptr;
 
 	//Fill the description of the dynamic matrix constant buffer that is in the vertex shader
 	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
