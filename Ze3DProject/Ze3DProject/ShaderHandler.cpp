@@ -35,13 +35,13 @@ void ShaderHandler::Shutdown()
 	return;
 }
 
-bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, int indexStart,
-	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 difColor, XMFLOAT4 specColor)
+bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, int indexStart, XMMATRIX worldMatrix, 
+	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 difColor, XMFLOAT4 specColor, bool transparent)
 {
 	bool result = false;
 
 	//Set shader parameters used for rendering
-	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, difColor, specColor);
+	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, difColor, specColor, transparent);
 	if (!result) {
 		return false;
 	}
@@ -203,6 +203,24 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 	{
 		return false;
 	}
+	
+	D3D11_RENDER_TARGET_BLEND_DESC rtbd;
+	ZeroMemory(&rtbd, sizeof(rtbd));
+	rtbd.BlendEnable = true;
+	rtbd.SrcBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	rtbd.DestBlend = D3D11_BLEND_SRC_ALPHA;
+	rtbd.BlendOp = D3D11_BLEND_OP_ADD;
+	rtbd.SrcBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+	rtbd.DestBlendAlpha = D3D11_BLEND_SRC_ALPHA;
+	rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	rtbd.RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
+
+	D3D11_BLEND_DESC blendDesc;
+	ZeroMemory(&blendDesc, sizeof(blendDesc));
+	blendDesc.AlphaToCoverageEnable = false;
+	blendDesc.RenderTarget[0] = rtbd;
+
+	device->CreateBlendState(&blendDesc, &transparencyBlendState);
 
 	return true;
 }
@@ -241,8 +259,8 @@ void ShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd
 	return;
 }
 
-bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, 
-	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 difColor, XMFLOAT4 specColor)
+bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix, 
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 difColor, XMFLOAT4 specColor, bool transparent)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -291,6 +309,13 @@ bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMA
 		//Set shader texture resource for pixel shader
 		deviceContext->PSSetShaderResources(0, 1, &texture);
 	}
+
+	if (transparent) {
+		deviceContext->OMSetBlendState(transparencyBlendState, NULL, 0xffffffff);
+	}
+	else {
+		deviceContext->OMSetBlendState(0, 0, 0xffffffff);
+	}
 	
 	return true;
 }
@@ -315,6 +340,11 @@ void ShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int indexCo
 
 void ShaderHandler::ShutdownShader()
 {
+	//Release blend state
+	if (this->transparencyBlendState) {
+		this->transparencyBlendState->Release();
+		this->transparencyBlendState = nullptr;
+	}
 	//Release sampler state
 	if (this->samplerState) {
 		this->samplerState->Release();

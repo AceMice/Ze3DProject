@@ -21,6 +21,7 @@ public:
 		XMFLOAT4 specColor;
 		int textureIndex;
 		bool hasTexture;
+		bool transparent;
 	};
 
 private:

@@ -481,7 +481,7 @@ int Model::NrOfSubsets()
 	return this->subsetIndices.size();
 }
 
-void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int& textureIndex, XMFLOAT4& difColor, XMFLOAT4& specColor)
+void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int& textureIndex, XMFLOAT4& difColor, XMFLOAT4& specColor, bool& transparent)
 {
 	indexStart = this->subsetIndices.at(subsetIndex);
 
@@ -502,6 +502,7 @@ void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int
 	
 	difColor = tempMaterial.difColor;
 	specColor = tempMaterial.specColor;
+	transparent = tempMaterial.transparent;
 
 	return;
 }

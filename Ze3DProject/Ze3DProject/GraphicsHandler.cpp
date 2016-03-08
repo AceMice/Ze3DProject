@@ -61,10 +61,10 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 	//Initialize the model2 object
-	result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "M4A1");
+	result = this->model2->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "carSLS3");
 	if (!result)
 	{
-		MessageBox(hwnd, L"this->model1->Initialize", L"Error", MB_OK);
+		MessageBox(hwnd, L"this->model2->Initialize", L"Error", MB_OK);
 		return false;
 	}
 
@@ -94,9 +94,9 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	XMMATRIX modelWorld;
 	
 	this->rotY += dTime / 800000;
-	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	modelWorld = XMMatrixRotationY(2.8f) * modelWorld;
-	modelWorld = XMMatrixTranslation(-8.0f, -5.0f, -5.0f) * modelWorld;
+	modelWorld = XMMatrixScaling(6.0f, 6.0f, 6.0f);
+	modelWorld = XMMatrixRotationY(3.0f) * modelWorld;
+	modelWorld = XMMatrixTranslation(-1.5f, -0.2f, 1.0f) * modelWorld;
 	this->model2->SetWorldMatrix(modelWorld);
 	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
 	modelWorld = XMMatrixRotationY(2.0f) * modelWorld;
@@ -124,6 +124,8 @@ bool GraphicsHandler::Render()
 	int textureIndex;
 	XMFLOAT4 difColor;
 	XMFLOAT4 specColor;
+	bool transparent;
+
 
 	//Clear the buffers to begin the scene
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
@@ -140,17 +142,31 @@ bool GraphicsHandler::Render()
 
 	modelSubsets = this->model1->NrOfSubsets();
 	for (int i = 0; i < modelSubsets; i++) {
-		model1->GetSubsetInfo(i, indexStart, indexCount, textureIndex, difColor, specColor);
+		model1->GetSubsetInfo(i, indexStart, indexCount, textureIndex, difColor, specColor, transparent);
 
-
-		//Render the model1 using the color shader
-		result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-			worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(textureIndex), difColor, specColor);
-		if (!result)
-		{
-			return false;
+		if (!transparent) {
+			result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart, //Render the model1 using the color shader
+				worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(textureIndex), difColor, specColor, transparent);
+			if (!result)
+			{
+				return false;
+			}
 		}
 	}
+
+	for (int i = 0; i < modelSubsets; i++) {
+		model1->GetSubsetInfo(i, indexStart, indexCount, textureIndex, difColor, specColor, transparent);
+
+		if (transparent) {
+			result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart, //Render the model1 using the color shader
+				worldMatrix, viewMatrix, projectionMatrix, this->model1->GetTexture(textureIndex), difColor, specColor, transparent);
+			if (!result)
+			{
+				return false;
+			}
+		}
+	}
+		
 
 	//Get the world matrix from model1
 	this->model2->GetWorldMatrix(worldMatrix);
@@ -160,15 +176,27 @@ bool GraphicsHandler::Render()
 
 	modelSubsets = this->model2->NrOfSubsets();
 	for (int i = 0; i < modelSubsets; i++) {
-		model2->GetSubsetInfo(i, indexStart, indexCount, textureIndex, difColor, specColor);
+		model2->GetSubsetInfo(i, indexStart, indexCount, textureIndex, difColor, specColor, transparent);
 
+		if (!transparent) {
+			result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart, //Render the model1 using the color shader
+				worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(textureIndex), difColor, specColor, transparent);
+			if (!result)
+			{
+				return false;
+			}
+		}
+	}
+	for (int i = 0; i < modelSubsets; i++) {
+		model2->GetSubsetInfo(i, indexStart, indexCount, textureIndex, difColor, specColor, transparent);
 
-		//Render the model1 using the color shader
-		result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-			worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(textureIndex), difColor, specColor);
-		if (!result)
-		{
-			return false;
+		if (transparent) {
+			result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart, //Render the model1 using the color shader
+				worldMatrix, viewMatrix, projectionMatrix, this->model2->GetTexture(textureIndex), difColor, specColor, transparent);
+			if (!result)
+			{
+				return false;
+			}
 		}
 	}
 	////Render the model1 using the color shader
