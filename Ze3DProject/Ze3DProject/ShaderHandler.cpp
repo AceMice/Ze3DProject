@@ -37,12 +37,12 @@ void ShaderHandler::Shutdown()
 }
 
 bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, int indexStart, XMMATRIX worldMatrix, 
-	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 difColor, XMFLOAT4 specColor, bool transparent)
+	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* normMap, XMFLOAT4 difColor, XMFLOAT4 specColor, bool transparent)
 {
 	bool result = false;
 
 	//Set shader parameters used for rendering
-	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, difColor, specColor, transparent);
+	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, normMap, difColor, specColor, transparent);
 	if (!result) {
 		return false;
 	}
@@ -264,7 +264,7 @@ void ShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd
 }
 
 bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix, 
-	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 difColor, XMFLOAT4 specColor, bool transparent)
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* normMap, XMFLOAT4 difColor, XMFLOAT4 specColor, bool transparent)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -298,6 +298,12 @@ bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMA
 	else {
 		dataPtr->hasTexture = true;
 	}
+	if (!normMap) {
+		dataPtr->hasNormMap = false;
+	}
+	else {
+		dataPtr->hasNormMap = true;
+	}
 
 	//Unmap the constant buffer to give the GPU access agin
 	deviceContext->Unmap(this->matrixBuffer, 0);
@@ -312,6 +318,10 @@ bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMA
 	if (texture) {
 		//Set shader texture resource for pixel shader
 		deviceContext->PSSetShaderResources(0, 1, &texture);
+	}
+	if (normMap) {
+		//Set shader normal map resource for pixel shader
+		deviceContext->PSSetShaderResources(1, 1, &normMap);
 	}
 
 	if (transparent) {

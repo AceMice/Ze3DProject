@@ -21,6 +21,8 @@ public:
 		XMFLOAT4 specColor;
 		int textureIndex;
 		bool hasTexture;
+		int normMapIndex;
+		bool hasNormMap;
 		bool transparent;
 	};
 

@@ -194,6 +194,8 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 				ss >> junk >> this->materials.at(nrOfMaterials).name;
 				this->materials.at(nrOfMaterials).hasTexture = false;
 				this->materials.at(nrOfMaterials).textureIndex = 0;
+				this->materials.at(nrOfMaterials).hasNormMap = false;
+				this->materials.at(nrOfMaterials).normMapIndex = 0;
 				this->materials.at(nrOfMaterials).specColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 				this->materials.at(nrOfMaterials).transparent = false;
 				nrOfMaterials++;
@@ -315,6 +317,88 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 				}
 				
 			}
+			else if (line.substr(0, 8) == "map_bump") {
+				if (line.size() > 8) {
+					bool beenLoaded = false;
+					std::string textureFilename;
+					ss.clear();
+					ss.str(line);
+					ss >> junk >> textureFilename;
+
+					for (int i = 0; !beenLoaded && i < this->textureNames.size(); i++) {
+						if (this->textureNames.at(i) == textureFilename) {
+							this->materials.at(nrOfMaterials - 1).hasTexture = true;
+							this->materials.at(nrOfMaterials - 1).textureIndex = i;
+							beenLoaded = true;
+						}
+					}
+					if (!beenLoaded) {
+						//Load the targa image data into memory
+						finalPath = path + textureFilename;
+						result = this->LoadTarga(finalPath.c_str(), height, width);
+						if (!result) {
+							return false;
+						}
+
+						//If it's the first texture, init some general desc values
+						if (firstTextureLoad) {
+							//Setup the description of the texture
+							textureDesc.MipLevels = 0;
+							textureDesc.ArraySize = 1;
+							textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+							textureDesc.SampleDesc.Count = 1;
+							textureDesc.SampleDesc.Quality = 0;
+							textureDesc.Usage = D3D11_USAGE_DEFAULT;
+							textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+							textureDesc.CPUAccessFlags = 0;
+							textureDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+
+							//Setup the shader resource view description
+							srvDesc.Format = textureDesc.Format;
+							srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+							srvDesc.Texture2D.MostDetailedMip = 0;
+							srvDesc.Texture2D.MipLevels = -1;
+						}
+						//Set the teexture specific description values
+						textureDesc.Height = height;
+						textureDesc.Width = width;
+
+						//Create the empty texture
+						hresult = device->CreateTexture2D(&textureDesc, NULL, &this->texture);
+						if (FAILED(hresult)) {
+							return false;
+						}
+
+						//Set the row pitch of the targa data
+						rowPitch = (width * 4) * sizeof(unsigned char);
+
+						//Copy the targa image data into the texture
+						deviceContext->UpdateSubresource(this->texture, 0, NULL, this->targaData, rowPitch, 0);
+
+						//Create the shader resource view for the texture
+						ID3D11ShaderResourceView* tempTextureView;
+
+						hresult = device->CreateShaderResourceView(this->texture, &srvDesc, &tempTextureView);
+						if (FAILED(hresult)) {
+							return false;
+						}
+						this->textureNames.push_back(textureFilename);
+						this->materials.at(nrOfMaterials - 1).hasNormMap = true;
+						this->materials.at(nrOfMaterials - 1).normMapIndex = this->textureViews.size();
+						this->textureViews.push_back(tempTextureView);
+
+						//Release the texture
+						if (this->texture) {
+							this->texture->Release();
+							this->texture = nullptr;
+						}
+						//Release the targa image data now that the image data has been loaded into the texture
+						delete[] this->targaData;
+						this->targaData = nullptr;
+					}
+				}
+
+			}
 		}
 	}
 	file.close();
@@ -334,6 +418,8 @@ Texture::Material Texture::GetMaterial(std::string materialName)
 	defaultMaterial.difColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 	defaultMaterial.hasTexture = false;
 	defaultMaterial.textureIndex = -1;
+	defaultMaterial.hasNormMap = false;
+	defaultMaterial.normMapIndex = -1;
 
 	return defaultMaterial;
 }

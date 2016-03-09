@@ -525,7 +525,7 @@ int Model::NrOfSubsets()
 	return this->subsetIndices.size();
 }
 
-void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int& textureIndex, XMFLOAT4& difColor, XMFLOAT4& specColor, bool& transparent)
+void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int& textureIndex, int& normMapIndex, XMFLOAT4& difColor, XMFLOAT4& specColor, bool& transparent)
 {
 	indexStart = this->subsetIndices.at(subsetIndex);
 
@@ -542,6 +542,13 @@ void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int
 	}
 	else {
 		textureIndex = -1;
+	}
+
+	if (tempMaterial.hasNormMap) {
+		normMapIndex = tempMaterial.normMapIndex;
+	}
+	else {
+		normMapIndex = -1;
 	}
 	
 	difColor = tempMaterial.difColor;

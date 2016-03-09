@@ -156,6 +156,7 @@ bool GraphicsHandler::Render()
 	int indexStart;
 	int modelSubsets;
 	int textureIndex;
+	int normMapIndex;
 	XMFLOAT4 difColor;
 	XMFLOAT4 specColor;
 	bool transparent;
@@ -183,12 +184,13 @@ bool GraphicsHandler::Render()
 		for (int j= 0; j < modelSubsets; j++) { 
 
 			//Get all the nessecary information from the model
-			this->models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, difColor, specColor, transparent);
+			this->models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
 
 			//Render the model using the shader-handler
 			if (!transparent) {
 				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex), difColor, specColor, false);
+					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex), 
+					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, false);
 				if (!result)
 				{
 					return false;
@@ -213,12 +215,13 @@ bool GraphicsHandler::Render()
 		for (int j = 0; j < modelSubsets; j++) {
 
 			//Get all the nessecary information from the model
-			models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, difColor, specColor, transparent);
+			models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
 
 			if (transparent) {
 				//Render the model using the shader-handler
 				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex), difColor, specColor, true);
+					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex),
+					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, true);
 				if (!result)
 				{
 					return false;
