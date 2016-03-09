@@ -409,15 +409,6 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		}
 		file.close();
 
-		//outputVertices[vertexIndex.x - 1].position = tempVertices.at(vertexIndex.x - 1);
-		//outputVertices[vertexIndex.x - 1].texture = tempUvs.at(vertexIndex.x - 1);
-		////outputVertices[vertexIndex.x - 1].normal = tempNormals.at(vertexIndex.x - 1);
-		//outputVertices[vertexIndex.y - 1].position = tempVertices.at(vertexIndex.y - 1);
-		//outputVertices[vertexIndex.y - 1].texture = tempUvs.at(vertexIndex.y - 1);
-
-		//outputVertices[vertexIndex.z - 1].position = tempVertices.at(vertexIndex.z - 1);
-		//outputVertices[vertexIndex.z - 1].texture = tempUvs.at(vertexIndex.z - 1);
-
 		if (vertexIndices.size() == 0 || tempVertices.size() == 0) {
 			return false;
 		}
@@ -426,21 +417,52 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		sizeIndices = vertexIndices.size();
 		outputIndices = new unsigned long[sizeIndices];
 
-		/*for (int i = 0; i < sizeIndices; i++) {
-		outputVertices[i].position = tempVertices.at(vertexIndices.at(i) - 1);
-		outputVertices[i].texture = tempUvs.at(uvIndices.at(i) - 1);
-		outputVertices[i].normal = tempNormals.at(normalIndices.at(i) - 1);
-		}*/
-		//for (int i = 0; i < this->subsetIndices.size(); i++) {
-		//	for (int j = 0; j < this->subsetIndices.at(i); j++) {
-		//		Vertex tempVertex;
-		//		int position = ((i - 1) * this->subsetIndices.size()) + j;
-		//		tempVertex.position = tempVertices.at(vertexIndices.at(position) - 1);
-		//		tempVertex.texture = tempUvs.at(uvIndices.at(position) - 1);
-		//		tempVertex.normal = tempNormals.at(normalIndices.at(position) - 1);
-		//		outputVertices->push_back(tempVertex);
+		//XMVECTOR normalSum = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+		//int facesUsingVertex = 0;
+		//bool uvFound = false;
+		//float newX;
+		//float newY;
+		//float newZ;
+
+		////Compute average normal
+		//for (int i = 0; i < sizeVertices; i++) {
+		//	Vertex tempVertex;
+		//	tempVertex.position = tempVertices.at(i);
+
+		//	for (int j = 0; j < sizeIndices; j++) {
+		//		if (vertexIndices.at(j) == i + 1) {
+		//			if (!uvFound) {
+		//				tempVertex.texture = tempUvs.at(uvIndices.at(j) - 1);
+		//				uvFound = true;
+		//			}
+		//			newX = XMVectorGetX(normalSum) + tempNormals.at(normalIndices.at(j) - 1).x;
+		//			newY = XMVectorGetY(normalSum) + tempNormals.at(normalIndices.at(j) - 1).y;
+		//			newZ = XMVectorGetZ(normalSum) + tempNormals.at(normalIndices.at(j) - 1).z;
+
+		//			normalSum = XMVectorSet(newX, newY, newZ, 0.0f);
+		//			facesUsingVertex++;
+		//		}
 		//	}
+
+		//	normalSum = normalSum / facesUsingVertex;
+
+		//	normalSum = XMVector3Normalize(normalSum);
+		//	
+		//	tempVertex.normal.x = XMVectorGetX(normalSum);
+		//	tempVertex.normal.y = XMVectorGetY(normalSum);
+		//	tempVertex.normal.z = XMVectorGetZ(normalSum);
+
+		//	outputVertices.push_back(tempVertex);
+
+		//	normalSum = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+		//	facesUsingVertex = 0;
+		//	uvFound = false;
 		//}
+
+		//for (int i = 0; i < sizeIndices; i++) {
+		//	outputIndices[i] = vertexIndices.at(i) - 1;
+		//}
+
 		for (int i = 0; i < sizeVertices; i++) {
 			Vertex tempVertex;
 			tempVertex.position = tempVertices.at(vertexIndices.at(i) - 1);
@@ -450,16 +472,17 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 
 			outputIndices[i] = i;
 		}
+
 		path = filename;
-		path.append(".ace");
+		path.append(".ace"); //Make the "All Computations Executed" file
 		file.open(path, std::ios::out);
 		if (!file.is_open()) {
 			return false;
 		}
-		file << sizeVertices << " " << sizeIndices << "\n";
+		file << sizeVertices << " " << sizeIndices << "\n"; //Save the sizes, needed for loading the binary files
 		file << materialLib << "\n";
 		for (int i = 0; i < subsetIndices.size(); i++) {
-			file << subsetIndices.at(i) << " " << materialNames.at(i) << "\n";
+			file << subsetIndices.at(i) << " " << materialNames.at(i) << "\n"; //Save all subsets with each material
 		}
 		file.close();
 

@@ -72,7 +72,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	//Insert model into vector
 	this->models.push_back(tempModel);
 
-	// Create the modelGround object.
+	// Create the carSLS3 object.
 	tempModel = new Model;
 	if (!tempModel)
 	{
