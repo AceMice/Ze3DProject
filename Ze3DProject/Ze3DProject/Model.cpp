@@ -24,6 +24,8 @@ bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 	bool result;
 	std::string materialLib;
 
+	this->name = modelFilename;
+
 	//Initialze the vertex and index buffer
 	result = this->InitializeBuffers(device, modelFilename, materialLib);
 	if (!result) {
@@ -524,4 +526,9 @@ void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int
 	transparent = tempMaterial.transparent;
 
 	return;
+}
+
+std::string Model::GetName()
+{
+	return this->name;
 }

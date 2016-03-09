@@ -42,6 +42,7 @@ private:
 	std::vector<std::string> materialNames;
 	Texture* texture;
 	XMMATRIX worldMatrix;
+	std::string name;
 
 	bool InitializeBuffers(ID3D11Device*, char*, std::string&);
 	void ShutdownBuffers();
@@ -66,6 +67,8 @@ public:
 	ID3D11ShaderResourceView* GetTexture(int);
 	int NrOfSubsets();
 	void GetSubsetInfo(int, int&, int&, int&, XMFLOAT4&, XMFLOAT4&, bool&);
+
+	std::string GetName();
 };
 
 
