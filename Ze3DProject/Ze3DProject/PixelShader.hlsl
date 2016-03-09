@@ -38,7 +38,7 @@ float4 main(PixelInput input) : SV_TARGET
 		float4 normalMap = shaderNormalMap.Sample(shaderSampler, input.tex);
 
 		//Change range from 0 - 1 to -1 - 1
-		normalMap = 1.0f - (normalMap * 2.0f);
+		normalMap = (normalMap * 2.0f) - 1.0f;
 
 		//Make sure the tangent and normal are completly orthogonal
 		input.tangent = normalize(input.tangent - dot(input.tangent, input.normal) * input.normal);

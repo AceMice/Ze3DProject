@@ -22,12 +22,13 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output
 {
 	PSInput element;
 	float3 tangent;
+	float3 normal;
 
 	float3 edge0 = input[1].position.xyz - input[0].position.xyz;
 	float3 edge1 = input[2].position.xyz - input[0].position.xyz;
 
-	float2 texEdge0 = input[0].tex - input[2].tex;
-	float2 texEdge1 = input[2].tex - input[1].tex;
+	float2 texEdge0 = input[1].tex - input[0].tex;
+	float2 texEdge1 = input[2].tex - input[0].tex;
 
 	tangent.x = (texEdge0.y * edge0.x - texEdge1.y * edge1.x) * (1.0f / (texEdge0.x * texEdge1.y - texEdge1.x * texEdge0.y));
 	tangent.y = (texEdge0.y * edge0.y - texEdge1.y * edge1.y) * (1.0f / (texEdge0.x * texEdge1.y - texEdge1.x * texEdge0.y));
