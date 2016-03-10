@@ -12,6 +12,7 @@ cbuffer MatrixBuffer
 	float4 specColor;
 	bool hasTexture;
 	bool hasNormMap;
+	float4 cameraPos;
 };
 
 struct PixelInput
@@ -32,6 +33,7 @@ float4 main(PixelInput input) : SV_TARGET
 	float diffuseStr = 0.8;
 	float shineFactor = 5;
 	float lightSpecular = 0.5;
+	float3 specular = float3(0.0f, 0.0f, 0.0f);
 
 
 	if (hasTexture) {
@@ -67,15 +69,19 @@ float4 main(PixelInput input) : SV_TARGET
 	float3 outVec = normalize(float3(0, 5, -6) - (input.worldPos).xyz);	//lightVec towards the object
 	
 	//Specular
-	float3 refVec = normalize(reflect(outVec, input.normal));	//Create the the reflection
-	float3 specular = float3(specColor.rgb * lightSpecular * max(pow( saturate(dot( refVec, input.viewDir)), shineFactor), 0));
+	float3 refVec = normalize(reflect(-outVec, input.normal));	//Create the the reflection
+	float lightIntesity = saturate(dot(refVec, input.viewDir));
+	
+	specular = specColor.rgb * lightSpecular * max(pow(lightIntesity, shineFactor), 0);
+	
+	
 	
 	//Calculate Diffuse color
 	//float3 outVec = normalize(-inVec);	//Reversing the vector to point outwards
-	float value = dot(input.normal, outVec);
+	float value = saturate(dot(input.normal, outVec));
 	float3 diffuse = float3(diffuseStr * s.r * value, diffuseStr * s.g * value, diffuseStr * s.b * value);
 
-	float3 result = saturate(ambient + diffuse + specular);
+	float3 result = saturate(ambient + diffuse + (value * specular));
 
 	return float4(result, s.a);
 }
