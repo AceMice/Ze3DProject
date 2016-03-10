@@ -24,6 +24,8 @@ bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 	bool result;
 	std::string materialLib;
 
+	this->name = modelFilename;
+
 	//Initialze the vertex and index buffer
 	result = this->InitializeBuffers(device, modelFilename, materialLib);
 	if (!result) {
@@ -69,7 +71,7 @@ ID3D11ShaderResourceView* Model::GetTexture(int textureIndex)
 
 bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::string& materialName)
 {
-	std::vector<Vertex>* vertices = new std::vector<Vertex>;
+	std::vector<Vertex> vertices;
 	unsigned long* indices = nullptr;
 	int sizeVertices = 0;
 	int sizeIndices = 0;
@@ -80,8 +82,10 @@ bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::st
 	HRESULT hresult;
 	bool result;
 	std::string path = "../Ze3DProject/OBJ/";
-	std::string format = ".obj";
-	std::string finalPath = path + modelFilename + format;
+	/*std::string format = ".obj";
+	std::string bin = ".bin";
+	std::string finalBinPath = path + modelFilename + bin;*/
+	std::string finalPath = path + modelFilename;
 	result = this->LoadObj(finalPath.c_str(), vertices, indices, sizeVertices, sizeIndices, materialName);
 	if (!result) {
 		return false;
@@ -136,7 +140,7 @@ bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::st
 
 	//Give the subresource structure a pointer to the vertex data
 	ZeroMemory(&vertexData, sizeof(vertexData));
-	vertexData.pSysMem = &((*vertices)[0]);
+	vertexData.pSysMem = &(vertices[0]);
 	vertexData.SysMemPitch = 0;
 	vertexData.SysMemSlicePitch = 0;
 
@@ -169,8 +173,7 @@ bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::st
 	//Release the arrays now that the vertex and index buffers ave been created and loaded
 	delete[] indices;
 	indices = nullptr;
-	delete vertices;
-	vertices = nullptr;
+	vertices.clear();
 
 	return true;
 }
@@ -244,7 +247,7 @@ void Model::ReleaseTexture()
 	return;
 }
 
-bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices, std::string& materialLib)
+bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices, std::string& materialLib)
 {
 	XMFLOAT3 tempVertex;
 	XMFLOAT2 tempUV;
@@ -263,134 +266,243 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>* outputVertices, u
 	std::string tempLine;
 	char junk;
 	std::stringstream ss;
-	std::ifstream file;
+	std::fstream file;
 	bool newGroup = false;
+	int tempSubset = 0;
+	std::string format = ".bin";
+	std::string path = filename;
+	path.append(".ace");
+	file.open(path, std::ios::in);
+	if (file.is_open()) {
+		std::getline(file, line);
+		ss.clear();
+		ss.str(line);
+		ss >> sizeVertices >> sizeIndices;
+		std::getline(file, line);
+		ss.clear();
+		ss.str(line);
+		ss >> materialLib;
+		while (std::getline(file, line)) {
+			ss.clear();
+			ss.str(line);
+			ss >> tempSubset >> tempLine;
+			subsetIndices.push_back(tempSubset);
+			materialNames.push_back(tempLine);
+		}
+		file.close();
+		path = filename;
+		path.append("V.bin");
+		file.open(path, std::ios::binary | std::ios::in);
+		if (!file.is_open()) {
+			return false;
+		}
+		Vertex* tempVerticesArray = new Vertex[sizeVertices];
 
-	file.open(filename);
-	if (!file.is_open()) {
-		return false;
+		file.read((char*)tempVerticesArray, sizeof(Vertex) * sizeVertices);
+		file.close();
+
+		outputVertices.insert(outputVertices.end(), &tempVerticesArray[0], &tempVerticesArray[sizeVertices]);
+
+		delete[] tempVerticesArray;
+
+		path = filename;
+		path.append("I.bin");
+		file.open(path, std::ios::binary | std::ios::in);
+		if (!file.is_open()) {
+			return false;
+		}
+		
+		outputIndices = new unsigned long[sizeIndices];
+		file.read((char*)outputIndices, sizeof(unsigned long) * sizeVertices);
+		file.close();
+
+		/*outputIndices = new unsigned long[sizeIndices];
+		for (int i = 0; i < sizeIndices; i++) {
+			outputIndices[i] = i;
+		}*/
 	}
+	else {
+		format = ".obj";
+		path = filename + format;
+		file.open(path, std::ios::in);
+		if (!file.is_open()) {
+			return false;
+		}
 
-	while (std::getline(file, line)) {
-		if (line.size() > 0) {
-			if (line.at(0) == 'v') {
-				if (line.at(1) == ' ') {
-					ss.clear();
-					ss.str(line);
-					ss >> junk >> tempVertex.x >> tempVertex.y >> tempVertex.z;
-					//sscanf_s(line.c_str(), "%f %f %f\n", &tempVertex.x, &tempVertex.y, &tempVertex.z);
-					tempVertices.push_back(tempVertex);
+		while (std::getline(file, line)) {
+			if (line.size() > 0) {
+				if (line.at(0) == 'v') {
+					if (line.at(1) == ' ') {
+						ss.clear();
+						ss.str(line);
+						ss >> junk >> tempVertex.x >> tempVertex.y >> tempVertex.z;
+						//sscanf_s(line.c_str(), "%f %f %f\n", &tempVertex.x, &tempVertex.y, &tempVertex.z);
+						tempVertices.push_back(tempVertex);
+					}
+					else if (line.at(1) == 't') {
+						ss.clear();
+						ss.str(line);
+						ss >> junks >> tempUV.x >> tempUV.y;
+						tempUV.y = 1.0f - tempUV.y;
+						//sscanf_s(line.c_str(), "%f %f\n", &tempUV.x, &tempUV.y);
+						tempUvs.push_back(tempUV);
+					}
+					else if (line.at(1) == 'n') {
+						ss.clear();
+						ss.str(line);
+						ss >> junks >> tempNormal.x >> tempNormal.y >> tempNormal.z;
+						//sscanf_s(line.c_str(), "%f %f %f\n", &tempNormal.x, &tempNormal.y, &tempNormal.z);
+						tempNormals.push_back(tempNormal);
+					}
 				}
-				else if (line.at(1) == 't') {
-					ss.clear();
-					ss.str(line);
-					ss >> junks >> tempUV.x >> tempUV.y;
-					tempUV.y = 1.0f - tempUV.y;
-					//sscanf_s(line.c_str(), "%f %f\n", &tempUV.x, &tempUV.y);
-					tempUvs.push_back(tempUV);
-				}
-				else if (line.at(1) == 'n') {
-					ss.clear();
-					ss.str(line);
-					ss >> junks >> tempNormal.x >> tempNormal.y >> tempNormal.z;
-					//sscanf_s(line.c_str(), "%f %f %f\n", &tempNormal.x, &tempNormal.y, &tempNormal.z);
-					tempNormals.push_back(tempNormal);
-				}
-			}
-			else if (line.at(0) == 'g') {
-				this->subsetIndices.push_back(vertexIndices.size());
-				newGroup = true;
-			}
-			else if (line.substr(0, 6) == "usemtl") {
-				ss.clear();
-				ss.str(line);
-				ss >> junks >> tempLine;
-				this->materialNames.push_back(tempLine);
-				if (!newGroup) {
+				else if (line.at(0) == 'g') {
 					this->subsetIndices.push_back(vertexIndices.size());
+					newGroup = true;
 				}
-				else {
-					newGroup = false;
+				else if (line.substr(0, 6) == "usemtl") {
+					ss.clear();
+					ss.str(line);
+					ss >> junks >> tempLine;
+					this->materialNames.push_back(tempLine);
+					if (!newGroup) {
+						this->subsetIndices.push_back(vertexIndices.size());
+					}
+					else {
+						newGroup = false;
+					}
 				}
-			}
-			else if (line.at(0) == 'f') {
-				if (newGroup) {
-					this->materialNames.push_back(this->materialNames.back());
-					newGroup = false;
-				}
-				ss.clear();
-				ss.str(line);
-				ss >> junk >> vertexIndex[0] >> junk >> uvIndex[0] >> junk >> normalIndex[0]
-					>> vertexIndex[1] >> junk >> uvIndex[1] >> junk >> normalIndex[1]
-					>> vertexIndex[2] >> junk >> uvIndex[2] >> junk >> normalIndex[2];
+				else if (line.at(0) == 'f') {
+					if (newGroup) {
+						this->materialNames.push_back(this->materialNames.back());
+						newGroup = false;
+					}
+					ss.clear();
+					ss.str(line);
+					ss >> junk >> vertexIndex[0] >> junk >> uvIndex[0] >> junk >> normalIndex[0]
+						>> vertexIndex[1] >> junk >> uvIndex[1] >> junk >> normalIndex[1]
+						>> vertexIndex[2] >> junk >> uvIndex[2] >> junk >> normalIndex[2];
 
-				/*int matches = sscanf_s(line.c_str(), "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex.x, &uvIndex.x, &normalIndex.x,
+					/*int matches = sscanf_s(line.c_str(), "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex.x, &uvIndex.x, &normalIndex.x,
 					&vertexIndex.y, &uvIndex.y, &normalIndex.y, &vertexIndex.z, &uvIndex.z, &normalIndex.z);
-				if (matches != 9) {
+					if (matches != 9) {
 					return false;
-				}*/
-				/*if (tempVertices.size() != tempUvs.size() || tempUvs.size() != tempNormals.size()) {
-				return false;
-				}*/
-				vertexIndices.push_back(vertexIndex[0]);
-				vertexIndices.push_back(vertexIndex[1]);
-				vertexIndices.push_back(vertexIndex[2]);
-				uvIndices.push_back(uvIndex[0]);
-				uvIndices.push_back(uvIndex[1]);
-				uvIndices.push_back(uvIndex[2]);
-				normalIndices.push_back(normalIndex[0]);
-				normalIndices.push_back(normalIndex[1]);
-				normalIndices.push_back(normalIndex[2]);
-			}
-			else if (line.substr(0, 6) == "mtllib") {
-				ss.clear();
-				ss.str(line);
-				ss >> junks >> materialLib;
+					}*/
+					/*if (tempVertices.size() != tempUvs.size() || tempUvs.size() != tempNormals.size()) {
+					return false;
+					}*/
+					vertexIndices.push_back(vertexIndex[0]);
+					vertexIndices.push_back(vertexIndex[1]);
+					vertexIndices.push_back(vertexIndex[2]);
+					uvIndices.push_back(uvIndex[0]);
+					uvIndices.push_back(uvIndex[1]);
+					uvIndices.push_back(uvIndex[2]);
+					normalIndices.push_back(normalIndex[0]);
+					normalIndices.push_back(normalIndex[1]);
+					normalIndices.push_back(normalIndex[2]);
+				}
+				else if (line.substr(0, 6) == "mtllib") {
+					ss.clear();
+					ss.str(line);
+					ss >> junks >> materialLib;
+				}
 			}
 		}
-	}
-	file.close();
-	
-	//outputVertices[vertexIndex.x - 1].position = tempVertices.at(vertexIndex.x - 1);
-	//outputVertices[vertexIndex.x - 1].texture = tempUvs.at(vertexIndex.x - 1);
-	////outputVertices[vertexIndex.x - 1].normal = tempNormals.at(vertexIndex.x - 1);
-	//outputVertices[vertexIndex.y - 1].position = tempVertices.at(vertexIndex.y - 1);
-	//outputVertices[vertexIndex.y - 1].texture = tempUvs.at(vertexIndex.y - 1);
+		file.close();
 
-	//outputVertices[vertexIndex.z - 1].position = tempVertices.at(vertexIndex.z - 1);
-	//outputVertices[vertexIndex.z - 1].texture = tempUvs.at(vertexIndex.z - 1);
+		if (vertexIndices.size() == 0 || tempVertices.size() == 0) {
+			return false;
+		}
 
-	if (vertexIndices.size() == 0 || tempVertices.size() == 0) {
-		return false;
-	}
+		sizeVertices = vertexIndices.size();
+		sizeIndices = vertexIndices.size();
+		outputIndices = new unsigned long[sizeIndices];
 
-	sizeVertices = vertexIndices.size();
-	sizeIndices = vertexIndices.size();
-	outputIndices = new unsigned long[sizeIndices];
+		//XMVECTOR normalSum = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+		//int facesUsingVertex = 0;
+		//bool uvFound = false;
+		//float newX;
+		//float newY;
+		//float newZ;
 
-	/*for (int i = 0; i < sizeIndices; i++) {
-		outputVertices[i].position = tempVertices.at(vertexIndices.at(i) - 1);
-		outputVertices[i].texture = tempUvs.at(uvIndices.at(i) - 1);
-		outputVertices[i].normal = tempNormals.at(normalIndices.at(i) - 1);
-	}*/
-	//for (int i = 0; i < this->subsetIndices.size(); i++) {
-	//	for (int j = 0; j < this->subsetIndices.at(i); j++) {
-	//		Vertex tempVertex;
-	//		int position = ((i - 1) * this->subsetIndices.size()) + j;
-	//		tempVertex.position = tempVertices.at(vertexIndices.at(position) - 1);
-	//		tempVertex.texture = tempUvs.at(uvIndices.at(position) - 1);
-	//		tempVertex.normal = tempNormals.at(normalIndices.at(position) - 1);
-	//		outputVertices->push_back(tempVertex);
-	//	}
-	//}
-	for (int i = 0; i < sizeIndices; i++) {
-		Vertex tempVertex;
-		tempVertex.position = tempVertices.at(vertexIndices.at(i) - 1);
-		tempVertex.texture = tempUvs.at(uvIndices.at(i) - 1);
-		tempVertex.normal = tempNormals.at(normalIndices.at(i) - 1);
-		outputVertices->push_back(tempVertex);
+		////Compute average normal
+		//for (int i = 0; i < sizeVertices; i++) {
+		//	Vertex tempVertex;
+		//	tempVertex.position = tempVertices.at(i);
 
-		outputIndices[i] = i;
+		//	for (int j = 0; j < sizeIndices; j++) {
+		//		if (vertexIndices.at(j) == i + 1) {
+		//			if (!uvFound) {
+		//				tempVertex.texture = tempUvs.at(uvIndices.at(j) - 1);
+		//				uvFound = true;
+		//			}
+		//			newX = XMVectorGetX(normalSum) + tempNormals.at(normalIndices.at(j) - 1).x;
+		//			newY = XMVectorGetY(normalSum) + tempNormals.at(normalIndices.at(j) - 1).y;
+		//			newZ = XMVectorGetZ(normalSum) + tempNormals.at(normalIndices.at(j) - 1).z;
+
+		//			normalSum = XMVectorSet(newX, newY, newZ, 0.0f);
+		//			facesUsingVertex++;
+		//		}
+		//	}
+
+		//	normalSum = normalSum / facesUsingVertex;
+
+		//	normalSum = XMVector3Normalize(normalSum);
+		//	
+		//	tempVertex.normal.x = XMVectorGetX(normalSum);
+		//	tempVertex.normal.y = XMVectorGetY(normalSum);
+		//	tempVertex.normal.z = XMVectorGetZ(normalSum);
+
+		//	outputVertices.push_back(tempVertex);
+
+		//	normalSum = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+		//	facesUsingVertex = 0;
+		//	uvFound = false;
+		//}
+
+		//for (int i = 0; i < sizeIndices; i++) {
+		//	outputIndices[i] = vertexIndices.at(i) - 1;
+		//}
+
+		for (int i = 0; i < sizeVertices; i++) {
+			Vertex tempVertex;
+			tempVertex.position = tempVertices.at(vertexIndices.at(i) - 1);
+			tempVertex.texture = tempUvs.at(uvIndices.at(i) - 1);
+			tempVertex.normal = tempNormals.at(normalIndices.at(i) - 1);
+			outputVertices.push_back(tempVertex);
+
+			outputIndices[i] = i;
+		}
+
+		path = filename;
+		path.append(".ace"); //Make the "All Computations Executed" file
+		file.open(path, std::ios::out);
+		if (!file.is_open()) {
+			return false;
+		}
+		file << sizeVertices << " " << sizeIndices << "\n"; //Save the sizes, needed for loading the binary files
+		file << materialLib << "\n";
+		for (int i = 0; i < subsetIndices.size(); i++) {
+			file << subsetIndices.at(i) << " " << materialNames.at(i) << "\n"; //Save all subsets with each material
+		}
+		file.close();
+
+		format = "V.bin"; //Save the vericies as binary
+		path = filename + format;
+		file.open(path, std::ios::out | std::ios::binary);
+		if (!file.is_open()) {
+			return false;
+		}
+		file.write((char*)&(outputVertices[0]), sizeof(Vertex) * outputVertices.size());
+		file.close();
+
+		format = "I.bin"; //save the indices as binary
+		path = filename + format;
+		file.open(path, std::ios::out | std::ios::binary);
+		if (!file.is_open()) {
+			return false;
+		}
+		file.write((char*)outputIndices, sizeof(unsigned long) * sizeIndices);
+		file.close();
 	}
 
 	return true;
@@ -413,7 +525,7 @@ int Model::NrOfSubsets()
 	return this->subsetIndices.size();
 }
 
-void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int& textureIndex, XMFLOAT4& difColor, XMFLOAT4& specColor)
+void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int& textureIndex, int& normMapIndex, XMFLOAT4& difColor, XMFLOAT4& specColor, bool& transparent)
 {
 	indexStart = this->subsetIndices.at(subsetIndex);
 
@@ -431,9 +543,22 @@ void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int
 	else {
 		textureIndex = -1;
 	}
+
+	if (tempMaterial.hasNormMap) {
+		normMapIndex = tempMaterial.normMapIndex;
+	}
+	else {
+		normMapIndex = -1;
+	}
 	
 	difColor = tempMaterial.difColor;
 	specColor = tempMaterial.specColor;
+	transparent = tempMaterial.transparent;
 
 	return;
+}
+
+std::string Model::GetName()
+{
+	return this->name;
 }

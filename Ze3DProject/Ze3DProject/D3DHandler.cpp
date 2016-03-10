@@ -264,7 +264,7 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 
 	//Setup the resterizer state for more rendering control
 	rasterDesc.AntialiasedLineEnable = false;
-	rasterDesc.CullMode = D3D11_CULL_BACK;
+	rasterDesc.CullMode = D3D11_CULL_NONE;
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
@@ -309,6 +309,7 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 
 void D3DHandler::Shutdown()
 {
+	this->deviceContext->Flush();
 	//Set to window mode before shutting down or releasing the swapchain will throw and exception
 	if (this->swapChain) {
 		this->swapChain->SetFullscreenState(false, NULL);

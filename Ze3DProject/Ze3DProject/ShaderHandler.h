@@ -20,7 +20,10 @@ private:
 
 		XMFLOAT4 difColor;
 		XMFLOAT4 specColor;
-		bool hasTexture;
+
+		BOOL hasTexture;
+		BOOL hasNormMap;
+
 		XMFLOAT4 cameraPos;
 	};
 
@@ -30,11 +33,14 @@ private:
 	ID3D11InputLayout* layout;
 	ID3D11Buffer* matrixBuffer;
 	ID3D11SamplerState* samplerState;
+	ID3D11BlendState* transparencyBlendState;
 
 	bool InitializeShader(ID3D11Device*, HWND, WCHAR*, WCHAR*, WCHAR*);
 	void ShutdownShader();
 	void OutputShaderErrorMessage(ID3D10Blob*, HWND, WCHAR*);
-	bool SetShaderParameters(ID3D11DeviceContext*, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, XMFLOAT4, XMFLOAT4, XMVECTOR);
+
+	bool SetShaderParameters(ID3D11DeviceContext*, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, ID3D11ShaderResourceView*, XMFLOAT4, XMFLOAT4, bool, XMVECTOR);
+
 	void RenderShader(ID3D11DeviceContext*, int, int);
 
 public:
@@ -43,7 +49,8 @@ public:
 
 	bool Initialize(ID3D11Device*, HWND);
 	void Shutdown();
-	bool Render(ID3D11DeviceContext*, int, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, XMFLOAT4, XMFLOAT4, XMVECTOR);
+
+	bool Render(ID3D11DeviceContext*, int, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, ID3D11ShaderResourceView*, XMFLOAT4, XMFLOAT4, bool, XMVECTOR);
 };
 
 #endif

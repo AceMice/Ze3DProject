@@ -17,11 +17,11 @@ class GraphicsHandler {
 private:
 	D3DHandler* direct3DH;
 	CameraHandler* cameraH;
-	Model* model1;
-	Model* model2;
+	std::vector<Model*> models;
 	ShaderHandler* shaderH;
 
 	bool Render();
+	Model* GetModel(char*);
 	//For testing
 	float rotY;
 public:

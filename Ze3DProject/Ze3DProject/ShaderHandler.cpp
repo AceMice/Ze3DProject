@@ -8,6 +8,7 @@ ShaderHandler::ShaderHandler()
 	this->layout = nullptr;
 	this->matrixBuffer = nullptr;
 	this->samplerState = nullptr;
+	this->transparencyBlendState = nullptr;
 }
 
 ShaderHandler::~ShaderHandler()
@@ -35,13 +36,15 @@ void ShaderHandler::Shutdown()
 	return;
 }
 
-bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, int indexStart,
-	XMMATRIX worldMatrix, XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 difColor, XMFLOAT4 specColor, XMVECTOR camPos)
+
+bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, int indexStart, XMMATRIX worldMatrix, 
+	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* normMap, 
+	XMFLOAT4 difColor, XMFLOAT4 specColor, bool transparent, XMVECTOR camPos)
 {
 	bool result = false;
 
 	//Set shader parameters used for rendering
-	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, difColor, specColor, camPos);
+	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, normMap, difColor, specColor, transparent, camPos);
 	if (!result) {
 		return false;
 	}
@@ -67,6 +70,7 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 	errorMessage = nullptr;
 	vertexShaderBuffer = nullptr;
 	pixelShaderBuffer = nullptr;
+	geoShaderBuffer = nullptr;
 
 	//Compile the vertex shader code
 	hresult = D3DCompileFromFile(vsFilename, NULL, NULL, "main", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
@@ -120,7 +124,7 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 
 	hresult = device->CreateGeometryShader(geoShaderBuffer->GetBufferPointer(), geoShaderBuffer->GetBufferSize(), NULL, &this->geoShader);
 	if (FAILED(hresult)) {
-		MessageBox(hwnd, L"device->CreatePixelShader", L"Error", MB_OK);
+		MessageBox(hwnd, L"device->CreateGeometryShader", L"Error", MB_OK);
 		return false;
 	}
 
@@ -166,6 +170,8 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 	vertexShaderBuffer = nullptr;
 	pixelShaderBuffer->Release();
 	pixelShaderBuffer = nullptr;
+	geoShaderBuffer->Release();
+	geoShaderBuffer = nullptr;
 
 	//Fill the description of the dynamic matrix constant buffer that is in the vertex shader
 	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -203,6 +209,24 @@ bool ShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsF
 	{
 		return false;
 	}
+	
+	D3D11_RENDER_TARGET_BLEND_DESC rtbd;
+	ZeroMemory(&rtbd, sizeof(rtbd));
+	rtbd.BlendEnable = true;
+	rtbd.SrcBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	rtbd.DestBlend = D3D11_BLEND_SRC_ALPHA;
+	rtbd.BlendOp = D3D11_BLEND_OP_ADD;
+	rtbd.SrcBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
+	rtbd.DestBlendAlpha = D3D11_BLEND_SRC_ALPHA;
+	rtbd.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	rtbd.RenderTargetWriteMask = D3D10_COLOR_WRITE_ENABLE_ALL;
+
+	D3D11_BLEND_DESC blendDesc;
+	ZeroMemory(&blendDesc, sizeof(blendDesc));
+	blendDesc.AlphaToCoverageEnable = false;
+	blendDesc.RenderTarget[0] = rtbd;
+
+	device->CreateBlendState(&blendDesc, &transparencyBlendState);
 
 	return true;
 }
@@ -241,8 +265,9 @@ void ShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd
 	return;
 }
 
-bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, 
-	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, XMFLOAT4 difColor, XMFLOAT4 specColor, XMVECTOR camPos)
+bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix, 
+	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* normMap, 
+	XMFLOAT4 difColor, XMFLOAT4 specColor, bool transparent, XMVECTOR camPos)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -276,6 +301,12 @@ bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMA
 	else {
 		dataPtr->hasTexture = true;
 	}
+	if (!normMap) {
+		dataPtr->hasNormMap = false;
+	}
+	else {
+		dataPtr->hasNormMap = true;
+	}
 
 	
 	//CAMERA POS
@@ -294,6 +325,17 @@ bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMA
 	if (texture) {
 		//Set shader texture resource for pixel shader
 		deviceContext->PSSetShaderResources(0, 1, &texture);
+	}
+	if (normMap) {
+		//Set shader normal map resource for pixel shader
+		deviceContext->PSSetShaderResources(1, 1, &normMap);
+	}
+
+	if (transparent) {
+		deviceContext->OMSetBlendState(transparencyBlendState, NULL, 0xffffffff);
+	}
+	else {
+		deviceContext->OMSetBlendState(0, 0, 0xffffffff);
 	}
 	
 	return true;
@@ -319,6 +361,11 @@ void ShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int indexCo
 
 void ShaderHandler::ShutdownShader()
 {
+	//Release blend state
+	if (this->transparencyBlendState) {
+		this->transparencyBlendState->Release();
+		this->transparencyBlendState = nullptr;
+	}
 	//Release sampler state
 	if (this->samplerState) {
 		this->samplerState->Release();
