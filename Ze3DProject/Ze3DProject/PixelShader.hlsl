@@ -40,14 +40,13 @@ float4 main(PixelInput input) : SV_TARGET
 	float3 ambient = float3(ambientStr * s.r, ambientStr * s.g, ambientStr * s.b);
 	
 	
-	float3 inVec = ((input.worldPos).xyz - float4(0, 5, -6, 1));	//lightVec towards the object
+	float3 outVec = normalize(float4(0, 5, -6, 1) - (input.worldPos).xyz);	//lightVec towards the object
 	
 	//Specular
-	float3 refVec = normalize(reflect(inVec, input.normal));	//Create the the reflection
+	float3 refVec = normalize(reflect(outVec, input.normal));	//Create the the reflection
 	float3 specular = specColor * lightSpecular * pow( dot( refVec, normalize(input.viewDir) ), shineFactor);
 	
 	//Calculate Diffuse color
-	float3 outVec = normalize(-inVec);	//Reversing the vector to point outwards
 	float value = saturate(dot(input.normal, outVec));
 	float3 diffuse = float3(diffuseStr * s.r * value, diffuseStr * s.g * value, diffuseStr * s.b * value);
 
