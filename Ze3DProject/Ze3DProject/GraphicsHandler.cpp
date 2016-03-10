@@ -182,7 +182,6 @@ bool GraphicsHandler::Render()
 		//Draw all non transparent subsets
 		modelSubsets = this->models.at(i)->NrOfSubsets();
 		for (int j= 0; j < modelSubsets; j++) { 
-
 			//Get all the nessecary information from the model
 			this->models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
 
@@ -190,7 +189,7 @@ bool GraphicsHandler::Render()
 			if (!transparent) {
 				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
 					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex), 
-					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, false);
+					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, this->cameraH->GetPosition());
 				if (!result)
 				{
 					return false;
@@ -221,7 +220,7 @@ bool GraphicsHandler::Render()
 				//Render the model using the shader-handler
 				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
 					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex),
-					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, true);
+					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, true, this->cameraH->GetPosition());
 				if (!result)
 				{
 					return false;

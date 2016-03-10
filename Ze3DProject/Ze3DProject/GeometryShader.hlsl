@@ -5,6 +5,7 @@ struct GSInput
 	float2 tex : TEXCOORD0;
 	float4 worldPos : POSITION;
 	float3 normal : NORMAL;
+	float3 viewDir : TEXCOORD1;
 };
 
 struct PSInput
@@ -14,6 +15,7 @@ struct PSInput
 	float3 normal : NORMAL;
 	float3 tangent : TANGENT;
 	float4 worldPos : POSITION;
+	float3 viewDir : TEXCOORD1;
 };
 
 [maxvertexcount(3)]
@@ -35,6 +37,8 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output
 	tangent.z = (texEdge0.y * edge0.z - texEdge1.y * edge1.z) * (1.0f / (texEdge0.x * texEdge1.y - texEdge1.x * texEdge0.y));
 	
 	tangent = normalize(tangent);
+
+	element.viewDir = input[0].viewDir;
 
 	for (uint i = 0; i < 3; i++)
 	{

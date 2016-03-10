@@ -21,11 +21,18 @@ struct PixelInput
 	float3 normal : NORMAL;
 	float3 tangent : TANGENT;
 	float4 worldPos : POSITION;
+	float3 viewDir : TEXCOORD1;
 };
 
 float4 main(PixelInput input) : SV_TARGET
 {
+
 	float4 s;	//Texture color for the current pixel
+	float ambientStr = 0.2;
+	float diffuseStr = 0.8;
+	float shineFactor = 5;
+	float lightSpecular = 0.5;
+
 
 	if (hasTexture) {
 		s = shaderTexture.Sample(shaderSampler, input.tex).rgba;
@@ -53,14 +60,22 @@ float4 main(PixelInput input) : SV_TARGET
 		input.normal = normalize(mul(normalMap, texSpace));
 	}
 	
-	float3 outVec = (float4(0,5,-6,1) - input.worldPos).xyz;	//(0,0,-6,1)Position of light i worldspace, camera is at (0,0,-5)
-	outVec = normalize(outVec);
+	//Ambient color
+	float3 ambient = float3(ambientStr * s.r, ambientStr * s.g, ambientStr * s.b);
+	
+	
+	float3 inVec = ((input.worldPos).xyz - float4(0, 5, -6, 1));	//lightVec towards the object
+	
+	//Specular
+	float3 refVec = normalize(reflect(inVec, input.normal));	//Create the the reflection
+	float3 specular = specColor * lightSpecular * pow( dot( refVec, normalize(input.viewDir) ), shineFactor);
+	
+	//Calculate Diffuse color
+	float3 outVec = normalize(-inVec);	//Reversing the vector to point outwards
 	float value = saturate(dot(input.normal, outVec));
+	float3 diffuse = float3(diffuseStr * s.r * value, diffuseStr * s.g * value, diffuseStr * s.b * value);
 
-	//Calculate new color
-	s.r = (0.8 * s.r * value) + (0.2 * s.r);
-	s.g = (0.8 * s.g * value) + (0.2 * s.g);
-	s.b = (0.8 * s.b * value) + (0.2 * s.b);
+	float3 result = ambient + diffuse + specular;
 
-	return s;
+	return float4(result, s.a);
 }
