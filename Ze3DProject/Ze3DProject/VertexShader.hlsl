@@ -8,6 +8,7 @@ cbuffer MatrixBuffer
 	float4 difColor;
 	float4 specColor;
 	bool hasTexture;
+	bool hasNormMap;
 	float4 cameraPos;
 };
 
@@ -46,7 +47,7 @@ GSInput main(VertexInput input)
 	//Store the normal for output
 	output.normal = normalize(mul(input.normal, worldMatrix));
 
-	output.viewDir = normalize(output.worldPos.xyz - mul(cameraPos.xyz, worldMatrix));
+	output.viewDir = normalize(mul(cameraPos.xyz, worldMatrix) - output.worldPos.xyz);
 
 	return output;
 }
