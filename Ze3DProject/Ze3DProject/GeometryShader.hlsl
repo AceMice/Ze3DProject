@@ -38,7 +38,7 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output
 	
 	tangent = normalize(tangent);
 
-	element.viewDir = input[0].viewDir;
+	
 
 	for (uint i = 0; i < 3; i++)
 	{
@@ -47,6 +47,7 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output
 		element.worldPos = input[i].worldPos;
 		element.normal = input[i].normal;
 		element.tangent = tangent;
+		element.viewDir = input[i].viewDir;
 
 		output.Append(element);
 	}
