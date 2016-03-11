@@ -160,7 +160,7 @@ bool GraphicsHandler::Render()
 	XMFLOAT4 difColor;
 	XMFLOAT4 specColor;
 	bool transparent;
-
+	XMVECTOR camPos = this->cameraH->GetPosition();
 
 	//Clear the buffers to begin the scene
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
@@ -189,7 +189,7 @@ bool GraphicsHandler::Render()
 			if (!transparent) {
 				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
 					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex), 
-					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, this->cameraH->GetPosition());
+					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, camPos);
 				if (!result)
 				{
 					return false;
@@ -220,7 +220,7 @@ bool GraphicsHandler::Render()
 				//Render the model using the shader-handler
 				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
 					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex),
-					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, true, this->cameraH->GetPosition());
+					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, true, camPos);
 				if (!result)
 				{
 					return false;

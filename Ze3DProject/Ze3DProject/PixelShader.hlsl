@@ -68,7 +68,7 @@ float4 main(PixelInput input) : SV_TARGET
 	float3 outVec = normalize(float3(0, 5, -6) - (input.worldPos).xyz);	//lightVec towards the object
 	
 	//Specular
-	float3 refVec = normalize(reflect(-outVec, input.normal));	//Create the the reflection
+	float3 refVec = normalize(reflect(outVec, input.normal));	//Create the the reflection
 	float lightIntesity = saturate(dot(refVec, input.viewDir));
 	
 	specular = specColor.rgb * lightSpecular * max(pow(lightIntesity, shineFactor), 0);
