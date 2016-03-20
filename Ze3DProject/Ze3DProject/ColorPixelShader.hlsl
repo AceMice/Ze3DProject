@@ -25,7 +25,7 @@ float4 main(PSInput input) : SV_TARGET
 
 	float lightIntensity = saturate(dot(normal.xyz, depth.xyz));
 
-	outputColor = saturate((color.rgba + specular.rgba) * lightIntensity);
+	outputColor = saturate(((color.rgba + specular.rgba) * lightIntensity * 0.8f) + ((color.rgba + specular.rgba) * 0.2f));
 
 	return outputColor;
 }
