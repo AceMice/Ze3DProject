@@ -30,6 +30,7 @@ struct PixelOutput
 	float4 color : SV_Target0;
 	float4 normal : SV_Target1;
 	float4 specular : SV_Target2;
+	float4 depth : SV_Target3;
 };
 
 PixelOutput main(PixelInput input) : SV_TARGET
@@ -76,6 +77,8 @@ PixelOutput main(PixelInput input) : SV_TARGET
 	float3 ambient = float3(ambientStr * s.r, ambientStr * s.g, ambientStr * s.b);
 
 	float3 outVec = normalize(float3(0, 5, -6) - (input.worldPos).xyz);	//lightVec towards the object
+
+	output.depth = float4(outVec, 1.0f);
 
 																		//Specular
 	float3 refVec = normalize(reflect(outVec, output.normal));	//Create the the reflection

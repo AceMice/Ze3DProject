@@ -248,7 +248,7 @@ bool GraphicsHandler::Render()
 	this->modelWindow->Render(this->direct3DH->GetDeviceContext());
 
 	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext(), this->modelWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, 
-		this->direct3DH->GetShaderResourceView(0), this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2));
+		this->direct3DH->GetShaderResourceView(0), this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2), this->direct3DH->GetShaderResourceView(3));
 	if (!result) {
 		return false;
 	}

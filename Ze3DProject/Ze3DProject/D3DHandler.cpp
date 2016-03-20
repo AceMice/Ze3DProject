@@ -444,12 +444,18 @@ void D3DHandler::Shutdown()
 	}
 
 	for (int i = 0; i < BUFFER_COUNT; i++) {
-		this->deferredRenderTargetTextures[i]->Release();
-		this->deferredRenderTargetTextures[i] = nullptr;
-		this->deferredRenderTargetViews[i]->Release();
-		this->deferredRenderTargetViews[i] = nullptr;
-		this->deferredShaderResources[i]->Release();
-		this->deferredShaderResources[i] = nullptr;
+		if (this->deferredRenderTargetTextures[i]) {
+			this->deferredRenderTargetTextures[i]->Release();
+			this->deferredRenderTargetTextures[i] = nullptr;
+		}
+		if (this->deferredRenderTargetViews[i]) {
+			this->deferredRenderTargetViews[i]->Release();
+			this->deferredRenderTargetViews[i] = nullptr;
+		}
+		if (this->deferredShaderResources[i]) {
+			this->deferredShaderResources[i]->Release();
+			this->deferredShaderResources[i] = nullptr;
+		}
 	}
 
 	if (this->deviceContext) {

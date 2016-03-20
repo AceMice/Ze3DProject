@@ -37,12 +37,12 @@ void ColorShaderHandler::Shutdown()
 
 bool ColorShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix,
 	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* colorTexture,
-	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture)
+	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* depthTexture)
 {
 	bool result = false;
 
 	//Set shader parameters used for rendering
-	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, colorTexture, normalTexture, specularTexture);
+	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, colorTexture, normalTexture, specularTexture, depthTexture);
 	if (!result) {
 		return false;
 	}
@@ -217,7 +217,7 @@ void ColorShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND
 
 bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix,
 	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* colorTexture,
-	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture)
+	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* depthTexture)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -263,6 +263,10 @@ bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	if (specularTexture) {
 		//Set shader specular texture resource for pixel shader
 		deviceContext->PSSetShaderResources(2, 1, &specularTexture);
+	}
+	if (depthTexture) {
+		//Set shader depth texture resource for pixel shader
+		deviceContext->PSSetShaderResources(3, 1, &depthTexture);
 	}
 
 	deviceContext->OMSetBlendState(0, 0, 0xffffffff);
