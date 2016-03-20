@@ -57,7 +57,6 @@ bool ColorShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR
 	HRESULT hresult;
 	ID3D10Blob* errorMessage;
 	ID3D10Blob* vertexShaderBuffer;
-	ID3D10Blob* geoShaderBuffer;
 	ID3D10Blob* pixelShaderBuffer;
 	D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
 	unsigned int numElements;
@@ -68,7 +67,6 @@ bool ColorShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR
 	errorMessage = nullptr;
 	vertexShaderBuffer = nullptr;
 	pixelShaderBuffer = nullptr;
-	geoShaderBuffer = nullptr;
 
 	//Compile the vertex shader code
 	hresult = D3DCompileFromFile(vsFilename, NULL, NULL, "main", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
