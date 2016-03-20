@@ -11,15 +11,21 @@
 #include <DirectXMath.h>
 using namespace DirectX;
 
+const int BUFFER_COUNT = 3;
+
 class D3DHandler {
 private:
 	bool vsync_enabled;
 	int videoCardMemory;
 	char videoCardDescription[128];
+	bool renderToBackBuffer;
 
 	IDXGISwapChain* swapChain;
 	ID3D11Device* device;
 	ID3D11DeviceContext* deviceContext;
+	ID3D11RenderTargetView* deferredRenderTargetViews[BUFFER_COUNT];
+	ID3D11Texture2D* deferredRenderTargetTextures[BUFFER_COUNT];
+	ID3D11ShaderResourceView* deferredShaderResources[BUFFER_COUNT];
 	ID3D11RenderTargetView* renderTargetView;
 	ID3D11Texture2D* depthStencilBuffer;
 	ID3D11DepthStencilState* depthStencilState;
@@ -45,6 +51,10 @@ public:
 	void GetOrthoMatrix(XMMATRIX&);
 
 	void GetVideoCardInfo(char*, int&);
+
+	void ChangeRenderTargets(bool);
+
+	ID3D11ShaderResourceView* GetShaderResourceView(int);
 };
 
 #endif

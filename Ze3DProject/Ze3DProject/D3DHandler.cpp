@@ -10,6 +10,14 @@ D3DHandler::D3DHandler()
 	this->depthStencilState = nullptr;
 	this->depthStencilView = nullptr;
 	this->rasterState = nullptr;
+	
+	for (int i = 0; i < BUFFER_COUNT; i++) {
+		this->deferredRenderTargetTextures[i] = nullptr;
+		this->deferredRenderTargetViews[i] = nullptr;
+		this->deferredShaderResources[i] = nullptr;
+	}
+
+	this->renderToBackBuffer = false;
 }
 
 D3DHandler::~D3DHandler()
@@ -36,6 +44,9 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 	D3D11_RASTERIZER_DESC rasterDesc;
 	D3D11_VIEWPORT viewport;
 	float fieldOfView, screenAspect;
+	D3D11_TEXTURE2D_DESC renderTextureDesc;
+	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
+	D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
 
 	//Store the vsync setting
 	this->vsync_enabled = vsync;
@@ -301,8 +312,61 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 
 	this->projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth);
 
-	// Create an orthographic projection matrix for 2D rendering.
+	//Create an orthographic projection matrix for 2D rendering
 	this->orthoMatrix = XMMatrixOrthographicLH((float)screenWidth, (float)screenHeight, screenNear, screenDepth);
+
+	//Initialize the render target texture description
+	ZeroMemory(&renderTextureDesc, sizeof(renderTextureDesc));
+
+	//Setup the render target texture description
+	renderTextureDesc.Width = screenWidth;
+	renderTextureDesc.Height = screenHeight;
+	renderTextureDesc.MipLevels = 1;
+	renderTextureDesc.ArraySize = 1;
+	renderTextureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+	renderTextureDesc.SampleDesc.Count = 1;
+	renderTextureDesc.Usage = D3D11_USAGE_DEFAULT;
+	renderTextureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	renderTextureDesc.CPUAccessFlags = 0;
+	renderTextureDesc.MiscFlags = 0;
+
+	//Create the render target textures
+	for (int i = 0; i < BUFFER_COUNT; i++) {
+		hresult = this->device->CreateTexture2D(&renderTextureDesc, NULL, &this->deferredRenderTargetTextures[i]);
+		if (FAILED(hresult)) {
+			MessageBox(hwnd, L"device->CreateTexture2D", L"Error", MB_OK);
+			return false;
+		}
+	}
+
+	//Setup the description of the render target view.
+	renderTargetViewDesc.Format = renderTextureDesc.Format;
+	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	renderTargetViewDesc.Texture2D.MipSlice = 0;
+
+	//Create the render target views.
+	for (i = 0; i<BUFFER_COUNT; i++) {
+		hresult = device->CreateRenderTargetView(this->deferredRenderTargetTextures[i], &renderTargetViewDesc, &this->deferredRenderTargetViews[i]);
+		if (FAILED(hresult)) {
+			MessageBox(hwnd, L"device->CreateRenderTargetView", L"Error", MB_OK);
+			return false;
+		}
+	}
+
+	// Setup the description of the shader resource view.
+	shaderResourceViewDesc.Format = renderTextureDesc.Format;
+	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
+	shaderResourceViewDesc.Texture2D.MipLevels = 1;
+
+	//Create the shader resource views.
+	for (int i = 0; i < BUFFER_COUNT; i++) {
+		hresult = device->CreateShaderResourceView(this->deferredRenderTargetTextures[i], &shaderResourceViewDesc, &this->deferredShaderResources[i]);
+		if (FAILED(hresult)) {
+			MessageBox(hwnd, L"device->CreateShaderResourceView", L"Error", MB_OK);
+			return false;
+		}
+	}
 
 	return true;
 }
@@ -340,6 +404,15 @@ void D3DHandler::Shutdown()
 		this->renderTargetView = nullptr;
 	}
 
+	for (int i = 0; i < BUFFER_COUNT; i++) {
+		this->deferredRenderTargetTextures[i]->Release();
+		this->deferredRenderTargetTextures[i] = nullptr;
+		this->deferredRenderTargetViews[i]->Release();
+		this->deferredRenderTargetViews[i] = nullptr;
+		this->deferredShaderResources[i]->Release();
+		this->deferredShaderResources[i] = nullptr;
+	}
+
 	if (this->deviceContext) {
 		this->deviceContext->Release();
 		this->deviceContext = nullptr;
@@ -367,8 +440,16 @@ void D3DHandler::BeginScene(float red, float green, float blue, float alpha)
 	color[2] = blue;
 	color[3] = alpha;
 
-	//Clear the back buffer
-	this->deviceContext->ClearRenderTargetView(this->renderTargetView, color);
+	if (this->renderToBackBuffer) {
+		//Clear the back buffer
+		this->deviceContext->ClearRenderTargetView(this->renderTargetView, color);
+	}
+	else {
+		for (int i = 0; i < BUFFER_COUNT; i++) {
+			this->deviceContext->ClearRenderTargetView(this->deferredRenderTargetViews[i], color);
+		}
+	}
+	
 
 	//Clear the depth buffer
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView, D3D11_CLEAR_DEPTH, 1.f, 0);
@@ -418,4 +499,18 @@ void D3DHandler::GetVideoCardInfo(char* cardName, int& memory)
 	strcpy_s(cardName, 128, this->videoCardDescription);
 	memory = this->videoCardMemory;
 	return;
+}
+
+void D3DHandler::ChangeRenderTargets(bool renderToBackBuffer)
+{
+	this->renderToBackBuffer = renderToBackBuffer;
+}
+
+ID3D11ShaderResourceView* D3DHandler::GetShaderResourceView(int resourceIndex)
+{
+	if (resourceIndex < BUFFER_COUNT) {
+		return this->deferredShaderResources[resourceIndex];
+	}
+	
+	return NULL;
 }

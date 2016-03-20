@@ -20,7 +20,7 @@ bool ShaderHandler::Initialize(ID3D11Device* device, HWND hwnd)
 	bool result = false;
 
 	//Initialize vertex and pixel shaders
-	result = this->InitializeShader(device, hwnd, L"../Ze3DProject/VertexShader.hlsl", L"../Ze3DProject/PixelShader.hlsl", L"../Ze3DProject/GeometryShader.hlsl");
+	result = this->InitializeShader(device, hwnd, L"../Ze3DProject/DeferredVertexShader.hlsl", L"../Ze3DProject/DeferredPixelShader.hlsl", L"../Ze3DProject/GeometryShader.hlsl");
 	if (!result) {
 		return false;
 	}

@@ -5,6 +5,7 @@ GraphicsHandler::GraphicsHandler()
 	this->direct3DH = nullptr;
 	this->cameraH = nullptr;
 	this->shaderH = nullptr;
+	this->colorShaderH = nullptr;
 
 	this->rotY = 0.0f;
 }
@@ -88,18 +89,33 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	//Insert model into vector
 	this->models.push_back(tempModel);
 
-	// Create the color shader object.
+	// Create the deferred shader object.
 	this->shaderH = new ShaderHandler;
 	if (!this->shaderH)
 	{
 		return false;
 	}
 
-	// Initialize the color shader object.
+	// Initialize the deferred shader object.
 	result = this->shaderH->Initialize(this->direct3DH->GetDevice(), hwnd);
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->shaderH->Initialize", L"Error", MB_OK);
+		return false;
+	}
+
+	// Create the color shader object.
+	this->colorShaderH = new ColorShaderHandler;
+	if (!this->colorShaderH)
+	{
+		return false;
+	}
+
+	// Initialize the color shader object.
+	result = this->colorShaderH->Initialize(this->direct3DH->GetDevice(), hwnd);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->colorShaderH->Initialize", L"Error", MB_OK);
 		return false;
 	}
 
@@ -162,6 +178,9 @@ bool GraphicsHandler::Render()
 	bool transparent;
 	XMVECTOR camPos = this->cameraH->GetPosition();
 
+	//Set the render target to be the textures
+	this->direct3DH->ChangeRenderTargets(false);
+
 	//Clear the buffers to begin the scene
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
@@ -170,9 +189,9 @@ bool GraphicsHandler::Render()
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
 
 	//**NON TRANSPARENT RENDER**\\
-
+	
 	for (int i = 0; i < this->models.size(); i++) {
-
+		
 		//Get the world matrix from model
 		this->models.at(i)->GetWorldMatrix(worldMatrix);
 
@@ -199,35 +218,48 @@ bool GraphicsHandler::Render()
 		}
 	}
 
-	//**TRANSPARENT RENDER**\\
+	//Set the render target to be the back buffer
+	this->direct3DH->ChangeRenderTargets(true);
 
-	for (int i = 0; i < this->models.size(); i++) {
+	//Clear the buffers to begin the scene
+	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
-		//Get the world matrix from model
-		this->models.at(i)->GetWorldMatrix(worldMatrix);
-
-		//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
-		this->models.at(i)->Render(this->direct3DH->GetDeviceContext());
-
-		//Draw all non transparent subsets
-		modelSubsets = this->models.at(i)->NrOfSubsets();
-		for (int j = 0; j < modelSubsets; j++) {
-
-			//Get all the nessecary information from the model
-			models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
-
-			if (transparent) {
-				//Render the model using the shader-handler
-				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex),
-					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, true, camPos);
-				if (!result)
-				{
-					return false;
-				}
-			}
-		}
+	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext, this->direct3DH->GetShaderResourceView(0),
+		this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2));
+	if (!result) {
+		return false;
 	}
+
+
+	////**TRANSPARENT RENDER**\\
+
+	//for (int i = 0; i < this->models.size(); i++) {
+
+	//	//Get the world matrix from model
+	//	this->models.at(i)->GetWorldMatrix(worldMatrix);
+
+	//	//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
+	//	this->models.at(i)->Render(this->direct3DH->GetDeviceContext());
+
+	//	//Draw all non transparent subsets
+	//	modelSubsets = this->models.at(i)->NrOfSubsets();
+	//	for (int j = 0; j < modelSubsets; j++) {
+
+	//		//Get all the nessecary information from the model
+	//		models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+
+	//		if (transparent) {
+	//			//Render the model using the shader-handler
+	//			result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+	//				worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex),
+	//				this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, true, camPos);
+	//			if (!result)
+	//			{
+	//				return false;
+	//			}
+	//		}
+	//	}
+	//}
 
 
 	//Display the rendered scene to screen
