@@ -177,7 +177,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 
 bool GraphicsHandler::Render()
 {
-	XMMATRIX worldMatrix, viewMatrix, projectionMatrix;
+	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
 	bool result;
 	int indexCount;
 	int indexStart;
@@ -235,19 +235,19 @@ bool GraphicsHandler::Render()
 	//Turn off depth buffer for 2d rendering
 	this->direct3DH->SetZBuffer(false);
 
-	//Clear the buffers to begin the scene
-	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
-
 	//Get the model window world matrix
 	this->modelWindow->GetWorldMatrix(worldMatrix);
 
 	//Get the base view matrix
 	this->cameraH->GetBaseViewMatrix(viewMatrix);
 
+	//Get the ortho matrix for 2d rendering
+	this->direct3DH->GetOrthoMatrix(orthoMatrix);
+
 	//Put the model windows buffers on the pipeline
 	this->modelWindow->Render(this->direct3DH->GetDeviceContext());
 
-	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext(), this->modelWindow->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, 
+	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext(), this->modelWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, 
 		this->direct3DH->GetShaderResourceView(0), this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2));
 	if (!result) {
 		return false;

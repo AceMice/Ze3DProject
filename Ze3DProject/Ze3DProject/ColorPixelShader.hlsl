@@ -20,7 +20,11 @@ float4 main(PSInput input) : SV_TARGET
 	normals = normalTexture.Sample(pointSampler, input.tex);
 	speculars = specularTexture.Sample(pointSampler, input.tex);
 
-	outputColor = saturate(colors.rgba + speculars.rgba);
+	float3 lightDir = float3(0.0f, 0.4f, -1.0f);
+
+	float lightIntensity = saturate(dot(normals.xyz, lightDir));
+
+	outputColor = saturate((colors.rgba + speculars.rgba) * lightIntensity);
 
 	return outputColor;
 }

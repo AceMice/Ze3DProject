@@ -18,7 +18,7 @@ D3DHandler::D3DHandler()
 		this->deferredShaderResources[i] = nullptr;
 	}
 
-	this->renderToBackBuffer = false;
+	this->renderToBackBuffer = true;
 }
 
 D3DHandler::~D3DHandler()
@@ -479,15 +479,15 @@ void D3DHandler::BeginScene(float red, float green, float blue, float alpha)
 	color[2] = blue;
 	color[3] = alpha;
 
-	if (this->renderToBackBuffer) {
+	//if (this->renderToBackBuffer) {
 		//Clear the back buffer
 		this->deviceContext->ClearRenderTargetView(this->renderTargetView, color);
-	}
-	else {
+	//}
+	//else {
 		for (int i = 0; i < BUFFER_COUNT; i++) {
 			this->deviceContext->ClearRenderTargetView(this->deferredRenderTargetViews[i], color);
 		}
-	}
+	//}
 	
 
 	//Clear the depth buffer
@@ -543,6 +543,12 @@ void D3DHandler::GetVideoCardInfo(char* cardName, int& memory)
 void D3DHandler::ChangeRenderTargets(bool renderToBackBuffer)
 {
 	this->renderToBackBuffer = renderToBackBuffer;
+	if (renderToBackBuffer) {
+		this->deviceContext->OMSetRenderTargets(1, &this->renderTargetView, this->depthStencilView);
+	}
+	else {
+		this->deviceContext->OMSetRenderTargets(BUFFER_COUNT, this->deferredRenderTargetViews, this->depthStencilView);
+	}
 }
 
 ID3D11ShaderResourceView* D3DHandler::GetShaderResourceView(int resourceIndex)
