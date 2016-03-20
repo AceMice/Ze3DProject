@@ -6,6 +6,7 @@ GraphicsHandler::GraphicsHandler()
 	this->cameraH = nullptr;
 	this->shaderH = nullptr;
 	this->colorShaderH = nullptr;
+	this->modelWindow = nullptr;
 
 	this->rotY = 0.0f;
 }
@@ -39,6 +40,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	//Set the initial position of the camera
 	this->cameraH->SetPosition(0.0f, 0.0f, -20.0f);
+	this->cameraH->GenerateBaseViewMatrix();
 
 	// Create the model1 object.
 	tempModel = new Model;
@@ -91,31 +93,40 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	// Create the deferred shader object.
 	this->shaderH = new ShaderHandler;
-	if (!this->shaderH)
-	{
+	if (!this->shaderH) {
 		return false;
 	}
 
 	// Initialize the deferred shader object.
 	result = this->shaderH->Initialize(this->direct3DH->GetDevice(), hwnd);
-	if (!result)
-	{
+	if (!result) {
 		MessageBox(hwnd, L"this->shaderH->Initialize", L"Error", MB_OK);
 		return false;
 	}
 
 	// Create the color shader object.
 	this->colorShaderH = new ColorShaderHandler;
-	if (!this->colorShaderH)
-	{
+	if (!this->colorShaderH) {
 		return false;
 	}
 
 	// Initialize the color shader object.
 	result = this->colorShaderH->Initialize(this->direct3DH->GetDevice(), hwnd);
-	if (!result)
-	{
+	if (!result) {
 		MessageBox(hwnd, L"this->colorShaderH->Initialize", L"Error", MB_OK);
+		return false;
+	}
+
+	//Create the model for rendering 2d to
+	this->modelWindow = new ModelWindow;
+	if (!this->modelWindow) {
+		return false;
+	}
+
+	//Initialize the modelWindow object
+	result = this->modelWindow->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), screenWidth, screenHeight);
+	if (!result) {
+		MessageBox(hwnd, L"this->modelWindow->Initialize", L"Error", MB_OK);
 		return false;
 	}
 
@@ -221,15 +232,28 @@ bool GraphicsHandler::Render()
 	//Set the render target to be the back buffer
 	this->direct3DH->ChangeRenderTargets(true);
 
+	//Turn off depth buffer for 2d rendering
+	this->direct3DH->SetZBuffer(false);
+
 	//Clear the buffers to begin the scene
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
-	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext(), this->direct3DH->GetShaderResourceView(0),
-		this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2));
+	//Get the model window world matrix
+	this->modelWindow->GetWorldMatrix(worldMatrix);
+
+	//Get the base view matrix
+	this->cameraH->GetBaseViewMatrix(viewMatrix);
+
+	//Put the model windows buffers on the pipeline
+	this->modelWindow->Render(this->direct3DH->GetDeviceContext());
+
+	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext(), this->modelWindow->GetIndexCount(), worldMatrix, viewMatrix, projectionMatrix, 
+		this->direct3DH->GetShaderResourceView(0), this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2));
 	if (!result) {
 		return false;
 	}
 
+	this->direct3DH->SetZBuffer(true);
 
 	////**TRANSPARENT RENDER**\\
 
@@ -271,11 +295,17 @@ bool GraphicsHandler::Render()
 void GraphicsHandler::Shutdown()
 {
 	//Release the shaderHandler object
-	if (this->shaderH)
-	{
+	if (this->shaderH) {
 		this->shaderH->Shutdown();
 		delete this->shaderH;
 		this->shaderH = 0;
+	}
+
+	//Release the shaderHandler object
+	if (this->colorShaderH) {
+		this->colorShaderH->Shutdown();
+		delete this->colorShaderH;
+		this->colorShaderH = 0;
 	}
 
 	//Release the Model objects
@@ -287,9 +317,13 @@ void GraphicsHandler::Shutdown()
 		}
 	}
 
+	if (this->modelWindow) {
+		delete this->modelWindow;
+		this->modelWindow = nullptr;
+	}
+
 	//Release the cameraHandler object
-	if (this->cameraH)
-	{
+	if (this->cameraH) {
 		delete this->cameraH;
 		this->cameraH = 0;
 	}

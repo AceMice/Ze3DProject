@@ -7,6 +7,7 @@
 #include "CameraHandler.h"
 #include "Inputhandler.h"
 #include "ColorShaderHandler.h"
+#include "ModelWindow.h"
 
 //Constants
 const bool FULL_SCREEN = false;
@@ -21,6 +22,7 @@ private:
 	std::vector<Model*> models;
 	ShaderHandler* shaderH;
 	ColorShaderHandler* colorShaderH;
+	ModelWindow* modelWindow;
 
 	bool Render();
 	Model* GetModel(char*);

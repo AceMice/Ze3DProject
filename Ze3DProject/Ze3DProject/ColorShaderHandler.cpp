@@ -141,20 +141,20 @@ bool ColorShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR
 	pixelShaderBuffer->Release();
 	pixelShaderBuffer = nullptr;
 
-	////Fill the description of the dynamic matrix constant buffer that is in the vertex shader
-	//matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	//matrixBufferDesc.ByteWidth = sizeof(MatrixBuffer);
-	//matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	//matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	//matrixBufferDesc.MiscFlags = 0;
-	//matrixBufferDesc.StructureByteStride = 0;
+	//Fill the description of the dynamic matrix constant buffer that is in the vertex shader
+	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	matrixBufferDesc.ByteWidth = sizeof(MatrixBufferSimple);
+	matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	matrixBufferDesc.MiscFlags = 0;
+	matrixBufferDesc.StructureByteStride = 0;
 
-	//// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
-	//hresult = device->CreateBuffer(&matrixBufferDesc, NULL, &this->matrixBuffer);
-	//if (FAILED(hresult)) {
-	//	MessageBox(hwnd, L"device->CreateBuffer", L"Error", MB_OK);
-	//	return false;
-	//}
+	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
+	hresult = device->CreateBuffer(&matrixBufferDesc, NULL, &this->matrixBuffer);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"device->CreateBuffer", L"Error", MB_OK);
+		return false;
+	}
 
 	//Fill the texture sampler state description
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
@@ -221,7 +221,7 @@ bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	MatrixBuffer* dataPtr;
+	MatrixBufferSimple* dataPtr;
 	unsigned int bufferNumber;
 
 	//Transpose each matrix to prepare for shaders (requirement in directx 11)
@@ -236,7 +236,7 @@ bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	}
 
 	//Get pointer to the data
-	dataPtr = (MatrixBuffer*)mappedResource.pData;
+	dataPtr = (MatrixBufferSimple*)mappedResource.pData;
 
 	//Copy the matrices to the constant buffer
 	dataPtr->world = worldMatrix;
@@ -251,7 +251,6 @@ bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 
 	//Set the constant buffer in vertex and pixel shader with updated values
 	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &this->matrixBuffer);
-	deviceContext->PSSetConstantBuffers(bufferNumber, 1, &this->matrixBuffer);
 
 	if (colorTexture) {
 		//Set shader color texture resource for pixel shader

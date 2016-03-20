@@ -12,7 +12,7 @@ using namespace std;
 
 class ColorShaderHandler {
 private:
-	struct MatrixBuffer
+	struct MatrixBufferSimple
 	{
 		XMMATRIX world;
 		XMMATRIX view;

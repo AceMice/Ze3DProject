@@ -8,6 +8,7 @@ D3DHandler::D3DHandler()
 	this->renderTargetView = nullptr;
 	this->depthStencilBuffer = nullptr;
 	this->depthStencilState = nullptr;
+	this->disabledDepthStencilState = nullptr;
 	this->depthStencilView = nullptr;
 	this->rasterState = nullptr;
 	
@@ -255,6 +256,39 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 	//Set the newly created depth stencil
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState, 1);
 
+	//Depth stencil desc
+	ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
+
+	//Fill depth stencil descrption
+	depthStencilDesc.DepthEnable = false;
+	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+
+	depthStencilDesc.StencilEnable = true;
+	depthStencilDesc.StencilReadMask = 0xFF;
+	depthStencilDesc.StencilWriteMask = 0xFF;
+
+	//Stencil operations if pixel is front-facing.
+	depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	//Stencil operations if pixel is back-facing.
+	depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	//Create the depth stencil state
+	hresult = this->device->CreateDepthStencilState(&depthStencilDesc, &this->disabledDepthStencilState);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"this->device->CreateDepthStencilState", L"Error", MB_OK);
+		return false;
+	}
+
+	
+
 	//Init depth stencil view description
 	ZeroMemory(&depthStencilViewDesc, sizeof(depthStencilViewDesc));
 
@@ -394,6 +428,11 @@ void D3DHandler::Shutdown()
 		this->depthStencilState = nullptr;
 	}
 
+	if (this->disabledDepthStencilState) {
+		this->disabledDepthStencilState->Release();
+		this->disabledDepthStencilState = nullptr;
+	}
+
 	if (this->depthStencilBuffer) {
 		this->depthStencilBuffer->Release();
 		this->depthStencilBuffer = nullptr;
@@ -513,4 +552,14 @@ ID3D11ShaderResourceView* D3DHandler::GetShaderResourceView(int resourceIndex)
 	}
 	
 	return NULL;
+}
+
+void D3DHandler::SetZBuffer(bool zBuffing)
+{
+	if (zBuffing) {
+		this->deviceContext->OMSetDepthStencilState(this->depthStencilState, 1);
+	}
+	else {
+		this->deviceContext->OMSetDepthStencilState(this->disabledDepthStencilState, 1);
+	}
 }

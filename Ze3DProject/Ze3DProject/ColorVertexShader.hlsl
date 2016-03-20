@@ -1,4 +1,9 @@
-
+cbuffer MatrixBufferSimple
+{
+	matrix worldMatrix;
+	matrix viewMatrix;
+	matrix projectionMatrix;
+};
 
 struct VertexInput
 {
@@ -16,7 +21,11 @@ PSInput main(VertexInput input)
 {
 	PSInput output;
 
-	output.position = input.position;
+	input.position.w = 1.0f;
+
+	output.position = mul(input.position, worldMatrix);
+	output.position = mul(output.position, viewMatrix);
+	output.position = mul(output.position, projectionMatrix);
 
 	//Store the color for output
 	output.tex = input.tex;

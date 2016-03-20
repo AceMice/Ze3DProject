@@ -29,6 +29,7 @@ private:
 	ID3D11RenderTargetView* renderTargetView;
 	ID3D11Texture2D* depthStencilBuffer;
 	ID3D11DepthStencilState* depthStencilState;
+	ID3D11DepthStencilState* disabledDepthStencilState;
 	ID3D11DepthStencilView* depthStencilView;
 	ID3D11RasterizerState* rasterState;
 	XMMATRIX projectionMatrix;
@@ -55,6 +56,8 @@ public:
 	void ChangeRenderTargets(bool);
 
 	ID3D11ShaderResourceView* GetShaderResourceView(int);
+
+	void SetZBuffer(bool);
 };
 
 #endif
