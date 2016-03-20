@@ -66,10 +66,10 @@ PixelOutput main(PixelInput input) : SV_TARGET
 		float3x3 texSpace = float3x3(input.tangent, biTangent, input.normal);
 
 		//Convert normal from normal map to texture space and store it in input.normal
-		output.normal = normalize(mul(normalMap, texSpace));
+		output.normal = float4(normalize(mul(normalMap, texSpace)), 1.0f);
 	}
 	else {
-		output.normal = input.normal;
+		output.normal = float4(input.normal, 1.0f);
 	}
 
 	//Ambient color
@@ -81,7 +81,7 @@ PixelOutput main(PixelInput input) : SV_TARGET
 	float3 refVec = normalize(reflect(outVec, output.normal));	//Create the the reflection
 	float lightIntesity = saturate(dot(refVec, input.viewDir));
 
-	output.specular = specColor.rgb * lightSpecular * max(pow(lightIntesity, shineFactor), 0);
+	output.specular = float4(specColor.rgb * lightSpecular * max(pow(lightIntesity, shineFactor), 0), 1.0f);
 
 	return output;
 }

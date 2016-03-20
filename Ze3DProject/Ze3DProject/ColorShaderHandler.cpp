@@ -5,6 +5,7 @@ ColorShaderHandler::ColorShaderHandler()
 	this->vertexShader = nullptr;
 	this->pixelShader = nullptr;
 	this->layout = nullptr;
+	this->matrixBuffer = nullptr;
 	this->samplerState = nullptr;
 }
 
@@ -34,18 +35,19 @@ void ColorShaderHandler::Shutdown()
 }
 
 
-bool ColorShaderHandler::Render(ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* colorTexture, 
+bool ColorShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix,
+	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* colorTexture,
 	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture)
 {
 	bool result = false;
 
 	//Set shader parameters used for rendering
-	result = this->SetShaderParameters(deviceContext, colorTexture, normalTexture, specularTexture);
+	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, colorTexture, normalTexture, specularTexture);
 	if (!result) {
 		return false;
 	}
 
-	this->RenderShader(deviceContext);
+	this->RenderShader(deviceContext, indexCount);
 
 	return true;
 }
@@ -215,13 +217,43 @@ void ColorShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND
 	return;
 }
 
-bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, ID3D11ShaderResourceView* colorTexture, 
+bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix,
+	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* colorTexture,
 	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	//MatrixBuffer* dataPtr;
+	MatrixBuffer* dataPtr;
 	unsigned int bufferNumber;
+
+	//Transpose each matrix to prepare for shaders (requirement in directx 11)
+	worldMatrix = XMMatrixTranspose(worldMatrix);
+	viewMatrix = XMMatrixTranspose(viewMatrix);
+	projectionMatrix = XMMatrixTranspose(projectionMatrix);
+
+	//Map the constant buffer so we can write to it (denies GPU access)
+	hresult = deviceContext->Map(this->matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	if (FAILED(hresult)) {
+		return false;
+	}
+
+	//Get pointer to the data
+	dataPtr = (MatrixBuffer*)mappedResource.pData;
+
+	//Copy the matrices to the constant buffer
+	dataPtr->world = worldMatrix;
+	dataPtr->view = viewMatrix;
+	dataPtr->projection = projectionMatrix;
+
+	//Unmap the constant buffer to give the GPU access agin
+	deviceContext->Unmap(this->matrixBuffer, 0);
+
+	//Set constant buffer position in vertex shader
+	bufferNumber = 0;
+
+	//Set the constant buffer in vertex and pixel shader with updated values
+	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &this->matrixBuffer);
+	deviceContext->PSSetConstantBuffers(bufferNumber, 1, &this->matrixBuffer);
 
 	if (colorTexture) {
 		//Set shader color texture resource for pixel shader
@@ -237,12 +269,11 @@ bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	}
 
 	deviceContext->OMSetBlendState(0, 0, 0xffffffff);
-	
 
 	return true;
 }
 
-void ColorShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext)
+void ColorShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
 {
 	//Set the input layout for vertex
 	deviceContext->IASetInputLayout(this->layout);
@@ -255,7 +286,7 @@ void ColorShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext)
 	deviceContext->PSSetSamplers(0, 1, &this->samplerState);
 
 	//Render the triangle
-	//deviceContext->DrawIndexed(0, 0, 0);
+	deviceContext->DrawIndexed(indexCount, 0, 0);
 
 	return;
 }
@@ -267,7 +298,11 @@ void ColorShaderHandler::ShutdownShader()
 		this->samplerState->Release();
 		this->samplerState = nullptr;
 	}
-
+	//Release matrix constant buffer
+	if (this->matrixBuffer) {
+		this->matrixBuffer->Release();
+		this->matrixBuffer = nullptr;
+	}
 	//Release layout
 	if (this->layout) {
 		this->layout->Release();

@@ -224,7 +224,7 @@ bool GraphicsHandler::Render()
 	//Clear the buffers to begin the scene
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
-	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext, this->direct3DH->GetShaderResourceView(0),
+	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext(), this->direct3DH->GetShaderResourceView(0),
 		this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2));
 	if (!result) {
 		return false;

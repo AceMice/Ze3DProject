@@ -9,7 +9,7 @@ struct PSInput
 	float2 tex : TEXCOORD0;
 };
 
-float4 main() : SV_TARGET
+float4 main(PSInput input) : SV_TARGET
 {
 	float4 colors;
 	float4 normals;
@@ -20,7 +20,7 @@ float4 main() : SV_TARGET
 	normals = normalTexture.Sample(pointSampler, input.tex);
 	speculars = specularTexture.Sample(pointSampler, input.tex);
 
-	outputColor = saturate(colors.rgb + speculars.rgb);
+	outputColor = saturate(colors.rgba + speculars.rgba);
 
 	return outputColor;
 }

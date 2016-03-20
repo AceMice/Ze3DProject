@@ -16,7 +16,7 @@ PSInput main(VertexInput input)
 {
 	PSInput output;
 
-	output.position = input.position
+	output.position = input.position;
 
 	//Store the color for output
 	output.tex = input.tex;
