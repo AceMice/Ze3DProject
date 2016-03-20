@@ -11,13 +11,17 @@ using namespace DirectX;
 class HeightMap {
 
 private:
+
+
+public:
 	struct HeightMapInfo {
 		int terrainWidth;
 		int terrainHeight;
 		XMFLOAT3 *heightMap;
 	};
 
-public:
+	HeightMap() {};
+	~HeightMap() {};
 
 	bool HeightMapLoad(char*, HeightMapInfo&);
 
