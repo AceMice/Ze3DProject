@@ -1,8 +1,7 @@
+#define _CRT_SECURE_NO_DEPRECATE	//To ignore a warning for fopen
+#include <stdio.h>					// see above
 #include "HeightMap.h"
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <windows.h>
+
 
 bool HeightMap::HeightMapLoad(char* filename, HeightMapInfo& hminfo) {
 	FILE* filePtr;				//Point to current position in file
@@ -15,7 +14,7 @@ bool HeightMap::HeightMapLoad(char* filename, HeightMapInfo& hminfo) {
 	//Add .bmp
 	std::string fullFileName = filename;
 	fullFileName += ".bmp";
-	filePtr = fopen(fullFileName.c_str(), "rb");
+	filePtr = fopen(fullFileName.c_str(), "rb");	//rb = read binary
 
 	//Check if open
 	if (filePtr == NULL) {
@@ -35,11 +34,11 @@ bool HeightMap::HeightMapLoad(char* filename, HeightMapInfo& hminfo) {
 	//Size of the image in bytes. The 3 represent RGB (byte, byte, byte) for each pixel
 	imageSize = hminfo.terrainWidth * hminfo.terrainHeight * 3;
 	
+	//Image data array
 	unsigned char* bitmapImage = new unsigned char[imageSize];
 	
+	//Move the ´filePtr to the end of the header
 	fseek(filePtr, bitmapFileHeader.bfOffBits, SEEK_SET);
-
-	// READ FROM HERE LATER //
 
 	// Store image data in bitmapImage
 	fread(bitmapImage, 1, imageSize, filePtr);
@@ -59,25 +58,24 @@ bool HeightMap::HeightMapLoad(char* filename, HeightMapInfo& hminfo) {
 	float heightFactor = 10.0f;
 
 	// Read the image data into our heightMap array
-	for (int j = 0; j< hminfo.terrainHeight; j++)
+	for (int i = 0; i< hminfo.terrainHeight; i++)
 	{
-		for (int i = 0; i< hminfo.terrainWidth; i++)
+		for (int j = 0; j< hminfo.terrainWidth; j++)
 		{
 			height = bitmapImage[k];
 
-			index = (hminfo.terrainHeight * j) + i;
+			index = (hminfo.terrainHeight * i) + j;
 
-			hminfo.heightMap[index].x = (float)i;
+			hminfo.heightMap[index].x = (float)j;
 			hminfo.heightMap[index].y = (float)height / heightFactor;
-			hminfo.heightMap[index].z = (float)j;
+			hminfo.heightMap[index].z = (float)i;
 
-			k += 3;
+			k += 3;	//Skip the other two since all three are the same
 		}
 	}
 
 	delete[] bitmapImage;
-	bitmapImage = 0;
+	bitmapImage = nullptr;
 
 	return true;
-}
 }
