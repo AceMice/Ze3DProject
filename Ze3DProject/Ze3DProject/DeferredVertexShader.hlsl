@@ -9,8 +9,6 @@ cbuffer MatrixBuffer
 	float4 specColor;
 	bool hasTexture;
 	bool hasNormMap;
-	//  padding 8 bytes
-	float4 cameraPos;
 };
 
 struct VertexInput
@@ -26,7 +24,6 @@ struct GSInput
 	float2 tex : TEXCOORD0;
 	float4 worldPos : POSITION;
 	float3 normal : NORMAL;
-	float3 viewDir : TEXCOORD1;
 };
 
 GSInput main(VertexInput input)
@@ -47,8 +44,6 @@ GSInput main(VertexInput input)
 
 	//Store the normal for output
 	output.normal = normalize(mul(input.normal, worldMatrix));
-
-	output.viewDir = normalize(mul(cameraPos.xyz, worldMatrix) - output.worldPos.xyz);
 
 	return output;
 }

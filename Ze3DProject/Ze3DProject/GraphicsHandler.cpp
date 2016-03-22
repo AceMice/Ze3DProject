@@ -202,7 +202,9 @@ bool GraphicsHandler::Render()
 	XMFLOAT4 difColor;
 	XMFLOAT4 specColor;
 	bool transparent;
-	XMVECTOR camPos = this->cameraH->GetPosition();
+	XMVECTOR camPosVec = this->cameraH->GetPosition();
+	XMFLOAT4 camPos = XMFLOAT4(XMVectorGetX(camPosVec), XMVectorGetY(camPosVec), XMVectorGetZ(camPosVec), XMVectorGetW(camPosVec));
+	
 	
 
 	//**DEFERRED RENDER**\\
@@ -235,7 +237,7 @@ bool GraphicsHandler::Render()
 			if (!transparent) {
 				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
 					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex),
-					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, camPos);
+					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, false);
 				if (!result)
 				{
 					return false;
@@ -308,7 +310,7 @@ bool GraphicsHandler::Render()
 	this->modelWindow->Render(this->direct3DH->GetDeviceContext());
 
 	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext(), this->modelWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, lightViewMatrix, lightProjectionMatrix,
-		this->direct3DH->GetShaderResourceView(0), this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2), this->direct3DH->GetShaderResourceView(3), this->direct3DH->GetShaderResourceView(4));
+		this->direct3DH->GetShaderResourceView(0), this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2), this->direct3DH->GetShaderResourceView(3), this->direct3DH->GetShaderResourceView(4), camPos);
 	if (!result) {
 		return false;
 	}

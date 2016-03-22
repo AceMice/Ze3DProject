@@ -12,7 +12,6 @@ cbuffer MatrixBuffer
 	float4 specColor;
 	bool hasTexture;
 	bool hasNormMap;
-	float4 cameraPos;
 };
 
 struct PixelInput
@@ -22,7 +21,6 @@ struct PixelInput
 	float3 normal : NORMAL;
 	float3 tangent : TANGENT;
 	float4 worldPos : POSITION;
-	float3 viewDir : TEXCOORD1;
 };
 
 struct PixelOutput
@@ -73,18 +71,9 @@ PixelOutput main(PixelInput input) : SV_TARGET
 		output.normal = float4(input.normal, 1.0f);
 	}
 
-	//Ambient color
-	float3 ambient = float3(ambientStr * s.r, ambientStr * s.g, ambientStr * s.b);
-
-	float3 outVec = normalize(float3(25, 15, -6) - (input.worldPos).xyz);	//lightVec towards the object
-
 	output.worldPos = input.worldPos;
 
-																		//Specular
-	float3 refVec = normalize(reflect(outVec, output.normal));	//Create the the reflection
-	float lightIntesity = saturate(dot(refVec, input.viewDir));
-
-	output.specular = float4(specColor.rgb * lightSpecular * max(pow(lightIntesity, shineFactor), 0), 1.0f);
+	output.specular = specColor;
 
 	return output;
 }

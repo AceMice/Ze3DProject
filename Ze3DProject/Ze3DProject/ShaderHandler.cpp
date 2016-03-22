@@ -39,12 +39,12 @@ void ShaderHandler::Shutdown()
 
 bool ShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, int indexStart, XMMATRIX worldMatrix, 
 	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* normMap, 
-	XMFLOAT4 difColor, XMFLOAT4 specColor, bool transparent, XMVECTOR camPos)
+	XMFLOAT4 difColor, XMFLOAT4 specColor, bool transparent)
 {
 	bool result = false;
 
 	//Set shader parameters used for rendering
-	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, normMap, difColor, specColor, transparent, camPos);
+	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, texture, normMap, difColor, specColor, transparent);
 	if (!result) {
 		return false;
 	}
@@ -267,7 +267,7 @@ void ShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd
 
 bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix, 
 	XMMATRIX projectionMatrix, ID3D11ShaderResourceView* texture, ID3D11ShaderResourceView* normMap, 
-	XMFLOAT4 difColor, XMFLOAT4 specColor, bool transparent, XMVECTOR camPos)
+	XMFLOAT4 difColor, XMFLOAT4 specColor, bool transparent)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -309,9 +309,6 @@ bool ShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMA
 	}
 
 	
-	//CAMERA POS
-	dataPtr->cameraPos = XMFLOAT4(XMVectorGetX(camPos), XMVectorGetY(camPos), XMVectorGetZ(camPos),XMVectorGetW(camPos));
-
 	//Unmap the constant buffer to give the GPU access agin
 	deviceContext->Unmap(this->matrixBuffer, 0);
 

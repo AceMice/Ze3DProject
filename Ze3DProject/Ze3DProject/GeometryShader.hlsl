@@ -5,7 +5,6 @@ struct GSInput
 	float2 tex : TEXCOORD0;
 	float4 worldPos : POSITION;
 	float3 normal : NORMAL;
-	float3 viewDir : TEXCOORD1;
 };
 
 struct PSInput
@@ -15,7 +14,6 @@ struct PSInput
 	float3 normal : NORMAL;
 	float3 tangent : TANGENT;
 	float4 worldPos : POSITION;
-	float3 viewDir : TEXCOORD1;
 };
 
 [maxvertexcount(3)]
@@ -47,7 +45,6 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output
 		element.worldPos = input[i].worldPos;
 		element.normal = input[i].normal;
 		element.tangent = tangent;
-		element.viewDir = input[i].viewDir;
 
 		output.Append(element);
 	}

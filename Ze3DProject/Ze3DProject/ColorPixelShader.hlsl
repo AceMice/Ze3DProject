@@ -13,6 +13,7 @@ cbuffer MatrixBufferSimple
 	matrix projectionMatrix;
 	matrix lightViewMatrix;
 	matrix lightProjectionMatrix;
+	float4 camPos;
 };
 
 struct PSInput
@@ -25,7 +26,7 @@ float4 main(PSInput input) : SV_TARGET
 {
 	float4 color;
 	float4 normal;
-	float4 specular;
+	float4 specColor;
 	float4 worldPos;
 	float4 outputColor;
 
@@ -40,10 +41,20 @@ float4 main(PSInput input) : SV_TARGET
 
 	color = colorTexture.Sample(pointSampler, input.tex);
 	normal = normalTexture.Sample(pointSampler, input.tex);
-	specular = specularTexture.Sample(pointSampler, input.tex);
+	specColor = specularTexture.Sample(pointSampler, input.tex);
 	worldPos = worldPosTexture.Sample(pointSampler, input.tex);
 
 	float3 outVec = normalize(float3(25, 15, -6) - (worldPos).xyz);
+
+	float3 refVec = normalize(reflect(outVec, normal));	//Create the the reflection
+
+	float3 viewDir = normalize(mul(camPos, worldMatrix) - worldPos).xyz;
+
+	float specIntesity = saturate(dot(refVec, viewDir));
+	float shineFactor = 5;
+	float lightSpecular = 0.5;
+
+	float4 specular = float4(specColor.rgb * lightSpecular * max(pow(specIntesity, shineFactor), 0), 1.0f);
 
 	lightPos = mul(worldPos, lightViewMatrix);
 	lightPos = mul(lightPos, lightProjectionMatrix);

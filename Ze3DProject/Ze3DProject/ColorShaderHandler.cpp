@@ -38,12 +38,12 @@ void ColorShaderHandler::Shutdown()
 
 bool ColorShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix,
 	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMMATRIX lightViewMatrix, XMMATRIX lightProjectionMatrix, ID3D11ShaderResourceView* colorTexture,
-	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* worldPosTexture, ID3D11ShaderResourceView* shadowTexture)
+	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* worldPosTexture, ID3D11ShaderResourceView* shadowTexture, XMFLOAT4 camPos)
 {
 	bool result = false;
 
 	//Set shader parameters used for rendering
-	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, lightViewMatrix, lightProjectionMatrix, colorTexture, normalTexture, specularTexture, worldPosTexture, shadowTexture);
+	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, lightViewMatrix, lightProjectionMatrix, colorTexture, normalTexture, specularTexture, worldPosTexture, shadowTexture, camPos);
 	if (!result) {
 		return false;
 	}
@@ -231,7 +231,7 @@ void ColorShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND
 
 bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix,
 	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMMATRIX lightViewMatrix, XMMATRIX lightProjectionMatrix, ID3D11ShaderResourceView* colorTexture,
-	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* worldPosTexture, ID3D11ShaderResourceView* shadowTexture)
+	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* worldPosTexture, ID3D11ShaderResourceView* shadowTexture, XMFLOAT4 camPos)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -260,6 +260,7 @@ bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	dataPtr->projection = projectionMatrix;
 	dataPtr->lightView = lightViewMatrix;
 	dataPtr->lightProjection = lightProjectionMatrix;
+	dataPtr->camPos = camPos;
 
 	//Unmap the constant buffer to give the GPU access agin
 	deviceContext->Unmap(this->matrixBuffer, 0);
