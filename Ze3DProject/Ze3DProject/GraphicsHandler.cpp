@@ -203,6 +203,7 @@ bool GraphicsHandler::Render()
 	XMFLOAT4 specColor;
 	bool transparent;
 	XMVECTOR camPos = this->cameraH->GetPosition();
+	
 
 	//**DEFERRED RENDER**\\
 
@@ -233,7 +234,7 @@ bool GraphicsHandler::Render()
 			//Render the model using the shader-handler
 			if (!transparent) {
 				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex), 
+					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex),
 					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, camPos);
 				if (!result)
 				{
@@ -249,15 +250,15 @@ bool GraphicsHandler::Render()
 	//Set the render target to be the textures
 	this->direct3DH->ChangeRenderTargets(2);
 
-	//Create the view, and projection matrices based on light pos(0, 5, -6)
-	XMVECTOR lookAt = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-	XMVECTOR lightPos = XMVectorSet(0.0f, 5.0f, -6.0f, 0.0f);
+	//Create the view, and projection matrices based on light pos(25, 15, -6)
+	XMVECTOR lookAt = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	XMVECTOR lightPos = XMVectorSet(25.0f, 15.0f, -6.0f, 0.0f);
 	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	lightViewMatrix = XMMatrixLookAtLH(lightPos, lookAt, lightUp);
 
 	float fieldOfView = (float)XM_PI / 2.0f;
 	float screenAspect = 1.0f;
-	lightProjectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, SCREEN_NEAR, SCREEN_DEPTH);
+	lightProjectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, 1.0f, 100.0f);
 
 	for (int i = 0; i < this->models.size(); i++) {
 

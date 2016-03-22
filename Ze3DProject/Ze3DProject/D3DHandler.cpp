@@ -346,7 +346,8 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 	this->deviceContext->RSSetViewports(1, &viewport);
 
 	//Setup projection matrix
-	fieldOfView = 3.141592654f / 4.0f;
+	//fieldOfView = 3.141592654f / 4.0f;
+	fieldOfView = (float)XM_PI / 4.0f;
 	screenAspect = (float)screenWidth / (float)screenHeight;
 
 	this->projectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, screenNear, screenDepth);
@@ -386,7 +387,7 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 	depthBufferDesc.Height = screenHeight;
 	depthBufferDesc.MipLevels = 1;
 	depthBufferDesc.ArraySize = 1;
-	depthBufferDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+	depthBufferDesc.Format = DXGI_FORMAT_R32_TYPELESS;
 	depthBufferDesc.SampleDesc.Count = 1;
 	depthBufferDesc.SampleDesc.Quality = 0;
 	depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
@@ -400,7 +401,7 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 		return false;
 	}
 
-	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+	depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
 
 	//Create the depth stencil view
 	hresult = this->device->CreateDepthStencilView(this->shadowRenderTargetTexture, &depthStencilViewDesc, &this->shadowDepthStencilView);
@@ -443,7 +444,7 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 		}
 	}
 
-	shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+	shaderResourceViewDesc.Format = DXGI_FORMAT_R32_FLOAT;
 
 	hresult = device->CreateShaderResourceView(this->shadowRenderTargetTexture, &shaderResourceViewDesc, &this->shadowShaderResource);
 	if (FAILED(hresult)) {
@@ -618,7 +619,7 @@ void D3DHandler::ChangeRenderTargets(int renderTargetIndex) //1 Deferred, 2 Shad
 		this->deviceContext->OMSetRenderTargets(BUFFER_COUNT, this->deferredRenderTargetViews, this->depthStencilView);
 	}
 	else if (renderTargetIndex == 2) {
-		this->deviceContext->OMSetRenderTargets(1, &this->shadowRenderTargetView, this->shadowDepthStencilView);
+		this->deviceContext->OMSetRenderTargets(0, NULL, this->shadowDepthStencilView);
 	}
 	else {
 		this->deviceContext->OMSetRenderTargets(1, &this->renderTargetView, this->depthStencilView);

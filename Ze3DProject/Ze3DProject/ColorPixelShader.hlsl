@@ -57,5 +57,7 @@ float4 main(PSInput input) : SV_TARGET
 
 	outputColor = saturate(((color.rgba + specular.rgba) * lightIntensity * 0.8f) + ((color.rgba + specular.rgba) * 0.2f));
 
+	depthValue = depthValue * 50 - 49;
+
 	return depthValue;
 }

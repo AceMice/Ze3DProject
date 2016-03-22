@@ -76,7 +76,7 @@ PixelOutput main(PixelInput input) : SV_TARGET
 	//Ambient color
 	float3 ambient = float3(ambientStr * s.r, ambientStr * s.g, ambientStr * s.b);
 
-	float3 outVec = normalize(float3(0, 5, -6) - (input.worldPos).xyz);	//lightVec towards the object
+	float3 outVec = normalize(float3(25, 15, -6) - (input.worldPos).xyz);	//lightVec towards the object
 
 	output.depth = float4(outVec, 1.0f);
 
