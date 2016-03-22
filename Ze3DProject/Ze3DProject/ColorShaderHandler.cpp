@@ -38,12 +38,12 @@ void ColorShaderHandler::Shutdown()
 
 bool ColorShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix,
 	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMMATRIX lightViewMatrix, XMMATRIX lightProjectionMatrix, ID3D11ShaderResourceView* colorTexture,
-	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* depthTexture, ID3D11ShaderResourceView* shadowTexture)
+	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* worldPosTexture, ID3D11ShaderResourceView* shadowTexture)
 {
 	bool result = false;
 
 	//Set shader parameters used for rendering
-	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, lightViewMatrix, lightProjectionMatrix, colorTexture, normalTexture, specularTexture, depthTexture, shadowTexture);
+	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, lightViewMatrix, lightProjectionMatrix, colorTexture, normalTexture, specularTexture, worldPosTexture, shadowTexture);
 	if (!result) {
 		return false;
 	}
@@ -231,7 +231,7 @@ void ColorShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND
 
 bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix,
 	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMMATRIX lightViewMatrix, XMMATRIX lightProjectionMatrix, ID3D11ShaderResourceView* colorTexture,
-	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* depthTexture, ID3D11ShaderResourceView* shadowTexture)
+	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* worldPosTexture, ID3D11ShaderResourceView* shadowTexture)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -269,6 +269,7 @@ bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 
 	//Set the constant buffer in vertex and pixel shader with updated values
 	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &this->matrixBuffer);
+	deviceContext->PSSetConstantBuffers(bufferNumber, 1, &this->matrixBuffer);
 
 	if (colorTexture) {
 		//Set shader color texture resource for pixel shader
@@ -282,9 +283,9 @@ bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 		//Set shader specular texture resource for pixel shader
 		deviceContext->PSSetShaderResources(2, 1, &specularTexture);
 	}
-	if (depthTexture) {
+	if (worldPosTexture) {
 		//Set shader depth texture resource for pixel shader
-		deviceContext->PSSetShaderResources(3, 1, &depthTexture);
+		deviceContext->PSSetShaderResources(3, 1, &worldPosTexture);
 	}
 	if (shadowTexture) {
 		//Set shader depth texture resource for pixel shader
