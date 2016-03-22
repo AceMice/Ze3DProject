@@ -32,6 +32,7 @@ struct GSInput
 GSInput main(VertexInput input)
 {
 	GSInput output;
+	float4 viewPos;
 
 	//Add homogencoordinates for proper matrix multiplication
 	input.position.w = 1.0f;
@@ -39,7 +40,7 @@ GSInput main(VertexInput input)
 	//Multiply the position with world-, view- and projectionmatrix
 	//Save the world-pos of the vertex
 	output.position = output.worldPos = mul(input.position, worldMatrix);
-	output.position = mul(output.position, viewMatrix);
+	output.position = viewPos = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix);
 
 	//Store the color for output
@@ -48,7 +49,7 @@ GSInput main(VertexInput input)
 	//Store the normal for output
 	output.normal = normalize(mul(input.normal, worldMatrix));
 
-	output.viewDir = normalize(mul(cameraPos.xyz, worldMatrix) - output.worldPos.xyz);
+	output.viewDir = normalize(cameraPos.xyz - viewPos.xyz);
 
 	return output;
 }

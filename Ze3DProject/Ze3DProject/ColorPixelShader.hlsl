@@ -52,10 +52,10 @@ float4 main(PSInput input) : SV_TARGET
 	float3 viewDir = normalize(mul(camPos, worldMatrix) - worldPos).xyz;
 
 	float specIntesity = saturate(dot(refVec, viewDir));
-	float shineFactor = 5;
-	float lightSpecular = 0.5;
+	float shineFactor = 5.0f;
+	float lightSpecular = 0.65f;
 
-	float4 specular = float4(specColor.rgb * lightSpecular * max(pow(specIntesity, shineFactor), 0), 1.0f);
+	float4 specular = float4(specColor.rgb * lightSpecular * max(pow(specIntesity, shineFactor), 0.0f), 1.0f);
 
 	positionLight = mul(worldPos, lightViewMatrix);
 	positionLight = mul(positionLight, lightProjectionMatrix);
