@@ -46,7 +46,7 @@ float4 main(PSInput input) : SV_TARGET
 
 	float3 outVec = normalize(float3(25, 15, -6) - (worldPos).xyz);
 
-	float3 refVec = normalize(reflect(outVec, normal));	//Create the the reflection
+	float3 refVec = normalize(reflect(-outVec, normal));	//Create the the reflection
 
 	float3 viewDir = normalize(mul(camPos, worldMatrix) - worldPos).xyz;
 
@@ -82,5 +82,5 @@ float4 main(PSInput input) : SV_TARGET
 
 	outputColor = saturate(((color.rgba + specular.rgba) * lightIntensity * 0.8f) + ((color.rgba + specular.rgba) * 0.2f));
 
-	return outputColor;
+	return specular;
 }
