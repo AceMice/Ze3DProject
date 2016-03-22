@@ -18,20 +18,29 @@ private:
 	bool vsync_enabled;
 	int videoCardMemory;
 	char videoCardDescription[128];
-	bool renderToBackBuffer;
 
 	IDXGISwapChain* swapChain;
 	ID3D11Device* device;
 	ID3D11DeviceContext* deviceContext;
+
 	ID3D11RenderTargetView* deferredRenderTargetViews[BUFFER_COUNT];
 	ID3D11Texture2D* deferredRenderTargetTextures[BUFFER_COUNT];
 	ID3D11ShaderResourceView* deferredShaderResources[BUFFER_COUNT];
+
+	ID3D11RenderTargetView* shadowRenderTargetView;
+	ID3D11Texture2D* shadowRenderTargetTexture;
+	ID3D11ShaderResourceView* shadowShaderResource;
+	ID3D11DepthStencilView* shadowDepthStencilView;
+
 	ID3D11RenderTargetView* renderTargetView;
+
 	ID3D11Texture2D* depthStencilBuffer;
 	ID3D11DepthStencilState* depthStencilState;
 	ID3D11DepthStencilState* disabledDepthStencilState;
 	ID3D11DepthStencilView* depthStencilView;
+
 	ID3D11RasterizerState* rasterState;
+
 	XMMATRIX projectionMatrix;
 	XMMATRIX orthoMatrix;
 
@@ -53,7 +62,7 @@ public:
 
 	void GetVideoCardInfo(char*, int&);
 
-	void ChangeRenderTargets(bool);
+	void ChangeRenderTargets(int);
 
 	ID3D11ShaderResourceView* GetShaderResourceView(int);
 

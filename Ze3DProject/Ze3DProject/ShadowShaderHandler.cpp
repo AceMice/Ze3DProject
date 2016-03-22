@@ -1,25 +1,23 @@
-#include "ColorShaderHandler.h"
+#include "ShadowShaderHandler.h"
 
-ColorShaderHandler::ColorShaderHandler()
+ShadowShaderHandler::ShadowShaderHandler()
 {
 	this->vertexShader = nullptr;
 	this->pixelShader = nullptr;
 	this->layout = nullptr;
 	this->matrixBuffer = nullptr;
-	this->samplerState = nullptr;
-	this->shadowSamplerState = nullptr;
 }
 
-ColorShaderHandler::~ColorShaderHandler()
+ShadowShaderHandler::~ShadowShaderHandler()
 {
 }
 
-bool ColorShaderHandler::Initialize(ID3D11Device* device, HWND hwnd)
+bool ShadowShaderHandler::Initialize(ID3D11Device* device, HWND hwnd)
 {
 	bool result = false;
 
 	//Initialize vertex and pixel shaders
-	result = this->InitializeShader(device, hwnd, L"../Ze3DProject/ColorVertexShader.hlsl", L"../Ze3DProject/ColorPixelShader.hlsl");
+	result = this->InitializeShader(device, hwnd, L"../Ze3DProject/ShadowVertexShader.hlsl", L"../Ze3DProject/ShadowPixelShader.hlsl");
 	if (!result) {
 		return false;
 	}
@@ -27,7 +25,7 @@ bool ColorShaderHandler::Initialize(ID3D11Device* device, HWND hwnd)
 	return true;
 }
 
-void ColorShaderHandler::Shutdown()
+void ShadowShaderHandler::Shutdown()
 {
 	//Shutdown vertex and pixel shaders
 	this->ShutdownShader();
@@ -36,38 +34,38 @@ void ColorShaderHandler::Shutdown()
 }
 
 
-bool ColorShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix,
-	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMMATRIX lightViewMatrix, XMMATRIX lightProjectionMatrix, ID3D11ShaderResourceView* colorTexture,
-	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* depthTexture, ID3D11ShaderResourceView* shadowTexture)
+bool ShadowShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, int indexStart, XMMATRIX worldMatrix,
+	XMMATRIX viewMatrix, XMMATRIX projectionMatrix)
 {
 	bool result = false;
 
 	//Set shader parameters used for rendering
-	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, lightViewMatrix, lightProjectionMatrix, colorTexture, normalTexture, specularTexture, depthTexture, shadowTexture);
+	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix);
 	if (!result) {
 		return false;
 	}
 
-	this->RenderShader(deviceContext, indexCount);
+	this->RenderShader(deviceContext, indexCount, indexStart);
 
 	return true;
 }
 
-bool ColorShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
+bool ShadowShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
 {
 	HRESULT hresult;
 	ID3D10Blob* errorMessage;
 	ID3D10Blob* vertexShaderBuffer;
+	ID3D10Blob* geoShaderBuffer;
 	ID3D10Blob* pixelShaderBuffer;
-	D3D11_INPUT_ELEMENT_DESC polygonLayout[2];
+	D3D11_INPUT_ELEMENT_DESC polygonLayout[1];
 	unsigned int numElements;
 	D3D11_BUFFER_DESC matrixBufferDesc;
-	D3D11_SAMPLER_DESC samplerDesc;
 
 	//init pointers to nullptr
 	errorMessage = nullptr;
 	vertexShaderBuffer = nullptr;
 	pixelShaderBuffer = nullptr;
+	geoShaderBuffer = nullptr;
 
 	//Compile the vertex shader code
 	hresult = D3DCompileFromFile(vsFilename, NULL, NULL, "main", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
@@ -117,15 +115,6 @@ bool ColorShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR
 	polygonLayout[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 	polygonLayout[0].InstanceDataStepRate = 0;
 
-	polygonLayout[1].SemanticName = "TEXCOORD";
-	polygonLayout[1].SemanticIndex = 0;
-	polygonLayout[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-	polygonLayout[1].InputSlot = 0;
-	//polygonLayout[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-	polygonLayout[1].AlignedByteOffset = 12;
-	polygonLayout[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-	polygonLayout[1].InstanceDataStepRate = 0;
-
 	//Get the number of elements in the layout
 	numElements = sizeof(polygonLayout) / sizeof(polygonLayout[0]);
 
@@ -144,7 +133,7 @@ bool ColorShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR
 
 	//Fill the description of the dynamic matrix constant buffer that is in the vertex shader
 	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	matrixBufferDesc.ByteWidth = sizeof(MatrixBufferSimple);
+	matrixBufferDesc.ByteWidth = sizeof(MatrixBufferLight);
 	matrixBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	matrixBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	matrixBufferDesc.MiscFlags = 0;
@@ -157,45 +146,10 @@ bool ColorShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR
 		return false;
 	}
 
-	//Fill the texture sampler state description
-	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-	samplerDesc.MipLODBias = 0.0f;
-	samplerDesc.MaxAnisotropy = 1;
-	samplerDesc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-	samplerDesc.BorderColor[0] = 0;
-	samplerDesc.BorderColor[1] = 0;
-	samplerDesc.BorderColor[2] = 0;
-	samplerDesc.BorderColor[3] = 0;
-	samplerDesc.MinLOD = 0;
-	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
-
-	//Create the texture sampler state
-	hresult = device->CreateSamplerState(&samplerDesc, &this->samplerState);
-	if (FAILED(hresult))
-	{
-		return false;
-	}
-	
-	// Create a clamp texture sampler state description.
-	//samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-
-	//Create the texture sampler state
-	hresult = device->CreateSamplerState(&samplerDesc, &this->shadowSamplerState);
-	if (FAILED(hresult))
-	{
-		return false;
-	}
-
 	return true;
 }
 
-void ColorShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
+void ShadowShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
 {
 	char* compileErrors;
 	unsigned long long bufferSize, i;
@@ -229,21 +183,18 @@ void ColorShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND
 	return;
 }
 
-bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix,
-	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMMATRIX lightViewMatrix, XMMATRIX lightProjectionMatrix, ID3D11ShaderResourceView* colorTexture,
-	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* depthTexture, ID3D11ShaderResourceView* shadowTexture)
+bool ShadowShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix, XMMATRIX viewMatrix,
+	XMMATRIX projectionMatrix)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	MatrixBufferSimple* dataPtr;
+	MatrixBufferLight* dataPtr;
 	unsigned int bufferNumber;
 
 	//Transpose each matrix to prepare for shaders (requirement in directx 11)
 	worldMatrix = XMMatrixTranspose(worldMatrix);
 	viewMatrix = XMMatrixTranspose(viewMatrix);
 	projectionMatrix = XMMatrixTranspose(projectionMatrix);
-	lightViewMatrix = XMMatrixTranspose(lightViewMatrix);
-	lightProjectionMatrix = XMMatrixTranspose(lightProjectionMatrix);
 
 	//Map the constant buffer so we can write to it (denies GPU access)
 	hresult = deviceContext->Map(this->matrixBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
@@ -252,14 +203,12 @@ bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	}
 
 	//Get pointer to the data
-	dataPtr = (MatrixBufferSimple*)mappedResource.pData;
+	dataPtr = (MatrixBufferLight*)mappedResource.pData;
 
 	//Copy the matrices to the constant buffer
 	dataPtr->world = worldMatrix;
 	dataPtr->view = viewMatrix;
 	dataPtr->projection = projectionMatrix;
-	dataPtr->lightView = lightViewMatrix;
-	dataPtr->lightProjection = lightProjectionMatrix;
 
 	//Unmap the constant buffer to give the GPU access agin
 	deviceContext->Unmap(this->matrixBuffer, 0);
@@ -270,63 +219,26 @@ bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	//Set the constant buffer in vertex and pixel shader with updated values
 	deviceContext->VSSetConstantBuffers(bufferNumber, 1, &this->matrixBuffer);
 
-	if (colorTexture) {
-		//Set shader color texture resource for pixel shader
-		deviceContext->PSSetShaderResources(0, 1, &colorTexture);
-	}
-	if (normalTexture) {
-		//Set shader normal texture resource for pixel shader
-		deviceContext->PSSetShaderResources(1, 1, &normalTexture);
-	}
-	if (specularTexture) {
-		//Set shader specular texture resource for pixel shader
-		deviceContext->PSSetShaderResources(2, 1, &specularTexture);
-	}
-	if (depthTexture) {
-		//Set shader depth texture resource for pixel shader
-		deviceContext->PSSetShaderResources(3, 1, &depthTexture);
-	}
-	if (shadowTexture) {
-		//Set shader depth texture resource for pixel shader
-		deviceContext->PSSetShaderResources(4, 1, &shadowTexture);
-	}
-
-	deviceContext->OMSetBlendState(0, 0, 0xffffffff);
-
 	return true;
 }
 
-void ColorShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount)
+void ShadowShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int indexCount, int indexStart)
 {
 	//Set the input layout for vertex
 	deviceContext->IASetInputLayout(this->layout);
 
 	//Set the vertex and pixel shaders that will be used to render this triangle
 	deviceContext->VSSetShader(this->vertexShader, NULL, 0);
-	deviceContext->PSSetShader(this->pixelShader, NULL, 0);
+	deviceContext->PSSetShader(NULL, NULL, 0);
 
-	//Set the sampler state in pixel shader
-	deviceContext->PSSetSamplers(0, 1, &this->samplerState);
-	deviceContext->PSSetSamplers(1, 1, &this->shadowSamplerState);
-
-	//Render the triangle
-	deviceContext->DrawIndexed(indexCount, 0, 0);
+	//Render the vertex buffer
+	deviceContext->DrawIndexed(indexCount, indexStart, 0);
 
 	return;
 }
 
-void ColorShaderHandler::ShutdownShader()
+void ShadowShaderHandler::ShutdownShader()
 {
-	//Release sampler state
-	if (this->samplerState) {
-		this->samplerState->Release();
-		this->samplerState = nullptr;
-	}
-	//Release sampler state
-	if (this->shadowSamplerState) {
-		this->shadowSamplerState->Release();
-		this->shadowSamplerState = nullptr;
-	}
 	//Release matrix constant buffer
 	if (this->matrixBuffer) {
 		this->matrixBuffer->Release();

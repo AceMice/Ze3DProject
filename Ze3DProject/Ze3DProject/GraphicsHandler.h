@@ -8,6 +8,7 @@
 #include "Inputhandler.h"
 #include "ColorShaderHandler.h"
 #include "ModelWindow.h"
+#include "ShadowShaderHandler.h"
 
 //Constants
 const bool FULL_SCREEN = false;
@@ -23,6 +24,7 @@ private:
 	ShaderHandler* shaderH;
 	ColorShaderHandler* colorShaderH;
 	ModelWindow* modelWindow;
+	ShadowShaderHandler* shadowShaderH;
 
 	bool Render();
 	Model* GetModel(char*);

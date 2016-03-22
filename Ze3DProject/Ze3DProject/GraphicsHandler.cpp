@@ -7,6 +7,7 @@ GraphicsHandler::GraphicsHandler()
 	this->shaderH = nullptr;
 	this->colorShaderH = nullptr;
 	this->modelWindow = nullptr;
+	this->shadowShaderH = nullptr;
 
 	this->rotY = 0.0f;
 }
@@ -104,6 +105,20 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	// Create the shadow shader object.
+	this->shadowShaderH = new ShadowShaderHandler;
+	if (!this->shadowShaderH) {
+		return false;
+	}
+
+	// Initialize the deferred shader object.
+	result = this->shadowShaderH->Initialize(this->direct3DH->GetDevice(), hwnd);
+	if (!result) {
+		MessageBox(hwnd, L"this->shadowShaderH->Initialize", L"Error", MB_OK);
+		return false;
+	}
+
+
 	// Create the color shader object.
 	this->colorShaderH = new ColorShaderHandler;
 	if (!this->colorShaderH) {
@@ -177,7 +192,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 
 bool GraphicsHandler::Render()
 {
-	XMMATRIX worldMatrix, viewMatrix, projectionMatrix, orthoMatrix;
+	XMMATRIX worldMatrix, viewMatrix, lightViewMatrix, projectionMatrix, lightProjectionMatrix, orthoMatrix;
 	bool result;
 	int indexCount;
 	int indexStart;
@@ -189,8 +204,10 @@ bool GraphicsHandler::Render()
 	bool transparent;
 	XMVECTOR camPos = this->cameraH->GetPosition();
 
+	//**DEFERRED RENDER**\\
+
 	//Set the render target to be the textures
-	this->direct3DH->ChangeRenderTargets(false);
+	this->direct3DH->ChangeRenderTargets(1);
 
 	//Clear the buffers to begin the scene
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
@@ -198,8 +215,6 @@ bool GraphicsHandler::Render()
 	//Get the view, and projection matrices from the camera and d3d objects
 	this->cameraH->GetViewMatrix(viewMatrix);
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
-
-	//**NON TRANSPARENT RENDER**\\
 	
 	for (int i = 0; i < this->models.size(); i++) {
 		
@@ -229,8 +244,52 @@ bool GraphicsHandler::Render()
 		}
 	}
 
+	//**SHADOW RENDER**\\
+
+	//Set the render target to be the textures
+	this->direct3DH->ChangeRenderTargets(2);
+
+	//Create the view, and projection matrices based on light pos(0, 5, -6)
+	XMVECTOR lookAt = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+	XMVECTOR lightPos = XMVectorSet(0.0f, 5.0f, -6.0f, 0.0f);
+	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	lightViewMatrix = XMMatrixLookAtLH(lightPos, lookAt, lightUp);
+
+	float fieldOfView = (float)XM_PI / 2.0f;
+	float screenAspect = 1.0f;
+	lightProjectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, SCREEN_NEAR, SCREEN_DEPTH);
+
+	for (int i = 0; i < this->models.size(); i++) {
+
+		//Get the world matrix from model
+		this->models.at(i)->GetWorldMatrix(worldMatrix);
+
+		//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
+		this->models.at(i)->Render(this->direct3DH->GetDeviceContext());
+
+		//Draw all non transparent subsets
+		modelSubsets = this->models.at(i)->NrOfSubsets();
+		for (int j = 0; j < modelSubsets; j++) {
+			//Get all the nessecary information from the model
+			this->models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+
+			//Render the model using the shader-handler
+			if (!transparent) {
+				result = this->shadowShaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+					worldMatrix, lightViewMatrix, lightProjectionMatrix);
+				if (!result)
+				{
+					return false;
+				}
+
+			}
+		}
+	}
+
+	//**LIGHT RENDER**\\
+
 	//Set the render target to be the back buffer
-	this->direct3DH->ChangeRenderTargets(true);
+	this->direct3DH->ChangeRenderTargets(3);
 
 	//Turn off depth buffer for 2d rendering
 	this->direct3DH->SetZBuffer(false);
@@ -247,8 +306,8 @@ bool GraphicsHandler::Render()
 	//Put the model windows buffers on the pipeline
 	this->modelWindow->Render(this->direct3DH->GetDeviceContext());
 
-	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext(), this->modelWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, 
-		this->direct3DH->GetShaderResourceView(0), this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2), this->direct3DH->GetShaderResourceView(3));
+	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext(), this->modelWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, lightViewMatrix, lightProjectionMatrix,
+		this->direct3DH->GetShaderResourceView(0), this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2), this->direct3DH->GetShaderResourceView(3), this->direct3DH->GetShaderResourceView(4));
 	if (!result) {
 		return false;
 	}
@@ -316,7 +375,8 @@ void GraphicsHandler::Shutdown()
 			this->models.at(i) = nullptr;
 		}
 	}
-
+	
+	//Delete the model for 2d drawing
 	if (this->modelWindow) {
 		delete this->modelWindow;
 		this->modelWindow = nullptr;

@@ -5,7 +5,9 @@ D3DHandler::D3DHandler()
 	this->device = nullptr;
 	this->deviceContext = nullptr;
 	this->swapChain = nullptr;
+
 	this->renderTargetView = nullptr;
+
 	this->depthStencilBuffer = nullptr;
 	this->depthStencilState = nullptr;
 	this->disabledDepthStencilState = nullptr;
@@ -18,7 +20,10 @@ D3DHandler::D3DHandler()
 		this->deferredShaderResources[i] = nullptr;
 	}
 
-	this->renderToBackBuffer = true;
+	this->shadowRenderTargetTexture = nullptr;
+	this->shadowRenderTargetView = nullptr;
+	this->shadowShaderResource = nullptr;
+
 }
 
 D3DHandler::~D3DHandler()
@@ -256,31 +261,31 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 	//Set the newly created depth stencil
 	this->deviceContext->OMSetDepthStencilState(this->depthStencilState, 1);
 
-	//Depth stencil desc
-	ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
+	////Depth stencil desc
+	//ZeroMemory(&depthStencilDesc, sizeof(depthStencilDesc));
 
 	//Fill depth stencil descrption
 	depthStencilDesc.DepthEnable = false;
-	depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-	depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	//depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	//depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;
 
-	depthStencilDesc.StencilEnable = true;
-	depthStencilDesc.StencilReadMask = 0xFF;
-	depthStencilDesc.StencilWriteMask = 0xFF;
+	//depthStencilDesc.StencilEnable = true;
+	//depthStencilDesc.StencilReadMask = 0xFF;
+	//depthStencilDesc.StencilWriteMask = 0xFF;
 
-	//Stencil operations if pixel is front-facing.
-	depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
-	depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	////Stencil operations if pixel is front-facing.
+	//depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	//depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	//depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	//depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
-	//Stencil operations if pixel is back-facing.
-	depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-	depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
-	depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-	depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	////Stencil operations if pixel is back-facing.
+	//depthStencilDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	//depthStencilDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_DECR;
+	//depthStencilDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	//depthStencilDesc.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
 
-	//Create the depth stencil state
+	//Create the disabled depth stencil state
 	hresult = this->device->CreateDepthStencilState(&depthStencilDesc, &this->disabledDepthStencilState);
 	if (FAILED(hresult)) {
 		MessageBox(hwnd, L"this->device->CreateDepthStencilState", L"Error", MB_OK);
@@ -373,6 +378,36 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 		}
 	}
 
+	//Depth buffer desc
+	ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
+
+	//Fill depth buffer description	
+	depthBufferDesc.Width = screenWidth;
+	depthBufferDesc.Height = screenHeight;
+	depthBufferDesc.MipLevels = 1;
+	depthBufferDesc.ArraySize = 1;
+	depthBufferDesc.Format = DXGI_FORMAT_R24G8_TYPELESS;
+	depthBufferDesc.SampleDesc.Count = 1;
+	depthBufferDesc.SampleDesc.Quality = 0;
+	depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+	depthBufferDesc.CPUAccessFlags = 0;
+	depthBufferDesc.MiscFlags = 0;
+
+	hresult = this->device->CreateTexture2D(&depthBufferDesc, NULL, &this->shadowRenderTargetTexture);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"device->CreateTexture2DShadow", L"Error", MB_OK);
+		return false;
+	}
+
+	depthStencilViewDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+
+	//Create the depth stencil view
+	hresult = this->device->CreateDepthStencilView(this->shadowRenderTargetTexture, &depthStencilViewDesc, &this->shadowDepthStencilView);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"this->device->CreateDepthStencilView", L"Error", MB_OK);
+		return false;
+	}
 	//Setup the description of the render target view.
 	renderTargetViewDesc.Format = renderTextureDesc.Format;
 	renderTargetViewDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
@@ -387,6 +422,12 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 		}
 	}
 
+	//hresult = device->CreateRenderTargetView(this->shadowRenderTargetTexture, &renderTargetViewDesc, &this->shadowRenderTargetView);
+	//if (FAILED(hresult)) {
+	//	MessageBox(hwnd, L"device->CreateRenderTargetView", L"Error", MB_OK);
+	//	return false;
+	//}
+
 	// Setup the description of the shader resource view.
 	shaderResourceViewDesc.Format = renderTextureDesc.Format;
 	shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
@@ -400,6 +441,14 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 			MessageBox(hwnd, L"device->CreateShaderResourceView", L"Error", MB_OK);
 			return false;
 		}
+	}
+
+	shaderResourceViewDesc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+
+	hresult = device->CreateShaderResourceView(this->shadowRenderTargetTexture, &shaderResourceViewDesc, &this->shadowShaderResource);
+	if (FAILED(hresult)) {
+		MessageBox(hwnd, L"device->CreateShaderResourceViewShadow", L"Error", MB_OK);
+		return false;
 	}
 
 	return true;
@@ -458,6 +507,19 @@ void D3DHandler::Shutdown()
 		}
 	}
 
+	if (this->shadowRenderTargetTexture) {
+		this->shadowRenderTargetTexture->Release();
+		this->shadowRenderTargetTexture = nullptr;
+	}
+	if (this->shadowRenderTargetView) {
+		this->shadowRenderTargetView->Release();
+		this->shadowRenderTargetView = nullptr;
+	}
+	if (this->shadowShaderResource) {
+		this->shadowShaderResource->Release();
+		this->shadowShaderResource = nullptr;
+	}
+
 	if (this->deviceContext) {
 		this->deviceContext->Release();
 		this->deviceContext = nullptr;
@@ -485,19 +547,23 @@ void D3DHandler::BeginScene(float red, float green, float blue, float alpha)
 	color[2] = blue;
 	color[3] = alpha;
 
-	//if (this->renderToBackBuffer) {
-		//Clear the back buffer
-		this->deviceContext->ClearRenderTargetView(this->renderTargetView, color);
-	//}
-	//else {
-		for (int i = 0; i < BUFFER_COUNT; i++) {
-			this->deviceContext->ClearRenderTargetView(this->deferredRenderTargetViews[i], color);
-		}
-	//}
-	
+
+	//Clear the back buffer
+	this->deviceContext->ClearRenderTargetView(this->renderTargetView, color);
+
+	//Clear the render target textures
+	for (int i = 0; i < BUFFER_COUNT; i++) {
+		this->deviceContext->ClearRenderTargetView(this->deferredRenderTargetViews[i], color);
+	}
+
+	//Clear the shadow map textures
+	this->deviceContext->ClearRenderTargetView(this->shadowRenderTargetView, color);
 
 	//Clear the depth buffer
 	this->deviceContext->ClearDepthStencilView(this->depthStencilView, D3D11_CLEAR_DEPTH, 1.f, 0);
+
+	//Clear the depth buffer
+	this->deviceContext->ClearDepthStencilView(this->shadowDepthStencilView, D3D11_CLEAR_DEPTH, 1.f, 0);
 
 	return;
 }
@@ -546,14 +612,16 @@ void D3DHandler::GetVideoCardInfo(char* cardName, int& memory)
 	return;
 }
 
-void D3DHandler::ChangeRenderTargets(bool renderToBackBuffer)
+void D3DHandler::ChangeRenderTargets(int renderTargetIndex) //1 Deferred, 2 ShadowMap, 3(else) BackBuffer
 {
-	this->renderToBackBuffer = renderToBackBuffer;
-	if (renderToBackBuffer) {
-		this->deviceContext->OMSetRenderTargets(1, &this->renderTargetView, this->depthStencilView);
+	if (renderTargetIndex == 1) {
+		this->deviceContext->OMSetRenderTargets(BUFFER_COUNT, this->deferredRenderTargetViews, this->depthStencilView);
+	}
+	else if (renderTargetIndex == 2) {
+		this->deviceContext->OMSetRenderTargets(1, &this->shadowRenderTargetView, this->shadowDepthStencilView);
 	}
 	else {
-		this->deviceContext->OMSetRenderTargets(BUFFER_COUNT, this->deferredRenderTargetViews, this->depthStencilView);
+		this->deviceContext->OMSetRenderTargets(1, &this->renderTargetView, this->depthStencilView);
 	}
 }
 
@@ -561,6 +629,9 @@ ID3D11ShaderResourceView* D3DHandler::GetShaderResourceView(int resourceIndex)
 {
 	if (resourceIndex < BUFFER_COUNT) {
 		return this->deferredShaderResources[resourceIndex];
+	}
+	else if (resourceIndex == BUFFER_COUNT) {
+		return this->shadowShaderResource;
 	}
 	
 	return NULL;
