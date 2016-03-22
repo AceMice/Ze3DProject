@@ -25,6 +25,8 @@ private:
 		BOOL hasNormMap;
 
 		int padding[2];
+
+		XMFLOAT4 camPos;
 	};
 
 	ID3D11VertexShader* vertexShader;
@@ -39,7 +41,7 @@ private:
 	void ShutdownShader();
 	void OutputShaderErrorMessage(ID3D10Blob*, HWND, WCHAR*);
 
-	bool SetShaderParameters(ID3D11DeviceContext*, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, ID3D11ShaderResourceView*, XMFLOAT4, XMFLOAT4, bool);
+	bool SetShaderParameters(ID3D11DeviceContext*, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, ID3D11ShaderResourceView*, XMFLOAT4, XMFLOAT4, bool, XMFLOAT4);
 
 	void RenderShader(ID3D11DeviceContext*, int, int);
 
@@ -50,7 +52,7 @@ public:
 	bool Initialize(ID3D11Device*, HWND);
 	void Shutdown();
 
-	bool Render(ID3D11DeviceContext*, int, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, ID3D11ShaderResourceView*, XMFLOAT4, XMFLOAT4, bool);
+	bool Render(ID3D11DeviceContext*, int, int, XMMATRIX, XMMATRIX, XMMATRIX, ID3D11ShaderResourceView*, ID3D11ShaderResourceView*, XMFLOAT4, XMFLOAT4, bool, XMFLOAT4);
 };
 
 #endif

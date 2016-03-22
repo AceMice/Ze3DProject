@@ -159,10 +159,10 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	
 	this->rotY += dTime / 800000;
 	
-	if (this->moveLight > 15.0f) {
+	if (this->moveLight > 5.0f) {
 		this->increase = false;
 	}
-	if (this->moveLight < -20.0f) {
+	if (this->moveLight < -30.0f) {
 		this->increase = true;
 	}
 	if (this->increase) {
@@ -252,7 +252,7 @@ bool GraphicsHandler::Render()
 			if (!transparent) {
 				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
 					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex),
-					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, false);
+					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, camPos);
 				if (!result)
 				{
 					return false;
