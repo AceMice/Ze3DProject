@@ -63,6 +63,10 @@ float4 main(PSInput input) : SV_TARGET
 	projectTexCoord.x = (lightPos.x / lightPos.w) * 0.5f + 0.5f;
 	projectTexCoord.y = (-lightPos.y / lightPos.w) * 0.5f + 0.5f;
 
+	//If point outside shadowmap -> cast no shadow
+	if ((saturate(projectTexCoord.x) != projectTexCoord.x) || (saturate(projectTexCoord.y) != projectTexCoord.y)) {
+		lightIntensity = saturate(dot(normal.xyz, outVec.xyz));
+	}
 	// Calculate the depth of the light.
 	lightDepthValue = lightPos.z / lightPos.w;
 
@@ -82,5 +86,5 @@ float4 main(PSInput input) : SV_TARGET
 
 	outputColor = saturate(((color.rgba + specular.rgba) * lightIntensity * 0.8f) + ((color.rgba + specular.rgba) * 0.2f));
 
-	return specular;
+	return outputColor;
 }
