@@ -38,12 +38,13 @@ void ColorShaderHandler::Shutdown()
 
 bool ColorShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix,
 	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMMATRIX lightViewMatrix, XMMATRIX lightProjectionMatrix, ID3D11ShaderResourceView* colorTexture,
-	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* worldPosTexture, ID3D11ShaderResourceView* shadowTexture, XMFLOAT4 camPos)
+	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* worldPosTexture, ID3D11ShaderResourceView* shadowTexture, 
+	XMFLOAT4 camPos, XMFLOAT4 lightPos)
 {
 	bool result = false;
 
 	//Set shader parameters used for rendering
-	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, lightViewMatrix, lightProjectionMatrix, colorTexture, normalTexture, specularTexture, worldPosTexture, shadowTexture, camPos);
+	result = this->SetShaderParameters(deviceContext, worldMatrix, viewMatrix, projectionMatrix, lightViewMatrix, lightProjectionMatrix, colorTexture, normalTexture, specularTexture, worldPosTexture, shadowTexture, camPos, lightPos);
 	if (!result) {
 		return false;
 	}
@@ -181,7 +182,7 @@ bool ColorShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR
 	
 	// Create a clamp texture sampler state description.
 	//samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	//samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
@@ -232,7 +233,8 @@ void ColorShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND
 
 bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix,
 	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, XMMATRIX lightViewMatrix, XMMATRIX lightProjectionMatrix, ID3D11ShaderResourceView* colorTexture,
-	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* worldPosTexture, ID3D11ShaderResourceView* shadowTexture, XMFLOAT4 camPos)
+	ID3D11ShaderResourceView* normalTexture, ID3D11ShaderResourceView* specularTexture, ID3D11ShaderResourceView* worldPosTexture, ID3D11ShaderResourceView* shadowTexture,
+	XMFLOAT4 camPos, XMFLOAT4 lightPos)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -262,6 +264,7 @@ bool ColorShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext,
 	dataPtr->lightView = lightViewMatrix;
 	dataPtr->lightProjection = lightProjectionMatrix;
 	dataPtr->camPos = camPos;
+	dataPtr->lightPos = lightPos;
 
 	//Unmap the constant buffer to give the GPU access agin
 	deviceContext->Unmap(this->matrixBuffer, 0);

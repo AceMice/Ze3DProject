@@ -383,8 +383,8 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 	ZeroMemory(&depthBufferDesc, sizeof(depthBufferDesc));
 
 	//Fill depth buffer description	
-	depthBufferDesc.Width = screenWidth;
-	depthBufferDesc.Height = screenHeight;
+	depthBufferDesc.Width = 2048.0f;
+	depthBufferDesc.Height = 2048.0f;
 	depthBufferDesc.MipLevels = 1;
 	depthBufferDesc.ArraySize = 1;
 	depthBufferDesc.Format = DXGI_FORMAT_R32_TYPELESS;
@@ -646,4 +646,30 @@ void D3DHandler::SetZBuffer(bool zBuffing)
 	else {
 		this->deviceContext->OMSetDepthStencilState(this->disabledDepthStencilState, 1);
 	}
+}
+
+void D3DHandler::SetShadowViewport(bool shadowViewport)
+{
+	D3D11_VIEWPORT viewport;
+
+	if (shadowViewport) {
+		//Setup the viewport
+		viewport.Width = 2048.0f;
+		viewport.Height = 2048.0f;
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
+		viewport.TopLeftX = 0.0f;
+		viewport.TopLeftY = 0.0f;
+	}
+	else {
+		viewport.Width = 800.0f;
+		viewport.Height = 800.0f;
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
+		viewport.TopLeftX = 0.0f;
+		viewport.TopLeftY = 0.0f;
+	}
+
+	//Create the viewport
+	this->deviceContext->RSSetViewports(1, &viewport);
 }

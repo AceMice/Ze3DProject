@@ -67,6 +67,8 @@ public:
 	ID3D11ShaderResourceView* GetShaderResourceView(int);
 
 	void SetZBuffer(bool);
+
+	void SetShadowViewport(bool);
 };
 
 #endif

@@ -14,6 +14,7 @@ cbuffer MatrixBufferSimple
 	matrix lightViewMatrix;
 	matrix lightProjectionMatrix;
 	float4 camPos;
+	float4 lightPos;
 };
 
 struct PSInput
@@ -34,7 +35,7 @@ float4 main(PSInput input) : SV_TARGET
 	float2 projectTexCoord;
 	float depthValue;
 	float lightDepthValue;
-	float4 lightPos;
+	float4 positionLight;
 
 	// Set the bias value for fixing the floating point precision issues.
 	float bias = 0.001f;
@@ -44,7 +45,7 @@ float4 main(PSInput input) : SV_TARGET
 	specColor = specularTexture.Sample(pointSampler, input.tex);
 	worldPos = worldPosTexture.Sample(pointSampler, input.tex);
 
-	float3 outVec = normalize(float3(25, 15, -6) - (worldPos).xyz);
+	float3 outVec = normalize(lightPos.xyz - (worldPos).xyz);
 
 	float3 refVec = normalize(reflect(-outVec, normal));	//Create the the reflection
 
@@ -56,22 +57,36 @@ float4 main(PSInput input) : SV_TARGET
 
 	float4 specular = float4(specColor.rgb * lightSpecular * max(pow(specIntesity, shineFactor), 0), 1.0f);
 
-	lightPos = mul(worldPos, lightViewMatrix);
-	lightPos = mul(lightPos, lightProjectionMatrix);
+	positionLight = mul(worldPos, lightViewMatrix);
+	positionLight = mul(positionLight, lightProjectionMatrix);
 
 	// Calculate the projected texture coordinates.
-	projectTexCoord.x = (lightPos.x / lightPos.w) * 0.5f + 0.5f;
-	projectTexCoord.y = (-lightPos.y / lightPos.w) * 0.5f + 0.5f;
+	projectTexCoord.x = (positionLight.x / positionLight.w) * 0.5f + 0.5f;
+	projectTexCoord.y = (-positionLight.y / positionLight.w) * 0.5f + 0.5f;
 
 	//If point outside shadowmap -> cast no shadow
 	if ((saturate(projectTexCoord.x) != projectTexCoord.x) || (saturate(projectTexCoord.y) != projectTexCoord.y)) {
 		lightIntensity = saturate(dot(normal.xyz, outVec.xyz));
 	}
 	// Calculate the depth of the light.
-	lightDepthValue = lightPos.z / lightPos.w;
+	lightDepthValue = positionLight.z / positionLight.w;
 
 	// Sample the shadow map depth value from the depth texture using the sampler at the projected texture coordinate location.
+	/*float shadowEpsilon = 0.01f;
+	float dx = 1.0f / 800.f;
+	float s0 = (shadowTexture.Sample(shadowSampler, projectTexCoord).r + shadowEpsilon < lightDepthValue) ? 0.0f : 1.0f;
+	float s1 = (shadowTexture.Sample(shadowSampler, projectTexCoord + float2(dx, 0.0f)).r + shadowEpsilon < lightDepthValue) ? 0.0f : 1.0f;
+	float s2 = (shadowTexture.Sample(shadowSampler, projectTexCoord + float2(0.0f, dx)).r + shadowEpsilon < lightDepthValue) ? 0.0f : 1.0f;
+	float s3 = (shadowTexture.Sample(shadowSampler, projectTexCoord + float2(dx, dx)).r + shadowEpsilon < lightDepthValue) ? 0.0f : 1.0f;*/
 	depthValue = shadowTexture.Sample(shadowSampler, projectTexCoord).r;
+
+	////Transform shadow map uv coord to texel space
+	//float2 texelPos = projectTexCoord * 800.f;
+
+	////Determine lerp amount, (340.3, 200.1) -> (0.3, 0.1)
+	//float2 lerps = frac(texelPos);
+
+	//float shadowCoeff = lerp(lerp(s0, s1, lerps.x), lerp(s2, s3, lerps.x), lerps.y);
 
 	// Subtract the bias from the lightDepthValue.
 	lightDepthValue = lightDepthValue - bias;

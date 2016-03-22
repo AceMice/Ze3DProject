@@ -30,6 +30,8 @@ private:
 	Model* GetModel(char*);
 	//For testing
 	float rotY;
+	float moveLight;
+	bool increase;
 public:
 	GraphicsHandler();
 	~GraphicsHandler();

@@ -10,6 +10,8 @@ GraphicsHandler::GraphicsHandler()
 	this->shadowShaderH = nullptr;
 
 	this->rotY = 0.0f;
+	this->moveLight = 0.0f;
+	this->increase = true;
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -156,6 +158,19 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	Model* tempModel = nullptr;
 	
 	this->rotY += dTime / 800000;
+	
+	if (this->moveLight > 15.0f) {
+		this->increase = false;
+	}
+	if (this->moveLight < -20.0f) {
+		this->increase = true;
+	}
+	if (this->increase) {
+		this->moveLight += dTime / 80000;
+	}
+	else {
+		this->moveLight -= dTime / 80000;
+	}
 
 	tempModel = this->GetModel("carSLS3");
 	if (tempModel) {
@@ -252,9 +267,12 @@ bool GraphicsHandler::Render()
 	//Set the render target to be the textures
 	this->direct3DH->ChangeRenderTargets(2);
 
+	//Change viewport size to shadow map size (2000)
+	this->direct3DH->SetShadowViewport(true);
+
 	//Create the view, and projection matrices based on light pos(25, 15, -6)
 	XMVECTOR lookAt = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	XMVECTOR lightPos = XMVectorSet(25.0f, 15.0f, -6.0f, 0.0f);
+	XMVECTOR lightPos = XMVectorSet(25.0f, 15.0f, this->moveLight, 0.0f);
 	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	lightViewMatrix = XMMatrixLookAtLH(lightPos, lookAt, lightUp);
 
@@ -289,6 +307,9 @@ bool GraphicsHandler::Render()
 		}
 	}
 
+	//Change viewport back
+	this->direct3DH->SetShadowViewport(false);
+
 	//**LIGHT RENDER**\\
 
 	//Set the render target to be the back buffer
@@ -310,7 +331,8 @@ bool GraphicsHandler::Render()
 	this->modelWindow->Render(this->direct3DH->GetDeviceContext());
 
 	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext(), this->modelWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, lightViewMatrix, lightProjectionMatrix,
-		this->direct3DH->GetShaderResourceView(0), this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2), this->direct3DH->GetShaderResourceView(3), this->direct3DH->GetShaderResourceView(4), camPos);
+		this->direct3DH->GetShaderResourceView(0), this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2), this->direct3DH->GetShaderResourceView(3), this->direct3DH->GetShaderResourceView(4),
+		camPos, XMFLOAT4(25.0f, 15.0f, this->moveLight, 0.0f));
 	if (!result) {
 		return false;
 	}
