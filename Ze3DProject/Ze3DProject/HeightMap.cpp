@@ -13,7 +13,7 @@ bool HeightMap::HeightMapLoad(char* filename, HeightMapInfo& hminfo) {
 	
 	//Add .bmp
 	std::string fullFileName = filename;
-	fullFileName += ".bmp";
+	fullFileName = "../Ze3DProject/BitMaps/" + fullFileName + ".bmp";
 	filePtr = fopen(fullFileName.c_str(), "rb");	//rb = read binary
 
 	//Check if open
@@ -37,7 +37,7 @@ bool HeightMap::HeightMapLoad(char* filename, HeightMapInfo& hminfo) {
 	//Image data array
 	unsigned char* bitmapImage = new unsigned char[imageSize];
 	
-	//Move the ´filePtr to the end of the header
+	//Move the filePtr to the end of the header
 	fseek(filePtr, bitmapFileHeader.bfOffBits, SEEK_SET);
 
 	// Store image data in bitmapImage

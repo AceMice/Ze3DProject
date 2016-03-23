@@ -6,6 +6,7 @@
 #include "Model.h"
 #include "CameraHandler.h"
 #include "Inputhandler.h"
+#include "GroundModel.h"
 
 //Constants
 const bool FULL_SCREEN = false;
@@ -18,6 +19,7 @@ private:
 	D3DHandler* direct3DH;
 	CameraHandler* cameraH;
 	std::vector<Model*> models;
+	std::vector<GroundModel*> groundModels;
 	ShaderHandler* shaderH;
 
 	bool Render();

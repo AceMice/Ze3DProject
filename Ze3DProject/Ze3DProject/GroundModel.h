@@ -51,7 +51,7 @@ private:
 	void RenderBuffers(ID3D11DeviceContext*);
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, std::string);
 	void ReleaseTexture();
-	bool GenerateGround(char*, std::vector<Vertex>&, unsigned long*&, int&, int&);
+	bool GenerateGround(char*, std::string, std::vector<Vertex>&, unsigned long*&, int&, int&);
 	
 public:
 	GroundModel();

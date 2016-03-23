@@ -81,12 +81,10 @@ bool GroundModel::InitializeBuffers(ID3D11Device* device, char* bmpFile, std::st
 	D3D11_SUBRESOURCE_DATA indexData;
 	HRESULT hresult;
 	bool result;
-	std::string path = "../Ze3DProject/OBJ/";
-	/*std::string format = ".obj";
-	std::string bin = ".bin";
-	std::string finalBinPath = path + modelFilename + bin;*/
+	materialName = "ground.mtl";
 
-	result = this->GenerateGround(bmpFile, vertices, indices, sizeVertices, sizeIndices);
+	//Hard coded the material to be "ground"
+	result = this->GenerateGround(bmpFile, materialName, vertices, indices, sizeVertices, sizeIndices);
 	
 	if (!result) {
 		return false;
@@ -154,14 +152,14 @@ bool GroundModel::InitializeBuffers(ID3D11Device* device, char* bmpFile, std::st
 	//Set up the description of the static index buffer
 	ZeroMemory(&indexBufferDesc, sizeof(indexBufferDesc));
 	indexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	indexBufferDesc.ByteWidth = sizeof(unsigned long) * this->indexCount;
+	indexBufferDesc.ByteWidth = sizeof(unsigned long) * this->indexCount;	// IndexCount = numFaces*3
 	indexBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
 	indexBufferDesc.CPUAccessFlags = 0;
 	indexBufferDesc.MiscFlags = 0;
 	indexBufferDesc.StructureByteStride = 0;
 
 	ZeroMemory(&indexData, sizeof(indexData));
-	indexData.pSysMem = indices;
+	indexData.pSysMem = &(indices[0]);
 	indexData.SysMemPitch = 0;
 	indexData.SysMemSlicePitch = 0;
 
@@ -172,7 +170,7 @@ bool GroundModel::InitializeBuffers(ID3D11Device* device, char* bmpFile, std::st
 	}
 
 	//Release the arrays now that the vertex and index buffers ave been created and loaded
-	delete[] indices;
+	delete[] indices;	//Never cleaned up
 	indices = nullptr;
 	vertices.clear();
 
@@ -248,14 +246,13 @@ void GroundModel::ReleaseTexture()
 	return;
 }
 
-bool GroundModel::GenerateGround(char* bmpFile, std::vector<Vertex>& outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices) {
+bool GroundModel::GenerateGround(char* bmpFile, std::string matrialLib, std::vector<Vertex>& outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices) {
 	HeightMap hmObj;
 	bool result = hmObj.HeightMapLoad(bmpFile, hmInfo);
 	
 	if (result != true) {
 			return false;
 	}
-	
 	int cols = hmInfo.terrainWidth;
 	int rows = hmInfo.terrainHeight;
 
@@ -280,9 +277,9 @@ bool GroundModel::GenerateGround(char* bmpFile, std::vector<Vertex>& outputVerti
 	int k = 0;
 	int texUIndex = 0;
 	int texVIndex = 0;
-	for (DWORD i = 0; i < rows - 1; i++)
+	for (unsigned long i = 0; i < rows - 1; i++)
 	{
-		for (DWORD j = 0; j < cols - 1; j++)
+		for (unsigned long j = 0; j < cols - 1; j++)
 		{
 			indices[k] = i*cols + j;        // Bottom left of quad
 			v[i*cols + j].texture = XMFLOAT2(texUIndex + 0.0f, texVIndex + 1.0f);
@@ -334,13 +331,13 @@ bool GroundModel::GenerateGround(char* bmpFile, std::vector<Vertex>& outputVerti
 		vecZ = v[indices[(i * 3)]].position.z - v[indices[(i * 3) + 2]].position.z;
 		edge1 = XMVectorSet(vecX, vecY, vecZ, 0.0f);    //Create our first edge
 
-		//Get the vector describing another edge of our triangle (edge 2,1)
+														//Get the vector describing another edge of our triangle (edge 2,1)
 		vecX = v[indices[(i * 3) + 2]].position.x - v[indices[(i * 3) + 1]].position.x;
 		vecY = v[indices[(i * 3) + 2]].position.y - v[indices[(i * 3) + 1]].position.y;
 		vecZ = v[indices[(i * 3) + 2]].position.z - v[indices[(i * 3) + 1]].position.z;
 		edge2 = XMVectorSet(vecX, vecY, vecZ, 0.0f);    //Create our second edge
 
-		//Cross multiply the two edge vectors to get the un-normalized face normal
+														//Cross multiply the two edge vectors to get the un-normalized face normal
 		XMStoreFloat3(&unnormalized, XMVector3Cross(edge1, edge2));
 		tempNormal.push_back(unnormalized);            //Save unormalized normal (for normal averaging)
 	}
@@ -386,11 +383,22 @@ bool GroundModel::GenerateGround(char* bmpFile, std::vector<Vertex>& outputVerti
 		normalSum = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 		facesUsing = 0;
 	}
-	outputVertices = v;
-	outputIndices = &indices[0];
+	//outputVertices = v;
+	outputVertices = std::vector<Vertex>(v.size());
 	sizeVertices = v.size();
 	sizeIndices = indices.size();
-	
+
+	outputIndices = new unsigned long[sizeIndices];
+	for (int i = 0; i < v.size(); i++) {
+		outputVertices.at(i) = v.at(i);
+	}
+
+	for (int i = 0; i < sizeIndices; i++) {
+		outputIndices[i] = indices.at(i);
+	}
+
+	this->materialNames.push_back("Grass");	//One material
+	this->subsetIndices.push_back(0);
 	return true;
 }
 

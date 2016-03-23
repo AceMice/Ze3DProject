@@ -17,6 +17,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 {
 	bool result;
 	Model* tempModel = nullptr;
+	GroundModel* tempGroundModel = nullptr;
 
 	this->direct3DH = new D3DHandler;
 	if (!this->direct3DH) {
@@ -39,6 +40,23 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	//Set the initial position of the camera
 	this->cameraH->SetPosition(0.0f, 0.0f, -20.0f);
 
+
+
+	//Create the GroundModel Object
+	tempGroundModel = new GroundModel;
+
+	result = tempGroundModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "BMPSmall");
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->groundModel->Initialize", L"Error", MB_OK);
+		return false;
+	}
+	//Insert model into vector
+	this->groundModels.push_back(tempGroundModel);
+	tempGroundModel = nullptr;
+
+
+
 	// Create the model1 object.
 	tempModel = new Model;
 	if (!tempModel)
@@ -46,7 +64,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	//Initialize the ground object
+	//Initialize the standard ground object
 	result = tempModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ground");
 	if (!result)
 	{
@@ -170,6 +188,30 @@ bool GraphicsHandler::Render()
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
 
 	//**NON TRANSPARENT RENDER**\\
+	
+	//Ground Render
+	for (int i = 0; i < this->groundModels.size(); i++) {
+		this->groundModels.at(i)->GetWorldMatrix(worldMatrix);
+
+		this->groundModels.at(i)->Render(this->direct3DH->GetDeviceContext());
+		modelSubsets = this->groundModels.at(i)->NrOfSubsets();
+		for (int j = 0; j < modelSubsets; j++) {
+			//Get all the nessecary information from the model
+			this->groundModels.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+
+			//Render the model using the shader-handler
+			if (!transparent) {
+				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+					worldMatrix, viewMatrix, projectionMatrix, this->groundModels.at(i)->GetTexture(textureIndex),
+					this->groundModels.at(i)->GetTexture(normMapIndex), difColor, specColor, false, camPos);
+				if (!result)
+				{
+					return false;
+				}
+
+			}
+		}
+	}
 
 	for (int i = 0; i < this->models.size(); i++) {
 
