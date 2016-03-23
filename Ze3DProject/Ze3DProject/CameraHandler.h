@@ -12,6 +12,7 @@ private:
 	XMVECTOR camPos;
 
 	XMMATRIX viewMatrix;
+	XMMATRIX baseViewMatrix;
 	XMMATRIX camRotationMatrix;
 	
 	float moveLeftRight;
@@ -30,6 +31,8 @@ public:
 	void Frame(float, InputHandler*);
 	void updateCamera(float, InputHandler*);
 	void GetViewMatrix(XMMATRIX&);
+	void GenerateBaseViewMatrix();
+	void GetBaseViewMatrix(XMMATRIX&);
 };
 
 #endif
