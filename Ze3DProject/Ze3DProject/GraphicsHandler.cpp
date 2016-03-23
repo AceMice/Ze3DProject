@@ -51,7 +51,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	//Create the GroundModel Object
 	tempGroundModel = new GroundModel;
 
-	result = tempGroundModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "BMPSmall");
+	result = tempGroundModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "BMP24Bit");
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->groundModel->Initialize", L"Error", MB_OK);
@@ -323,6 +323,29 @@ bool GraphicsHandler::Render()
 	float fieldOfView = (float)XM_PI / 2.0f;
 	float screenAspect = 1.0f;
 	lightProjectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, 1.0f, 100.0f);
+
+	//Ground Render
+	for (int i = 0; i < this->groundModels.size(); i++) {
+		this->groundModels.at(i)->GetWorldMatrix(worldMatrix);
+
+		this->groundModels.at(i)->Render(this->direct3DH->GetDeviceContext());
+		modelSubsets = this->groundModels.at(i)->NrOfSubsets();
+		for (int j = 0; j < modelSubsets; j++) {
+			//Get all the nessecary information from the model
+			this->groundModels.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+
+			//Render the model using the shader-handler
+			if (!transparent) {
+				result = this->shadowShaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+					worldMatrix, lightViewMatrix, lightProjectionMatrix);
+				if (!result)
+				{
+					return false;
+				}
+
+			}
+		}
+	}
 
 	for (int i = 0; i < this->models.size(); i++) {
 
