@@ -15,7 +15,7 @@ public:
 	~Frustum();
 
 	void CreateFrustum(float, XMMATRIX, XMMATRIX);
-	bool IntersectBB(XMVECTOR[8]);
+	bool IntersectBB(XMVECTOR*);
 };
 
 #endif

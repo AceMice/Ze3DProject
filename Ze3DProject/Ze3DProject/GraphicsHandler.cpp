@@ -8,6 +8,7 @@ GraphicsHandler::GraphicsHandler()
 	this->colorShaderH = nullptr;
 	this->modelWindow = nullptr;
 	this->shadowShaderH = nullptr;
+	this->frustum = nullptr;
 
 	this->rotY = 0.0f;
 	this->moveLight = 0.0f;
@@ -153,6 +154,11 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	this->frustum = new Frustum;
+	if (!this->frustum) {
+		return false;
+	}
+
 
 	return true;
 }
@@ -235,50 +241,76 @@ bool GraphicsHandler::Render()
 	XMFLOAT4 difColor;
 	XMFLOAT4 specColor;
 	bool transparent;
+	XMVECTOR* modelBB;
+	bool renderModel = true;
+	int modelsRendered = 0;
+
 	XMVECTOR camPosVec = this->cameraH->GetPosition();
 	XMFLOAT4 camPos = XMFLOAT4(XMVectorGetX(camPosVec), XMVectorGetY(camPosVec), XMVectorGetZ(camPosVec), XMVectorGetW(camPosVec));
 	
 	
-
 	//**DEFERRED RENDER**\\
-
-	//Set the render target to be the textures
-	this->direct3DH->ChangeRenderTargets(1);
 
 	//Clear the buffers to begin the scene
 	this->direct3DH->BeginScene(0.0f, 0.0f, 0.0f, 1.0f);
 
+	//Set the render target to be the textures
+	this->direct3DH->ChangeRenderTargets(1);
+
 	//Get the view, and projection matrices from the camera and d3d objects
 	this->cameraH->GetViewMatrix(viewMatrix);
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
-	
+
+	//Create the frustum
+	this->frustum->CreateFrustum(SCREEN_DEPTH, viewMatrix, projectionMatrix);
+
 	for (int i = 0; i < this->models.size(); i++) {
 		
-		//Get the world matrix from model
-		this->models.at(i)->GetWorldMatrix(worldMatrix);
+		//Check against frustum
+		if (this->models.at(i)->GethasBB()) {
+			modelBB = this->models.at(i)->GetBouningBox();
+			renderModel = this->frustum->IntersectBB(modelBB);
+			delete[] modelBB;
+		}
+		else {
+			renderModel = true;
+		}
+		
+		if (renderModel) {
+			modelsRendered++;
 
-		//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
-		this->models.at(i)->Render(this->direct3DH->GetDeviceContext());
+			//Get the world matrix from model
+			this->models.at(i)->GetWorldMatrix(worldMatrix);
 
-		//Draw all non transparent subsets
-		modelSubsets = this->models.at(i)->NrOfSubsets();
-		for (int j= 0; j < modelSubsets; j++) { 
-			//Get all the nessecary information from the model
-			this->models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+			//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
+			this->models.at(i)->Render(this->direct3DH->GetDeviceContext());
 
-			//Render the model using the shader-handler
-			if (!transparent) {
-				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-					worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex),
-					this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, camPos);
-				if (!result)
-				{
-					return false;
+			//Draw all non transparent subsets
+			modelSubsets = this->models.at(i)->NrOfSubsets();
+			for (int j = 0; j < modelSubsets; j++) {
+				//Get all the nessecary information from the model
+				this->models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+
+				//Render the model using the shader-handler
+				if (!transparent) {
+					result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+						worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex),
+						this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, camPos);
+					if (!result)
+					{
+						return false;
+					}
+
 				}
-
 			}
 		}
+		
 	}
+
+	if (modelsRendered != 10) {
+		int lol = modelsRendered;
+	}
+	
 
 	//**SHADOW RENDER**\\
 
@@ -388,6 +420,7 @@ bool GraphicsHandler::Render()
 	//}
 
 
+
 	//Display the rendered scene to screen
 	this->direct3DH->EndScene();
 
@@ -400,14 +433,20 @@ void GraphicsHandler::Shutdown()
 	if (this->shaderH) {
 		this->shaderH->Shutdown();
 		delete this->shaderH;
-		this->shaderH = 0;
+		this->shaderH = nullptr;
 	}
 
 	//Release the shaderHandler object
 	if (this->colorShaderH) {
 		this->colorShaderH->Shutdown();
 		delete this->colorShaderH;
-		this->colorShaderH = 0;
+		this->colorShaderH = nullptr;
+	}
+	//Release the shaderHandler object
+	if (this->shadowShaderH) {
+		this->shadowShaderH->Shutdown();
+		delete this->shadowShaderH;
+		this->shadowShaderH = nullptr;
 	}
 
 	//Release the Model objects
@@ -417,6 +456,11 @@ void GraphicsHandler::Shutdown()
 			delete this->models.at(i);
 			this->models.at(i) = nullptr;
 		}
+	}
+
+	if (this->frustum) {
+		delete this->frustum;
+		this->frustum = nullptr;
 	}
 	
 	//Delete the model for 2d drawing

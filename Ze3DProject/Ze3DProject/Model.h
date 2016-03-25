@@ -43,7 +43,7 @@ private:
 	Texture* texture;
 	XMMATRIX worldMatrix;
 	std::string name;
-	XMVECTOR boundingBox[8];
+	XMVECTOR* boundingBox;
 	bool hasBB;
 	
 	bool InitializeBuffers(ID3D11Device*, char*, std::string&);
@@ -72,6 +72,8 @@ public:
 	void GetSubsetInfo(int, int&, int&, int&, int&, XMFLOAT4&, XMFLOAT4&, bool&);
 
 	std::string GetName();
+	XMVECTOR* GetBouningBox();
+	bool GethasBB();
 };
 
 

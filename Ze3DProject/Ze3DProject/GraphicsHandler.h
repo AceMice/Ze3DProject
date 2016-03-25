@@ -9,6 +9,7 @@
 #include "ColorShaderHandler.h"
 #include "ModelWindow.h"
 #include "ShadowShaderHandler.h"
+#include "Frustum.h"
 
 //Constants
 const bool FULL_SCREEN = false;
@@ -25,6 +26,7 @@ private:
 	ColorShaderHandler* colorShaderH;
 	ModelWindow* modelWindow;
 	ShadowShaderHandler* shadowShaderH;
+	Frustum* frustum;
 
 	bool Render();
 	Model* GetModel(std::string);

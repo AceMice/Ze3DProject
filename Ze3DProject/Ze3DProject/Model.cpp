@@ -7,6 +7,7 @@ Model::Model()
 	this->indexBuffer = nullptr;
 	this->texture = nullptr;
 	this->worldMatrix = XMMatrixIdentity();
+	this->boundingBox = nullptr;
 }
 
 Model::Model(const Model& originalObj)
@@ -26,6 +27,8 @@ bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 
 	this->name = modelName;
 	this->hasBB = hasBB;
+	this->boundingBox = new XMVECTOR[8];
+	
 
 	//Initialze the vertex and index buffer
 	result = this->InitializeBuffers(device, modelFilename, materialLib);
@@ -44,6 +47,7 @@ bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 
 void Model::Shutdown() 
 {
+	delete[] this->boundingBox;
 	//Release model texute
 	this->ReleaseTexture();
 	//Shutdown the vertex and index buffers
@@ -627,4 +631,18 @@ void Model::CreateBoundingBox(XMFLOAT3 minVertex, XMFLOAT3 maxVertex)
 
 	this->boundingBox[7] = XMVectorSet(maxVertex.x, minVertex.y, maxVertex.z, 1.0f);
 
+}
+
+XMVECTOR* Model::GetBouningBox()
+{
+	XMVECTOR* worldBB = new XMVECTOR[8];
+	for (int i = 0; i < 8; i++) {
+		worldBB[i] = XMVector4Transform(worldBB[i], this->worldMatrix);
+	}
+	return worldBB;
+}
+
+bool Model::GethasBB()
+{
+	return this->hasBB;
 }
