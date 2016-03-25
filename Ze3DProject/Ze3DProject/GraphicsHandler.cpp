@@ -65,6 +65,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	std::stringstream ss;
 	for (int i = 0; i < 20; i++) {
 		// Create the model2 object.
+		ss.str("");
 		ss << i;
 		std::string ogreName = "ogreFullG" + ss.str();
 		ss.clear();
@@ -159,6 +160,40 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
+	XMMATRIX modelWorld;
+	
+	/*tempModel = this->GetModel("carSLS3");
+	if (tempModel) {
+		modelWorld = XMMatrixScaling(5.0f, 5.0f, 5.0f);
+		modelWorld = XMMatrixRotationY(3.0f) * modelWorld;
+		modelWorld = XMMatrixTranslation(-1.5f, -0.33f, 1.0f) * modelWorld;
+		tempModel->SetWorldMatrix(modelWorld);
+	}*/
+	float z = 0.0f;
+	float x = 0.0f;
+	for (int i = 0; i < 20; i++) {
+		std::string ogreName;
+		ss.str("");
+		ss << i;
+		ogreName = "ogreFullG" + ss.str();
+		tempModel = this->GetModel(ogreName);
+		if (tempModel) {
+			z = (i / 5 * 10) - 15;
+			x = ((i % 5) * 15) - 30;
+			modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+			modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
+			modelWorld = XMMatrixTranslation(x, -5.75f, z) * modelWorld;
+			tempModel->SetWorldMatrix(modelWorld);
+		}
+		ss.clear();
+	}
+
+
+	tempModel = this->GetModel("ground");
+	if (tempModel) {
+		modelWorld = XMMatrixTranslation(0.0f, -4.0f, 0.0f);
+		tempModel->SetWorldMatrix(modelWorld);
+	}
 
 	return true;
 }
@@ -168,8 +203,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	bool result;
 	XMMATRIX modelWorld;
 	Model* tempModel = nullptr;
-	std::string ogreName;
-	std::stringstream ss;
+	
 	
 	this->rotY += dTime / 800000;
 	
@@ -187,36 +221,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 		this->moveLight -= dTime / 80000;
 	}
 
-	tempModel = this->GetModel("carSLS3");
-	if (tempModel) {
-		modelWorld = XMMatrixScaling(5.0f, 5.0f, 5.0f);
-		modelWorld = XMMatrixRotationY(3.0f) * modelWorld;
-		modelWorld = XMMatrixTranslation(-1.5f, -0.33f, 1.0f) * modelWorld;
-		tempModel->SetWorldMatrix(modelWorld);
-	}
-	float z = 0.0f;
-	float x = 0.0f;
-	for (int i = 0; i < 20; i++) {
-		ss << i;
-		ogreName = "ogreFullG" + ss.str();
-		tempModel = this->GetModel(ogreName);
-		if (tempModel) {
-			z = (i / 5 * 10) - 15;
-			x = ((i % 5) * 15) - 30;
-			modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-			modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
-			modelWorld = XMMatrixTranslation(x, -5.75f, z ) * modelWorld;
-			tempModel->SetWorldMatrix(modelWorld);
-		}
-		ss.clear();
-	}
 	
-	
-	tempModel = this->GetModel("ground");
-	if (tempModel) {
-		modelWorld = XMMatrixTranslation(0.0f, -4.0f, 0.0f);
-		tempModel->SetWorldMatrix(modelWorld);
-	}
 
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH);
@@ -231,7 +236,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 
 bool GraphicsHandler::Render()
 {
-	XMMATRIX worldMatrix, viewMatrix, lightViewMatrix, projectionMatrix, lightProjectionMatrix, orthoMatrix;
+	XMMATRIX worldMatrix, viewMatrix, lightViewMatrix, projectionMatrix, lightProjectionMatrix, orthoMatrix, MVP;
 	bool result;
 	int indexCount;
 	int indexStart;
@@ -265,10 +270,13 @@ bool GraphicsHandler::Render()
 	this->frustum->CreateFrustum(SCREEN_DEPTH, viewMatrix, projectionMatrix);
 
 	for (int i = 0; i < this->models.size(); i++) {
-		
+		this->models.at(i)->GetWorldMatrix(worldMatrix);
 		//Check against frustum
 		if (this->models.at(i)->GethasBB()) {
-			modelBB = this->models.at(i)->GetBouningBox();
+			//Get the world matrix from model
+			MVP = XMMatrixMultiply(worldMatrix, viewMatrix);
+
+			modelBB = this->models.at(i)->GetBouningBox(MVP);
 			renderModel = this->frustum->IntersectBB(modelBB);
 			delete[] modelBB;
 		}
@@ -279,9 +287,7 @@ bool GraphicsHandler::Render()
 		if (renderModel) {
 			modelsRendered++;
 
-			//Get the world matrix from model
-			this->models.at(i)->GetWorldMatrix(worldMatrix);
-
+			
 			//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
 			this->models.at(i)->Render(this->direct3DH->GetDeviceContext());
 

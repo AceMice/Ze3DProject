@@ -72,7 +72,7 @@ public:
 	void GetSubsetInfo(int, int&, int&, int&, int&, XMFLOAT4&, XMFLOAT4&, bool&);
 
 	std::string GetName();
-	XMVECTOR* GetBouningBox();
+	XMVECTOR* GetBouningBox(XMMATRIX);
 	bool GethasBB();
 };
 

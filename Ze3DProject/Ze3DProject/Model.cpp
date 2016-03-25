@@ -633,11 +633,11 @@ void Model::CreateBoundingBox(XMFLOAT3 minVertex, XMFLOAT3 maxVertex)
 
 }
 
-XMVECTOR* Model::GetBouningBox()
+XMVECTOR* Model::GetBouningBox(XMMATRIX MVP)
 {
 	XMVECTOR* worldBB = new XMVECTOR[8];
 	for (int i = 0; i < 8; i++) {
-		worldBB[i] = XMVector4Transform(worldBB[i], this->worldMatrix);
+		worldBB[i] = XMVector4Transform(worldBB[i], MVP);
 	}
 	return worldBB;
 }
