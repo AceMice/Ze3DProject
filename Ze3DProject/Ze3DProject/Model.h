@@ -1,5 +1,5 @@
-#ifndef Model_H
-#define Model_H
+#ifndef MODEL_H
+#define MODEL_H
 
 #include "Texture.h"
 
@@ -43,20 +43,23 @@ private:
 	Texture* texture;
 	XMMATRIX worldMatrix;
 	std::string name;
-
+	XMVECTOR boundingBox[8];
+	bool hasBB;
+	
 	bool InitializeBuffers(ID3D11Device*, char*, std::string&);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, std::string);
 	void ReleaseTexture();
 	bool LoadObj(const char*, std::vector<Vertex>&, unsigned long*&, int&, int&, std::string&);
+	void CreateBoundingBox(XMFLOAT3, XMFLOAT3);
 
 public:
 	Model();
 	Model(const Model&);
 	~Model();
 
-	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, char*);
+	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, char*, std::string, bool);
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 

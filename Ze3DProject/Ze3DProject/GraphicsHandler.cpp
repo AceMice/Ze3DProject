@@ -53,7 +53,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Initialize the ground object
-	result = tempModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ground");
+	result = tempModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ground", "ground", false);
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->ground->Initialize", L"Error", MB_OK);
@@ -61,38 +61,44 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 	//Insert model into vector
 	this->models.push_back(tempModel);
+	std::stringstream ss;
+	for (int i = 0; i < 20; i++) {
+		// Create the model2 object.
+		ss << i;
+		std::string ogreName = "ogreFullG" + ss.str();
+		ss.clear();
+		tempModel = new Model;
+		if (!tempModel)
+		{
+			return false;
+		}
+		//Initialize the OgreFullG object
+		result = tempModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreFullG", ogreName, true);
+		if (!result)
+		{
+			MessageBox(hwnd, L"this->OgreFullG->Initialize", L"Error", MB_OK);
+			return false;
+		}
+		//Insert model into vector
+		this->models.push_back(tempModel);
+	}
+	
 
-	// Create the model2 object.
-	tempModel = new Model;
-	if (!tempModel)
-	{
-		return false;
-	}
-	//Initialize the OgreFullG object
-	result = tempModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "OgreFullG");
-	if (!result)
-	{
-		MessageBox(hwnd, L"this->OgreFullG->Initialize", L"Error", MB_OK);
-		return false;
-	}
-	//Insert model into vector
-	this->models.push_back(tempModel);
-
-	// Create the carSLS3 object.
-	tempModel = new Model;
-	if (!tempModel)
-	{
-		return false;
-	}
-	//Initialize the carSLS3 object
-	result = tempModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "carSLS3");
-	if (!result)
-	{
-		MessageBox(hwnd, L"this->carSLS3->Initialize", L"Error", MB_OK);
-		return false;
-	}
-	//Insert model into vector
-	this->models.push_back(tempModel);
+	//// Create the carSLS3 object.
+	//tempModel = new Model;
+	//if (!tempModel)
+	//{
+	//	return false;
+	//}
+	////Initialize the carSLS3 object
+	//result = tempModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "carSLS3", "carSLS3");
+	//if (!result)
+	//{
+	//	MessageBox(hwnd, L"this->carSLS3->Initialize", L"Error", MB_OK);
+	//	return false;
+	//}
+	////Insert model into vector
+	//this->models.push_back(tempModel);
 
 	// Create the deferred shader object.
 	this->shaderH = new ShaderHandler;
@@ -156,15 +162,18 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	bool result;
 	XMMATRIX modelWorld;
 	Model* tempModel = nullptr;
+	std::string ogreName;
+	std::stringstream ss;
 	
 	this->rotY += dTime / 800000;
 	
-	if (this->moveLight > 5.0f) {
+	/*if (this->moveLight > 5.0f) {
 		this->increase = false;
 	}
 	if (this->moveLight < -30.0f) {
 		this->increase = true;
-	}
+	}*/
+	this->moveLight = -30.0f;
 	if (this->increase) {
 		this->moveLight += dTime / 80000;
 	}
@@ -179,14 +188,23 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 		modelWorld = XMMatrixTranslation(-1.5f, -0.33f, 1.0f) * modelWorld;
 		tempModel->SetWorldMatrix(modelWorld);
 	}
-	
-	tempModel = this->GetModel("OgreFullG");
-	if (tempModel) {
-		modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-		modelWorld = XMMatrixRotationY(2.0f) * modelWorld;
-		modelWorld = XMMatrixTranslation(6.0f, -5.75f, -3.0f) * modelWorld;
-		tempModel->SetWorldMatrix(modelWorld);
+	float z = 0.0f;
+	float x = 0.0f;
+	for (int i = 0; i < 20; i++) {
+		ss << i;
+		ogreName = "ogreFullG" + ss.str();
+		tempModel = this->GetModel(ogreName);
+		if (tempModel) {
+			z = (i / 5 * 10) - 15;
+			x = ((i % 5) * 15) - 30;
+			modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+			modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
+			modelWorld = XMMatrixTranslation(x, -5.75f, z ) * modelWorld;
+			tempModel->SetWorldMatrix(modelWorld);
+		}
+		ss.clear();
 	}
+	
 	
 	tempModel = this->GetModel("ground");
 	if (tempModel) {
@@ -421,7 +439,7 @@ void GraphicsHandler::Shutdown()
 	}
 }
 
-Model* GraphicsHandler::GetModel(char* name)
+Model* GraphicsHandler::GetModel(std::string name)
 {
 	//Find the correct model by name
 	for (int i = 0; i < this->models.size(); i++) {

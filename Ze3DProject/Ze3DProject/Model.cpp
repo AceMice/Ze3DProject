@@ -19,12 +19,13 @@ Model::~Model()
 
 }
 
-bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename) 
+bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, std::string modelName, bool hasBB) 
 {
 	bool result;
 	std::string materialLib;
 
-	this->name = modelFilename;
+	this->name = modelName;
+	this->hasBB = hasBB;
 
 	//Initialze the vertex and index buffer
 	result = this->InitializeBuffers(device, modelFilename, materialLib);
@@ -264,6 +265,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 	std::string line;
 	std::string junks;
 	std::string tempLine;
+	double point[3];
 	char junk;
 	std::stringstream ss;
 	std::fstream file;
@@ -275,13 +277,19 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 	file.open(path, std::ios::in);
 	if (file.is_open()) {
 		std::getline(file, line);
-		ss.clear();
 		ss.str(line);
 		ss >> sizeVertices >> sizeIndices;
 		std::getline(file, line);
 		ss.clear();
 		ss.str(line);
 		ss >> materialLib;
+		for (int i = 0; i < 8; i++) {//Load the eight points for bounding box corners
+			std::getline(file, line);
+			ss.clear();
+			ss.str(line);
+			ss >> point[0] >> point[1] >> point[2];
+			this->boundingBox[i] = XMVectorSet(point[0], point[1], point[2], 1.0f);
+		}
 		while (std::getline(file, line)) {
 			ss.clear();
 			ss.str(line);
@@ -289,6 +297,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 			subsetIndices.push_back(tempSubset);
 			materialNames.push_back(tempLine);
 		}
+		ss.clear();
 		file.close();
 		path = filename;
 		path.append("V.bin");
@@ -328,7 +337,8 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		if (!file.is_open()) {
 			return false;
 		}
-
+		XMFLOAT3 maxVertex = XMFLOAT3(-D3D11_FLOAT32_MAX, -D3D11_FLOAT32_MAX, -D3D11_FLOAT32_MAX);
+		XMFLOAT3 minVertex = XMFLOAT3(D3D11_FLOAT32_MAX, D3D11_FLOAT32_MAX, D3D11_FLOAT32_MAX);
 		while (std::getline(file, line)) {
 			if (line.size() > 0) {
 				if (line.at(0) == 'v') {
@@ -337,6 +347,25 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 						ss.str(line);
 						ss >> junk >> tempVertex.x >> tempVertex.y >> tempVertex.z;
 						//sscanf_s(line.c_str(), "%f %f %f\n", &tempVertex.x, &tempVertex.y, &tempVertex.z);
+						if (tempVertex.x > maxVertex.x) {
+							maxVertex.x = tempVertex.x;
+						}
+						if (tempVertex.y > maxVertex.y) {
+							maxVertex.y = tempVertex.y;
+						}
+						if (tempVertex.z > maxVertex.z) {
+							maxVertex.z = tempVertex.z;
+						}
+						if (tempVertex.x < minVertex.x) {
+							minVertex.x = tempVertex.x;
+						}
+						if (tempVertex.y < minVertex.y) {
+							minVertex.y = tempVertex.y;
+						}
+						if (tempVertex.z < minVertex.z) {
+							minVertex.z = tempVertex.z;
+						}
+						
 						tempVertices.push_back(tempVertex);
 					}
 					else if (line.at(1) == 't') {
@@ -473,6 +502,11 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 			outputIndices[i] = i;
 		}
 
+		if (this->hasBB) {
+			this->CreateBoundingBox(minVertex, maxVertex);
+		}
+		
+
 		path = filename;
 		path.append(".ace"); //Make the "All Computations Executed" file
 		file.open(path, std::ios::out);
@@ -481,6 +515,18 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		}
 		file << sizeVertices << " " << sizeIndices << "\n"; //Save the sizes, needed for loading the binary files
 		file << materialLib << "\n";
+		
+		if (this->hasBB) {
+			for (int i = 0; i < 8; i++) {//Save the eight points for bounding box corners
+				file << XMVectorGetX(this->boundingBox[i]) << " " << XMVectorGetY(this->boundingBox[i]) << " " << XMVectorGetZ(this->boundingBox[i]) << "\n";
+			}
+		}
+		else {
+			for (int i = 0; i < 8; i++) {//Save the six planes for bounding box in plane equation form (Ax + By + Cz + D = 0)
+				file << 0.0f << " " << 0.0f << " " << 0.0f << "\n";
+			}
+		}
+		
 		for (int i = 0; i < subsetIndices.size(); i++) {
 			file << subsetIndices.at(i) << " " << materialNames.at(i) << "\n"; //Save all subsets with each material
 		}
@@ -561,4 +607,24 @@ void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int
 std::string Model::GetName()
 {
 	return this->name;
+}
+
+void Model::CreateBoundingBox(XMFLOAT3 minVertex, XMFLOAT3 maxVertex)
+{
+	this->boundingBox[0] = XMVectorSet(minVertex.x, maxVertex.y, maxVertex.z, 1.0f);
+
+	this->boundingBox[1] = XMVectorSet(minVertex.x, maxVertex.y, minVertex.z, 1.0f);
+
+	this->boundingBox[2] = XMVectorSet(maxVertex.x, maxVertex.y, minVertex.z, 1.0f);
+
+	this->boundingBox[3] = XMVectorSet(maxVertex.x, maxVertex.y, maxVertex.z, 1.0f);
+
+	this->boundingBox[4] = XMVectorSet(minVertex.x, minVertex.y, maxVertex.z, 1.0f);
+
+	this->boundingBox[5] = XMVectorSet(minVertex.x, minVertex.y, minVertex.z, 1.0f);
+
+	this->boundingBox[6] = XMVectorSet(maxVertex.x, minVertex.y, minVertex.z, 1.0f);
+
+	this->boundingBox[7] = XMVectorSet(maxVertex.x, minVertex.y, maxVertex.z, 1.0f);
+
 }

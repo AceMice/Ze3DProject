@@ -27,7 +27,7 @@ private:
 	ShadowShaderHandler* shadowShaderH;
 
 	bool Render();
-	Model* GetModel(char*);
+	Model* GetModel(std::string);
 	//For testing
 	float rotY;
 	float moveLight;

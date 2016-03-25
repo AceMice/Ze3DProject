@@ -149,6 +149,7 @@
     <ClCompile Include="CameraHandler.cpp" />
     <ClCompile Include="ColorShaderHandler.cpp" />
     <ClCompile Include="D3DHandler.cpp" />
+    <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="GraphicsHandler.cpp" />
     <ClCompile Include="InputHandler.cpp" />
     <ClCompile Include="main.cpp" />
@@ -163,6 +164,7 @@
     <ClInclude Include="CameraHandler.h" />
     <ClInclude Include="ColorShaderHandler.h" />
     <ClInclude Include="D3DHandler.h" />
+    <ClInclude Include="Frustum.h" />
     <ClInclude Include="GraphicsHandler.h" />
     <ClInclude Include="InputHandler.h" />
     <ClInclude Include="Model.h" />

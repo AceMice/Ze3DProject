@@ -669,7 +669,7 @@ void D3DHandler::SetShadowViewport(bool shadowViewport)
 		viewport.TopLeftX = 0.0f;
 		viewport.TopLeftY = 0.0f;
 	}
-
+	
 	//Create the viewport
 	this->deviceContext->RSSetViewports(1, &viewport);
 }
