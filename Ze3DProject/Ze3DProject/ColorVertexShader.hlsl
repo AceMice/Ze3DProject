@@ -5,6 +5,8 @@ cbuffer MatrixBufferSimple
 	matrix projectionMatrix;
 	matrix lightViewMatrix;
 	matrix lightProjectionMatrix;
+	float4 camPos;
+	float4 lightPos;
 };
 
 struct VertexInput
