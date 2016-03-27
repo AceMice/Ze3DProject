@@ -7,11 +7,18 @@ Frustum::~Frustum()
 {
 }
 
+void Frustum::SetViewMatrix(XMMATRIX viewMatrix)
+{
+	this->viewMatrix = viewMatrix;
+}
+
 void Frustum::CreateFrustum(float screenDepth, XMMATRIX viewMatrix, XMMATRIX projMatrix)
 {
 	float zMinimum, r;
 	XMFLOAT4X4 projMatrixFloat;
 	XMFLOAT4X4 frustumMatrix;
+	viewMatrix = XMMatrixTranspose(viewMatrix);
+	projMatrix = XMMatrixTranspose(projMatrix);
 	XMStoreFloat4x4(&projMatrixFloat, projMatrix);
 
 	// Calculate the minimum Z distance in the frustum.
@@ -83,7 +90,7 @@ bool Frustum::IntersectBB(XMVECTOR* boundingBox)
 
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 6; j++) {
-			if (XMVectorGetX(XMPlaneDotCoord(this->planes[j], boundingBox[i])) >= 0.0f) {
+			if (XMVectorGetX(XMPlaneDotCoord(this->planes[j], XMVector4Transform(boundingBox[i], this->viewMatrix))) >= 0.0f) {
 				insideAll++;
 			}
 		}

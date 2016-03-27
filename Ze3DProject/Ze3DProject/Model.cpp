@@ -20,12 +20,13 @@ Model::~Model()
 
 }
 
-bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* modelFilename, std::string modelName, bool hasBB) 
+bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, std::string modelFilename, std::string modelName, int modelId, bool hasBB)
 {
 	bool result;
 	std::string materialLib;
 
 	this->name = modelName;
+	this->id = modelId;
 	this->hasBB = hasBB;
 	this->boundingBox = new XMVECTOR[8];
 	
@@ -74,7 +75,7 @@ ID3D11ShaderResourceView* Model::GetTexture(int textureIndex)
 	return this->texture->GetTexture(textureIndex);
 }
 
-bool Model::InitializeBuffers(ID3D11Device* device, char* modelFilename, std::string& materialName)
+bool Model::InitializeBuffers(ID3D11Device* device, std::string modelFilename, std::string& materialName)
 {
 	std::vector<Vertex> vertices;
 	unsigned long* indices = nullptr;
@@ -287,13 +288,28 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		ss.clear();
 		ss.str(line);
 		ss >> materialLib;
-		for (int i = 0; i < 8; i++) {//Load the eight points for bounding box corners
+		//for (int i = 0; i < 8; i++) {//Load the eight points for bounding box corners
+		//	std::getline(file, line);
+		//	ss.clear();
+		//	ss.str(line);
+		//	ss >> point[0] >> point[1] >> point[2];
+		//	this->boundingBox[i] = XMVectorSet(point[0], point[1], point[2], 1.0f);
+		//}
+		std::getline(file, line);
+		ss.clear();
+		ss.str(line);
+		ss >> this->hasBB;
+		if (this->hasBB) {
 			std::getline(file, line);
 			ss.clear();
 			ss.str(line);
-			ss >> point[0] >> point[1] >> point[2];
-			this->boundingBox[i] = XMVectorSet(point[0], point[1], point[2], 1.0f);
+			ss >> this->minVertex.x >> this->minVertex.y >> this->minVertex.z;
+			std::getline(file, line);
+			ss.clear();
+			ss.str(line);
+			ss >> this->maxVertex.x >> this->maxVertex.y >> this->maxVertex.z;
 		}
+
 		while (std::getline(file, line)) {
 			ss.clear();
 			ss.str(line);
@@ -506,6 +522,9 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 			outputIndices[i] = i;
 		}
 
+		this->minVertex = minVertex;
+		this->maxVertex = maxVertex;
+
 		if (this->hasBB) {
 			this->CreateBoundingBox(minVertex, maxVertex);
 		}
@@ -521,14 +540,18 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		file << materialLib << "\n";
 		
 		if (this->hasBB) {
-			for (int i = 0; i < 8; i++) {//Save the eight points for bounding box corners
-				file << XMVectorGetX(this->boundingBox[i]) << " " << XMVectorGetY(this->boundingBox[i]) << " " << XMVectorGetZ(this->boundingBox[i]) << "\n";
-			}
+			//for (int i = 0; i < 8; i++) {//Save the eight points for bounding box corners
+			//	file << XMVectorGetX(this->boundingBox[i]) << " " << XMVectorGetY(this->boundingBox[i]) << " " << XMVectorGetZ(this->boundingBox[i]) << "\n";
+			//}
+			file << 1 << "\n";
+			file << this->minVertex.x << " " << this->minVertex.y << " " << this->minVertex.z << "\n";
+			file << this->maxVertex.x << " " << this->maxVertex.y << " " << this->maxVertex.z << "\n";
 		}
 		else {
-			for (int i = 0; i < 8; i++) {//Save the six planes for bounding box in plane equation form (Ax + By + Cz + D = 0)
-				file << 0.0f << " " << 0.0f << " " << 0.0f << "\n";
-			}
+			//for (int i = 0; i < 8; i++) {//Save the six planes for bounding box in plane equation form (Ax + By + Cz + D = 0)
+			//	file << 0.0f << " " << 0.0f << " " << 0.0f << "\n";
+			//}
+			file << 0  << "\n";
 		}
 		
 		for (int i = 0; i < subsetIndices.size(); i++) {
@@ -645,4 +668,23 @@ XMVECTOR* Model::GetBouningBox(XMMATRIX MVP)
 bool Model::GethasBB()
 {
 	return this->hasBB;
+}
+
+int Model::GetId()
+{
+	return this->id;
+}
+
+void Model::GetMinMaxVertex(XMFLOAT3& minVert, XMFLOAT3& maxVert)
+{
+	XMVECTOR minVertVec = XMVectorSet(this->minVertex.x, this->minVertex.y, this->minVertex.z, 1.0f);
+	XMVECTOR maxVertVec = XMVectorSet(this->maxVertex.x, this->maxVertex.y, this->maxVertex.z, 1.0f);
+	//XMMATRIX worldTransed = XMMatrixTranspose(this->worldMatrix);
+	XMMATRIX worldTransed = this->worldMatrix;
+	minVertVec = XMVector4Transform(minVertVec, worldTransed);
+	maxVertVec = XMVector4Transform(maxVertVec, worldTransed);
+	minVert = XMFLOAT3(XMVectorGetX(minVertVec), XMVectorGetY(minVertVec), XMVectorGetZ(minVertVec));
+	maxVert = XMFLOAT3(XMVectorGetX(maxVertVec), XMVectorGetY(maxVertVec), XMVectorGetZ(maxVertVec));
+
+	return;
 }

@@ -663,7 +663,7 @@ void D3DHandler::SetShadowViewport(bool shadowViewport)
 	}
 	else {
 		viewport.Width = 800.0f;
-		viewport.Height = 800.0f;
+		viewport.Height = 600.0f;
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
 		viewport.TopLeftX = 0.0f;

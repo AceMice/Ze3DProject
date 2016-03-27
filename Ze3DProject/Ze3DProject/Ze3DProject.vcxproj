@@ -154,6 +154,7 @@
     <ClCompile Include="InputHandler.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="ModelHandler.cpp" />
     <ClCompile Include="ModelWindow.cpp" />
     <ClCompile Include="ShaderHandler.cpp" />
     <ClCompile Include="ShadowShaderHandler.cpp" />
@@ -168,6 +169,7 @@
     <ClInclude Include="GraphicsHandler.h" />
     <ClInclude Include="InputHandler.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="ModelHandler.h" />
     <ClInclude Include="ModelWindow.h" />
     <ClInclude Include="ShaderHandler.h" />
     <ClInclude Include="ShadowShaderHandler.h" />

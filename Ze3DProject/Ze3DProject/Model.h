@@ -43,10 +43,13 @@ private:
 	Texture* texture;
 	XMMATRIX worldMatrix;
 	std::string name;
+	int id;
 	XMVECTOR* boundingBox;
+	XMFLOAT3 minVertex;
+	XMFLOAT3 maxVertex;
 	bool hasBB;
 	
-	bool InitializeBuffers(ID3D11Device*, char*, std::string&);
+	bool InitializeBuffers(ID3D11Device*, std::string, std::string&);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, std::string);
@@ -59,7 +62,7 @@ public:
 	Model(const Model&);
 	~Model();
 
-	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, char*, std::string, bool);
+	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, std::string, std::string, int, bool);
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 
@@ -74,6 +77,8 @@ public:
 	std::string GetName();
 	XMVECTOR* GetBouningBox(XMMATRIX);
 	bool GethasBB();
+	int GetId();
+	void GetMinMaxVertex(XMFLOAT3& minVert, XMFLOAT3& maxVert);
 };
 
 
