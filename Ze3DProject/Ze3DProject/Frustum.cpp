@@ -7,9 +7,9 @@ Frustum::~Frustum()
 {
 }
 
-void Frustum::SetViewMatrix(XMMATRIX viewMatrix)
+void Frustum::SetViewProjMatrix(XMMATRIX viewMatrix, XMMATRIX projMatrix)
 {
-	this->viewMatrix = viewMatrix;
+	this->viewMatrix = XMMatrixInverse(NULL, XMMatrixMultiply(projMatrix, viewMatrix));
 }
 
 void Frustum::CreateFrustum(float screenDepth, XMMATRIX viewMatrix, XMMATRIX projMatrix)
@@ -17,8 +17,8 @@ void Frustum::CreateFrustum(float screenDepth, XMMATRIX viewMatrix, XMMATRIX pro
 	float zMinimum, r;
 	XMFLOAT4X4 projMatrixFloat;
 	XMFLOAT4X4 frustumMatrix;
-	viewMatrix = XMMatrixTranspose(viewMatrix);
-	projMatrix = XMMatrixTranspose(projMatrix);
+	//viewMatrix = XMMatrixTranspose(viewMatrix);
+	//projMatrix = XMMatrixTranspose(projMatrix);
 	XMStoreFloat4x4(&projMatrixFloat, projMatrix);
 
 	// Calculate the minimum Z distance in the frustum.
@@ -28,7 +28,7 @@ void Frustum::CreateFrustum(float screenDepth, XMMATRIX viewMatrix, XMMATRIX pro
 	projMatrixFloat._43 = -r * zMinimum;
 
 	// Create the frustum from the viewMatrix and updated projectionMatrix.
-	XMStoreFloat4x4(&frustumMatrix, XMMatrixMultiply(viewMatrix, projMatrix)); ;
+	XMStoreFloat4x4(&frustumMatrix, XMMatrixMultiply(projMatrix, viewMatrix)); ;
 
 	// Calculate near plane of frustum.
 	XMVectorSetX(this->planes[0], frustumMatrix._14 + frustumMatrix._13);
@@ -78,6 +78,14 @@ void Frustum::CreateFrustum(float screenDepth, XMMATRIX viewMatrix, XMMATRIX pro
 	//this->planes[5] = XMPlaneNormalize(this->planes[5]);
 	this->planes[5] = XMVector4Normalize(this->planes[5]);
 
+	/*for (int i = 0; i < 6; i++) {
+		float denom = 1.0f / XMVectorGetX(XMVector3Length(this->planes[i]));
+		XMVectorSetX(this->planes[i], XMVectorGetX(this->planes[i]) * denom);
+		XMVectorSetY(this->planes[i], XMVectorGetY(this->planes[i]) * denom);
+		XMVectorSetZ(this->planes[i], XMVectorGetZ(this->planes[i]) * denom);
+		XMVectorSetW(this->planes[i], XMVectorGetW(this->planes[i]) * denom);
+	}*/
+
 	return;
 }
 
@@ -87,10 +95,13 @@ bool Frustum::IntersectBB(XMVECTOR* boundingBox)
 	XMVECTOR* p2;
 	bool pointInside = false;
 	int insideAll = 0;
-
+	XMVECTOR planesWorld[6];
+	/*for (int i = 0; i < 6; i++) {
+		planesWorld[i] = XMVector4Transform(this->planes[i], this->viewMatrix);
+	}*/
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 6; j++) {
-			if (XMVectorGetX(XMPlaneDotCoord(this->planes[j], XMVector4Transform(boundingBox[i], this->viewMatrix))) >= 0.0f) {
+			if (XMVectorGetX(XMPlaneDotCoord(this->planes[j], boundingBox[i])) < 0.0f) {
 				insideAll++;
 			}
 		}

@@ -15,7 +15,7 @@ public:
 	Frustum();
 	~Frustum();
 
-	void SetViewMatrix(XMMATRIX viewMatrix);
+	void SetViewProjMatrix(XMMATRIX viewMatrix, XMMATRIX projMatrix);
 	void CreateFrustum(float, XMMATRIX viewMatrix, XMMATRIX projMatrix);
 	bool IntersectBB(XMVECTOR* boundingbox);
 };

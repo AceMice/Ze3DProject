@@ -357,8 +357,8 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		if (!file.is_open()) {
 			return false;
 		}
-		XMFLOAT3 maxVertex = XMFLOAT3(-D3D11_FLOAT32_MAX, -D3D11_FLOAT32_MAX, -D3D11_FLOAT32_MAX);
-		XMFLOAT3 minVertex = XMFLOAT3(D3D11_FLOAT32_MAX, D3D11_FLOAT32_MAX, D3D11_FLOAT32_MAX);
+		XMFLOAT3 maxVert = XMFLOAT3(-D3D11_FLOAT32_MAX, -D3D11_FLOAT32_MAX, -D3D11_FLOAT32_MAX);
+		XMFLOAT3 minVert = XMFLOAT3(D3D11_FLOAT32_MAX, D3D11_FLOAT32_MAX, D3D11_FLOAT32_MAX);
 		while (std::getline(file, line)) {
 			if (line.size() > 0) {
 				if (line.at(0) == 'v') {
@@ -367,23 +367,23 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 						ss.str(line);
 						ss >> junk >> tempVertex.x >> tempVertex.y >> tempVertex.z;
 						//sscanf_s(line.c_str(), "%f %f %f\n", &tempVertex.x, &tempVertex.y, &tempVertex.z);
-						if (tempVertex.x > maxVertex.x) {
-							maxVertex.x = tempVertex.x;
+						if (tempVertex.x > maxVert.x) {
+							maxVert.x = tempVertex.x;
 						}
-						if (tempVertex.y > maxVertex.y) {
-							maxVertex.y = tempVertex.y;
+						if (tempVertex.y > maxVert.y) {
+							maxVert.y = tempVertex.y;
 						}
-						if (tempVertex.z > maxVertex.z) {
-							maxVertex.z = tempVertex.z;
+						if (tempVertex.z > maxVert.z) {
+							maxVert.z = tempVertex.z;
 						}
-						if (tempVertex.x < minVertex.x) {
-							minVertex.x = tempVertex.x;
+						if (tempVertex.x < minVert.x) {
+							minVert.x = tempVertex.x;
 						}
-						if (tempVertex.y < minVertex.y) {
-							minVertex.y = tempVertex.y;
+						if (tempVertex.y < minVert.y) {
+							minVert.y = tempVertex.y;
 						}
-						if (tempVertex.z < minVertex.z) {
-							minVertex.z = tempVertex.z;
+						if (tempVertex.z < minVert.z) {
+							minVert.z = tempVertex.z;
 						}
 						
 						tempVertices.push_back(tempVertex);
@@ -522,8 +522,8 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 			outputIndices[i] = i;
 		}
 
-		this->minVertex = minVertex;
-		this->maxVertex = maxVertex;
+		this->minVertex = minVert;
+		this->maxVertex = maxVert;
 
 		if (this->hasBB) {
 			this->CreateBoundingBox(minVertex, maxVertex);

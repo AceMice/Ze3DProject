@@ -107,15 +107,15 @@ void ModelHandler::CreateQuadrants(QuadNode* node, int level)
 	}
 
 	node->child[0]->minBox = node->minBox;
-	node->child[0]->maxBox = XMFLOAT3(node->maxBox.x + dx, node->maxBox.y, node->maxBox.z + dz);
+	node->child[0]->maxBox = XMFLOAT3(node->maxBox.x - dx, node->maxBox.y, node->maxBox.z + dz);
 
 	node->child[1]->minBox = XMFLOAT3(node->minBox.x + dx, node->minBox.y , node->minBox.z);
-	node->child[1]->maxBox = XMFLOAT3(node->maxBox.x, node->maxBox.y, node->maxBox.z - dz);
+	node->child[1]->maxBox = XMFLOAT3(node->maxBox.x, node->maxBox.y, node->maxBox.z + dz);
 
-	node->child[2]->minBox = XMFLOAT3(node->minBox.x, node->minBox.y, node->minBox.z + dz);
+	node->child[2]->minBox = XMFLOAT3(node->minBox.x, node->minBox.y, node->minBox.z - dz);
 	node->child[2]->maxBox = XMFLOAT3(node->maxBox.x - dx, node->maxBox.y, node->maxBox.z);
 
-	node->child[3]->minBox = XMFLOAT3(node->minBox.x + dx, node->minBox.y, node->minBox.z + dz);
+	node->child[3]->minBox = XMFLOAT3(node->minBox.x + dx, node->minBox.y, node->minBox.z - dz);
 	node->child[3]->maxBox = node->maxBox;
 
 	XMFLOAT3 minModel, maxModel;
@@ -212,9 +212,14 @@ std::vector<Model*> ModelHandler::GetModelsInViewFrustum(Frustum* viewFrustum)
 
 	this->TraverseQuadTree(this->quadTree, viewFrustum, nodesToRender);
 
+	if (nodesToRender.size() != 20) {
+		int lol = 0;
+	}
+
 	for (int i = 0; i < nodesToRender.size(); i++) {
 		for (int j = 0; j < nodesToRender.at(i)->models.size(); j++) {
 			alreadyExists = false;
+			modelID = nodesToRender.at(i)->models.at(j)->GetId();
 			for (int k = 0; k < modelIDs.size(); k++) {
 				if (modelIDs.at(k) == modelID) {
 					alreadyExists = true;
@@ -223,6 +228,7 @@ std::vector<Model*> ModelHandler::GetModelsInViewFrustum(Frustum* viewFrustum)
 
 			if (!alreadyExists) {
 				outputModels.push_back(nodesToRender.at(i)->models.at(j));
+				modelIDs.push_back(modelID);
 			}
 		}
 	}

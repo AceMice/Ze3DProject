@@ -190,21 +190,27 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}*/
 	float z = 0.0f;
 	float x = 0.0f;
-	for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < 19; i++) {
 		std::string ogreName;
 		ss.str("");
 		ss << i;
 		ogreName = "ogreFullG" + ss.str();
-		z = (i / 5 * 10) - 15;
-		x = ((i % 5) * 15) - 30;
+		z = (i / 5 * 50) - 50;
+		x = ((i % 5) * 50) - 90;
 		modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+		modelWorld = XMMatrixTranslation(x + 200, -5.75f, z) * modelWorld;
 		modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
-		modelWorld = XMMatrixTranslation(x, -5.75f, z) * modelWorld;
 		if (!this->modelHandler->UpdateModelWorldMatrix(ogreName, modelWorld)) {
 			return false;
 		}
 
 		ss.clear();
+	}
+	
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("ogreFullG19", modelWorld)) {
+		return false;
 	}
 
 	
@@ -214,7 +220,12 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		
 	}
 
-	this->modelHandler->CreateQuadTree(2);
+	XMMATRIX viewMatrix, projectionMatrix;
+	this->cameraH->GetBaseViewMatrix(viewMatrix);
+	this->direct3DH->GetProjectionMatrix(projectionMatrix);
+	this->frustum->SetViewProjMatrix(viewMatrix, projectionMatrix);
+
+	this->modelHandler->CreateQuadTree(3);
 
 	return true;
 }
@@ -234,13 +245,13 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	if (this->moveLight < -30.0f) {
 		this->increase = true;
 	}*/
-	this->moveLight = -30.0f;
-	if (this->increase) {
+	this->moveLight = -90.0f;
+	/*if (this->increase) {
 		this->moveLight += dTime / 80000;
 	}
 	else {
 		this->moveLight -= dTime / 80000;
-	}
+	}*/
 
 	
 
@@ -290,7 +301,7 @@ bool GraphicsHandler::Render()
 
 	//Create the frustum
 	this->frustum->CreateFrustum(SCREEN_DEPTH, viewMatrix, projectionMatrix);
-	this->frustum->SetViewMatrix(viewMatrix);
+	this->frustum->SetViewProjMatrix(viewMatrix, projectionMatrix);
 
 	//Get the models in frustum
 	models = this->modelHandler->GetModelsInViewFrustum(this->frustum);
@@ -339,7 +350,7 @@ bool GraphicsHandler::Render()
 		
 	}
 
-	if (modelsRendered  == 1) {
+	if (modelsRendered  != 21) {
 		int lol = modelsRendered;
 	}
 	
@@ -354,7 +365,7 @@ bool GraphicsHandler::Render()
 
 	//Create the view, and projection matrices based on light pos(25, 15, -6)
 	XMVECTOR lookAt = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	XMVECTOR lightPos = XMVectorSet(25.0f, 15.0f, this->moveLight, 0.0f);
+	XMVECTOR lightPos = XMVectorSet(75.0f, 45.0f, this->moveLight, 0.0f);
 	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	lightViewMatrix = XMMatrixLookAtLH(lightPos, lookAt, lightUp);
 
