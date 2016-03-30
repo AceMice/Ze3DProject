@@ -331,6 +331,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		file.close();
 
 		outputVertices.insert(outputVertices.end(), &tempVerticesArray[0], &tempVerticesArray[sizeVertices]);
+		this->vertPositions.insert(this->vertPositions.end(), &tempVerticesArray[0].position, &tempVerticesArray[sizeVertices].position);
 
 		delete[] tempVerticesArray;
 
@@ -465,6 +466,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		sizeVertices = vertexIndices.size();
 		sizeIndices = vertexIndices.size();
 		outputIndices = new unsigned long[sizeIndices];
+		this->vertPositions = tempVertices;
 
 		//XMVECTOR normalSum = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
 		//int facesUsingVertex = 0;
@@ -677,14 +679,52 @@ int Model::GetId()
 
 void Model::GetMinMaxVertex(XMFLOAT3& minVert, XMFLOAT3& maxVert)
 {
-	XMVECTOR minVertVec = XMVectorSet(this->minVertex.x, this->minVertex.y, this->minVertex.z, 1.0f);
-	XMVECTOR maxVertVec = XMVectorSet(this->maxVertex.x, this->maxVertex.y, this->maxVertex.z, 1.0f);
-	//XMMATRIX worldTransed = XMMatrixTranspose(this->worldMatrix);
-	XMMATRIX worldTransed = this->worldMatrix;
-	minVertVec = XMVector4Transform(minVertVec, worldTransed);
-	maxVertVec = XMVector4Transform(maxVertVec, worldTransed);
-	minVert = XMFLOAT3(XMVectorGetX(minVertVec), XMVectorGetY(minVertVec), XMVectorGetZ(minVertVec));
-	maxVert = XMFLOAT3(XMVectorGetX(maxVertVec), XMVectorGetY(maxVertVec), XMVectorGetZ(maxVertVec));
+	//XMVECTOR minVertVec = XMVectorSet(this->minVertex.x, this->minVertex.y, this->minVertex.z, 1.0f);
+	//XMVECTOR maxVertVec = XMVectorSet(this->maxVertex.x, this->maxVertex.y, this->maxVertex.z, 1.0f);
+	////XMMATRIX worldTransed = XMMatrixTranspose(this->worldMatrix);
+	//XMMATRIX worldTransed = this->worldMatrix;
+	//minVertVec = XMVector4Transform(minVertVec, worldTransed);
+	//maxVertVec = XMVector4Transform(maxVertVec, worldTransed);
+	//minVert = XMFLOAT3(XMVectorGetX(minVertVec), XMVectorGetY(minVertVec), XMVectorGetZ(minVertVec));
+	//maxVert = XMFLOAT3(XMVectorGetX(maxVertVec), XMVectorGetY(maxVertVec), XMVectorGetZ(maxVertVec));
+	minVert = this->minVertex;
+	maxVert = this->maxVertex;
 
 	return;
+}
+
+void Model::GenerateMinMaxVertex()
+{
+	XMVECTOR vertVec;
+	XMFLOAT3 vertFloat;
+	XMFLOAT3 maxVert = XMFLOAT3(-D3D11_FLOAT32_MAX, -D3D11_FLOAT32_MAX, -D3D11_FLOAT32_MAX);
+	XMFLOAT3 minVert = XMFLOAT3(D3D11_FLOAT32_MAX, D3D11_FLOAT32_MAX, D3D11_FLOAT32_MAX);
+
+	for (int i = 0; i < this->vertPositions.size(); i++) {
+		vertVec = XMLoadFloat3(&this->vertPositions.at(i));
+		vertVec = XMVector3TransformCoord(vertVec, this->worldMatrix);
+		XMStoreFloat3(&vertFloat, vertVec);
+
+		if (vertFloat.x > maxVert.x) {
+			maxVert.x = vertFloat.x;
+		}
+		if (vertFloat.y > maxVert.y) {
+			maxVert.y = vertFloat.y;
+		}
+		if (vertFloat.z > maxVert.z) {
+			maxVert.z = vertFloat.z;
+		}
+		if (vertFloat.x < minVert.x) {
+			minVert.x = vertFloat.x;
+		}
+		if (vertFloat.y < minVert.y) {
+			minVert.y = vertFloat.y;
+		}
+		if (vertFloat.z < minVert.z) {
+			minVert.z = vertFloat.z;
+		}
+	}
+
+	this->minVertex = minVert;
+	this->maxVertex = maxVert;
 }

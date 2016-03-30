@@ -27,8 +27,10 @@ void Frustum::CreateFrustum(float screenDepth, XMMATRIX viewMatrix, XMMATRIX pro
 	projMatrixFloat._33 = r;
 	projMatrixFloat._43 = -r * zMinimum;
 
+	XMMATRIX updatedProjMatrix = XMLoadFloat4x4(&projMatrixFloat);
+
 	// Create the frustum from the viewMatrix and updated projectionMatrix.
-	XMStoreFloat4x4(&frustumMatrix, XMMatrixMultiply(projMatrix, viewMatrix)); ;
+	XMStoreFloat4x4(&frustumMatrix, XMMatrixMultiply(viewMatrix, updatedProjMatrix)); ;
 
 	// Calculate near plane of frustum.
 	XMVectorSetX(this->planes[0], frustumMatrix._14 + frustumMatrix._13);
@@ -95,13 +97,13 @@ bool Frustum::IntersectBB(XMVECTOR* boundingBox)
 	XMVECTOR* p2;
 	bool pointInside = false;
 	int insideAll = 0;
-	XMVECTOR planesWorld[6];
-	/*for (int i = 0; i < 6; i++) {
-		planesWorld[i] = XMVector4Transform(this->planes[i], this->viewMatrix);
-	}*/
+
 	for (int i = 0; i < 8; i++) {
 		for (int j = 0; j < 6; j++) {
-			if (XMVectorGetX(XMPlaneDotCoord(this->planes[j], boundingBox[i])) < 0.0f) {
+			/*if (XMVectorGetX(XMPlaneDotCoord(this->planes[i], boundingBox[j])) >= 0.0f) {
+				insideAll++;
+			}*/
+			if (XMVectorGetX(XMVector3Dot(this->planes[i], boundingBox[j])) + XMVectorGetW(this->planes[i]) >= 0.0f) {
 				insideAll++;
 			}
 		}

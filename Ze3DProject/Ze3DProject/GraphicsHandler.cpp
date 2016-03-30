@@ -199,7 +199,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		x = ((i % 5) * 50) - 90;
 		modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
 		modelWorld = XMMatrixTranslation(x + 200, -5.75f, z) * modelWorld;
-		modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
+		//modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
 		if (!this->modelHandler->UpdateModelWorldMatrix(ogreName, modelWorld)) {
 			return false;
 		}
@@ -225,6 +225,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
 	this->frustum->SetViewProjMatrix(viewMatrix, projectionMatrix);
 
+	this->modelHandler->GenerateModelsMinMaxVerts();
 	this->modelHandler->CreateQuadTree(3);
 
 	return true;
@@ -245,7 +246,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	if (this->moveLight < -30.0f) {
 		this->increase = true;
 	}*/
-	this->moveLight = -90.0f;
+	this->moveLight = -10.0f;
 	/*if (this->increase) {
 		this->moveLight += dTime / 80000;
 	}
@@ -286,7 +287,15 @@ bool GraphicsHandler::Render()
 	XMVECTOR camPosVec = this->cameraH->GetPosition();
 	XMFLOAT4 camPos = XMFLOAT4(XMVectorGetX(camPosVec), XMVectorGetY(camPosVec), XMVectorGetZ(camPosVec), XMVectorGetW(camPosVec));
 	
-	
+	//Create the view, and projection matrices based on light pos(25, 15, -6)
+	XMVECTOR lookAt = XMVectorSet(150.0f, 0.0f, 25.0f, 0.0f);
+	XMVECTOR lightPos = XMVectorSet(-25.0f, 75.0f, this->moveLight, 0.0f);
+	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	lightViewMatrix = XMMatrixLookAtLH(lightPos, lookAt, lightUp);
+
+	float fieldOfView = (float)XM_PI / 4.0f;
+	float screenAspect = 1.0f;
+	lightProjectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, 1.0f, 1000.0f);
 	//**DEFERRED RENDER**\\
 
 	//Clear the buffers to begin the scene
@@ -308,6 +317,7 @@ bool GraphicsHandler::Render()
 
 	for (int i = 0; i < models.size(); i++) {
 		models.at(i)->GetWorldMatrix(worldMatrix);
+
 		////Check against frustum
 		//if (this->models.at(i)->GethasBB()) {
 		//	//Get the world matrix from model
@@ -350,7 +360,7 @@ bool GraphicsHandler::Render()
 		
 	}
 
-	if (modelsRendered  != 21) {
+	if (modelsRendered  == 1) {
 		int lol = modelsRendered;
 	}
 	
@@ -363,15 +373,7 @@ bool GraphicsHandler::Render()
 	//Change viewport size to shadow map size (2000)
 	this->direct3DH->SetShadowViewport(true);
 
-	//Create the view, and projection matrices based on light pos(25, 15, -6)
-	XMVECTOR lookAt = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	XMVECTOR lightPos = XMVectorSet(75.0f, 45.0f, this->moveLight, 0.0f);
-	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-	lightViewMatrix = XMMatrixLookAtLH(lightPos, lookAt, lightUp);
-
-	float fieldOfView = (float)XM_PI / 2.0f;
-	float screenAspect = 1.0f;
-	lightProjectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, 1.0f, 100.0f);
+	
 
 	for (int i = 0; i < models.size(); i++) {
 
@@ -423,9 +425,11 @@ bool GraphicsHandler::Render()
 	//Put the model windows buffers on the pipeline
 	this->modelWindow->Render(this->direct3DH->GetDeviceContext());
 
+	XMFLOAT4 lightPosFloat = XMFLOAT4(XMVectorGetX(lightPos), XMVectorGetY(lightPos), XMVectorGetZ(lightPos), XMVectorGetW(lightPos));
+
 	result = this->colorShaderH->Render(this->direct3DH->GetDeviceContext(), this->modelWindow->GetIndexCount(), worldMatrix, viewMatrix, orthoMatrix, lightViewMatrix, lightProjectionMatrix,
 		this->direct3DH->GetShaderResourceView(0), this->direct3DH->GetShaderResourceView(1), this->direct3DH->GetShaderResourceView(2), this->direct3DH->GetShaderResourceView(3), this->direct3DH->GetShaderResourceView(4),
-		camPos, XMFLOAT4(25.0f, 15.0f, this->moveLight, 0.0f));
+		camPos, lightPosFloat);
 	if (!result) {
 		return false;
 	}

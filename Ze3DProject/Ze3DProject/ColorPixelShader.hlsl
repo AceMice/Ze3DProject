@@ -38,7 +38,7 @@ float4 main(PSInput input) : SV_TARGET
 	float4 positionLight;
 
 	// Set the bias value for fixing the floating point precision issues.
-	float bias = 0.001f;
+	float bias = 0.00001f;
 
 	color = colorTexture.Sample(pointSampler, input.tex);
 	normal = normalTexture.Sample(pointSampler, input.tex);
@@ -49,7 +49,7 @@ float4 main(PSInput input) : SV_TARGET
 
 	float3 refVec = normalize(reflect(-outVec, normal));	//Create the the reflection
 
-	float3 viewDir = normalize(mul(camPos, worldMatrix) - worldPos).xyz;
+	float3 viewDir = normalize(camPos - worldPos).xyz;
 
 	float specIntesity = saturate(dot(refVec, viewDir));
 	float shineFactor = 5.0f;

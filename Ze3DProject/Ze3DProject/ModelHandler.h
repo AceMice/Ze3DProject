@@ -25,26 +25,8 @@ private:
 			
 		}
 
-		void GetBoundBox(XMVECTOR* boundingBox)
-		{
-			boundingBox[0] = XMVectorSet(minBox.x, maxBox.y, maxBox.z, 1.0f);
-
-			boundingBox[1] = XMVectorSet(minBox.x, maxBox.y, minBox.z, 1.0f);
-
-			boundingBox[2] = XMVectorSet(maxBox.x, maxBox.y, minBox.z, 1.0f);
-
-			boundingBox[3] = XMVectorSet(maxBox.x, maxBox.y, maxBox.z, 1.0f);
-
-			boundingBox[4] = XMVectorSet(minBox.x, minBox.y, maxBox.z, 1.0f);
-
-			boundingBox[5] = XMVectorSet(minBox.x, minBox.y, minBox.z, 1.0f);
-
-			boundingBox[6] = XMVectorSet(maxBox.x, minBox.y, minBox.z, 1.0f);
-
-			boundingBox[7] = XMVectorSet(maxBox.x, minBox.y, maxBox.z, 1.0f);
-
-			return;
-		}
+		void GetBoundBox(XMVECTOR* boundingBox);
+		void GetVertices(std::vector<Model::Vertex>* vertices);
 	};
 	std::vector<Model*> models;
 	std::vector<Model*> modelsNoBB;
@@ -67,6 +49,7 @@ public:
 	std::vector<Model*> GetModelsInViewFrustum(Frustum* viewFrustum);
 	std::vector<Model*> GetModels();
 	void Shutdown();
+	void GenerateModelsMinMaxVerts();
 };
 
 #endif

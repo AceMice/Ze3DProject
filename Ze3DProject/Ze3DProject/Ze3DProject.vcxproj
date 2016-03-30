@@ -162,6 +162,7 @@
     <ClCompile Include="Texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BBModel.h" />
     <ClInclude Include="CameraHandler.h" />
     <ClInclude Include="ColorShaderHandler.h" />
     <ClInclude Include="D3DHandler.h" />

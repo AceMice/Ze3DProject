@@ -49,7 +49,7 @@ GSInput main(VertexInput input)
 	//Store the normal for output
 	output.normal = normalize(mul(input.normal, worldMatrix));
 
-	output.viewDir = normalize(cameraPos.xyz - viewPos.xyz);
+	output.viewDir = normalize(cameraPos.xyz - output.worldPos.xyz);
 
 	return output;
 }

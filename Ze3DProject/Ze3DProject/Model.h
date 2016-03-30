@@ -5,7 +5,7 @@
 
 class Model {
 
-private:
+public:
 	
 	struct Vertex {
 		XMFLOAT3 position;
@@ -34,6 +34,8 @@ private:
 		}
 	};
 
+private:
+
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Buffer* indexBuffer;
 	int vertexCount;
@@ -48,6 +50,7 @@ private:
 	XMFLOAT3 minVertex;
 	XMFLOAT3 maxVertex;
 	bool hasBB;
+	std::vector<XMFLOAT3> vertPositions;
 	
 	bool InitializeBuffers(ID3D11Device*, std::string, std::string&);
 	void ShutdownBuffers();
@@ -79,6 +82,7 @@ public:
 	bool GethasBB();
 	int GetId();
 	void GetMinMaxVertex(XMFLOAT3& minVert, XMFLOAT3& maxVert);
+	void GenerateMinMaxVertex();
 };
 
 

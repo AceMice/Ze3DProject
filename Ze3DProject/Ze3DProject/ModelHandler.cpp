@@ -10,6 +10,33 @@ ModelHandler::~ModelHandler()
 
 }
 
+void ModelHandler::QuadNode::GetBoundBox(XMVECTOR* boundingBox)
+{
+	boundingBox[0] = XMVectorSet(this->minBox.x, this->maxBox.y, this->maxBox.z, 1.0f);
+
+	boundingBox[1] = XMVectorSet(this->minBox.x, this->maxBox.y, this->minBox.z, 1.0f);
+
+	boundingBox[2] = XMVectorSet(this->maxBox.x, this->maxBox.y, this->minBox.z, 1.0f);
+
+	boundingBox[3] = XMVectorSet(this->maxBox.x, this->maxBox.y, this->maxBox.z, 1.0f);
+
+	boundingBox[4] = XMVectorSet(this->minBox.x, this->minBox.y, this->maxBox.z, 1.0f);
+
+	boundingBox[5] = XMVectorSet(this->minBox.x, this->minBox.y, this->minBox.z, 1.0f);
+
+	boundingBox[6] = XMVectorSet(this->maxBox.x, this->minBox.y, this->minBox.z, 1.0f);
+
+	boundingBox[7] = XMVectorSet(this->maxBox.x, this->minBox.y, this->maxBox.z, 1.0f);
+
+	return;
+	
+}
+
+void ModelHandler::QuadNode::GetVertices(std::vector<Model::Vertex>* vertices)
+{
+
+}
+
 bool ModelHandler::Initialize()
 {
 	
@@ -89,8 +116,8 @@ void ModelHandler::Shutdown()
 bool ModelHandler::BBIntersect(XMFLOAT3 minBB1, XMFLOAT3 maxBB1, XMFLOAT3 minBB2, XMFLOAT3 maxBB2)
 {
 	return (minBB1.x <= maxBB2.x && maxBB1.x >= minBB2.x) &&
-		(minBB1.y <= maxBB2.x && maxBB1.y >= minBB2.y) &&
-		(minBB1.z <= maxBB2.x && maxBB1.z >= minBB2.z);
+		(minBB1.y <= maxBB2.y && maxBB1.y >= minBB2.y) &&
+		(minBB1.z <= maxBB2.z && maxBB1.z >= minBB2.z);
 }
 
 void ModelHandler::CreateQuadrants(QuadNode* node, int level)
@@ -107,15 +134,15 @@ void ModelHandler::CreateQuadrants(QuadNode* node, int level)
 	}
 
 	node->child[0]->minBox = node->minBox;
-	node->child[0]->maxBox = XMFLOAT3(node->maxBox.x - dx, node->maxBox.y, node->maxBox.z + dz);
+	node->child[0]->maxBox = XMFLOAT3(node->maxBox.x - dx, node->maxBox.y, node->maxBox.z - dz);
 
 	node->child[1]->minBox = XMFLOAT3(node->minBox.x + dx, node->minBox.y , node->minBox.z);
-	node->child[1]->maxBox = XMFLOAT3(node->maxBox.x, node->maxBox.y, node->maxBox.z + dz);
+	node->child[1]->maxBox = XMFLOAT3(node->maxBox.x, node->maxBox.y, node->maxBox.z - dz);
 
-	node->child[2]->minBox = XMFLOAT3(node->minBox.x, node->minBox.y, node->minBox.z - dz);
+	node->child[2]->minBox = XMFLOAT3(node->minBox.x, node->minBox.y, node->minBox.z + dz);
 	node->child[2]->maxBox = XMFLOAT3(node->maxBox.x - dx, node->maxBox.y, node->maxBox.z);
 
-	node->child[3]->minBox = XMFLOAT3(node->minBox.x + dx, node->minBox.y, node->minBox.z - dz);
+	node->child[3]->minBox = XMFLOAT3(node->minBox.x + dx, node->minBox.y, node->minBox.z + dz);
 	node->child[3]->maxBox = node->maxBox;
 
 	XMFLOAT3 minModel, maxModel;
@@ -162,6 +189,8 @@ bool ModelHandler::CreateQuadTree(int levels)
 			minestModel.z = minModel.z;
 		}
 	}
+	//this->quadTree->minBox = XMFLOAT3(-200, -10, -200);
+	//this->quadTree->maxBox = XMFLOAT3(400, 100, 400);
 	this->quadTree->minBox = minestModel;
 	this->quadTree->maxBox = maxestModel;
 
@@ -181,7 +210,7 @@ void ModelHandler::TraverseQuadTree(QuadNode* node, Frustum* viewFrustum, std::v
 	XMVECTOR* boundingBox = new XMVECTOR[8];
 
 	node->child[0]->GetBoundBox(boundingBox);
-	if (viewFrustum->IntersectBB(boundingBox)) { //Prob need to move bounding box to view space
+	if (viewFrustum->IntersectBB(boundingBox)) {
 		this->TraverseQuadTree(node->child[0], viewFrustum, nodesToRender);
 	}
 	node->child[1]->GetBoundBox(boundingBox);
@@ -212,7 +241,7 @@ std::vector<Model*> ModelHandler::GetModelsInViewFrustum(Frustum* viewFrustum)
 
 	this->TraverseQuadTree(this->quadTree, viewFrustum, nodesToRender);
 
-	if (nodesToRender.size() != 20) {
+	if (nodesToRender.size() != 21) {
 		int lol = 0;
 	}
 
@@ -279,4 +308,11 @@ std::vector<Model*> ModelHandler::GetModels()
 	}
 
 	return outputModels;
+}
+
+void ModelHandler::GenerateModelsMinMaxVerts()
+{
+	for (int i = 0; i < this->models.size(); i++) {
+		this->models.at(i)->GenerateMinMaxVertex();
+	}
 }
