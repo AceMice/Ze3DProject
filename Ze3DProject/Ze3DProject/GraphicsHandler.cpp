@@ -226,7 +226,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	this->frustum->SetViewProjMatrix(viewMatrix, projectionMatrix);
 
 	this->modelHandler->GenerateModelsMinMaxVerts();
-	this->modelHandler->CreateQuadTree(3);
+	this->modelHandler->CreateQuadTree(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), 3);
 
 	return true;
 }

@@ -34,7 +34,89 @@ void ModelHandler::QuadNode::GetBoundBox(XMVECTOR* boundingBox)
 
 void ModelHandler::QuadNode::GetVertices(std::vector<Model::Vertex>* vertices)
 {
+	XMVECTOR* boudingBox = new XMVECTOR[8];
+	this->GetBoundBox(boudingBox);
+	Model::Vertex tempVert;
 
+	XMStoreFloat3(&tempVert.position, boudingBox[0]); //Top quad
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[2]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[1]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[0]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[3]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[2]);
+	vertices->push_back(tempVert);
+
+	XMStoreFloat3(&tempVert.position, boudingBox[4]); //Front quad
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[3]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[0]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[4]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[7]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[3]);
+	vertices->push_back(tempVert);
+
+	XMStoreFloat3(&tempVert.position, boudingBox[5]); //Left quad
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[0]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[1]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[5]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[4]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[0]);
+	vertices->push_back(tempVert);
+
+	XMStoreFloat3(&tempVert.position, boudingBox[6]); //Back quad
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[1]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[2]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[6]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[5]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[1]);
+	vertices->push_back(tempVert);
+
+	XMStoreFloat3(&tempVert.position, boudingBox[7]); //Right quad
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[2]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[3]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[7]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[6]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[2]);
+	vertices->push_back(tempVert);
+
+	XMStoreFloat3(&tempVert.position, boudingBox[5]); //Bottom quad
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[7]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[4]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[5]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[6]);
+	vertices->push_back(tempVert);
+	XMStoreFloat3(&tempVert.position, boudingBox[7]);
+	vertices->push_back(tempVert);
+
+	delete[] boudingBox;
 }
 
 bool ModelHandler::Initialize()
@@ -120,6 +202,73 @@ bool ModelHandler::BBIntersect(XMFLOAT3 minBB1, XMFLOAT3 maxBB1, XMFLOAT3 minBB2
 		(minBB1.z <= maxBB2.z && maxBB1.z >= minBB2.z);
 }
 
+bool ModelHandler::CreateBBModel(ID3D11Device* device, ID3D11DeviceContext* deviceContext, QuadNode* node)
+{
+	if (node == nullptr) {
+		return false;
+	}
+
+	bool result = false;
+
+	std::vector<Model::Vertex>* vertices = new std::vector<Model::Vertex>;
+	node->GetVertices(vertices);
+	Model* tempModel = nullptr;
+	tempModel = new Model;
+	if (!tempModel)
+	{
+		return false;
+	}
+	//Initialize the bounding box model object
+	result = tempModel->Initialize(device, deviceContext, "", "ModelBB", 0, false, vertices);
+	if (!result)
+	{
+		return false;
+	}
+
+	delete vertices;
+
+	this->modelsNoBB.push_back(tempModel);
+
+	return true;
+}
+
+bool ModelHandler::CreateBBModels(ID3D11Device* device, ID3D11DeviceContext* deviceContext, QuadNode* node)
+{
+	if (node == nullptr) {
+		return true;
+	}
+
+	bool result = false;
+
+	for (int i = 0; i < 4; i++) {
+		result = this->CreateBBModels(device, deviceContext, node->child[i]);
+		if (!result) {
+			return false;
+		}
+	}
+	
+	std::vector<Model::Vertex>* vertices = new std::vector<Model::Vertex>;
+	node->GetVertices(vertices);
+	Model* tempModel = nullptr;
+	tempModel = new Model;
+	if (!tempModel)
+	{
+		return false;
+	}
+	//Initialize the bounding box model object
+	result = tempModel->Initialize(device, deviceContext, "", "ModelBB", 0, false, vertices);
+	if (!result)
+	{
+		return false;
+	}
+
+	delete vertices;
+
+	this->modelsNoBB.push_back(tempModel);
+
+	return true;
+}
+
 void ModelHandler::CreateQuadrants(QuadNode* node, int level)
 {
 	if (level == 0) {
@@ -160,12 +309,13 @@ void ModelHandler::CreateQuadrants(QuadNode* node, int level)
 	}
 }
 
-bool ModelHandler::CreateQuadTree(int levels)
+bool ModelHandler::CreateQuadTree(ID3D11Device* device, ID3D11DeviceContext* deviceContext, int levels)
 {
 	XMFLOAT3 minModel, maxModel; 
 	XMFLOAT3 minestModel = XMFLOAT3(D3D11_FLOAT32_MAX, D3D11_FLOAT32_MAX, D3D11_FLOAT32_MAX);
 	XMFLOAT3 maxestModel = XMFLOAT3(-D3D11_FLOAT32_MAX, -D3D11_FLOAT32_MAX, -D3D11_FLOAT32_MAX);
 	this->quadTree = new QuadNode;
+	bool result = false;
 
 	for (int i = 0; i < this->models.size(); i++) {
 		this->quadTree->models.push_back(this->models.at(i));
@@ -190,12 +340,16 @@ bool ModelHandler::CreateQuadTree(int levels)
 		}
 	}
 	//this->quadTree->minBox = XMFLOAT3(-200, -10, -200);
-	//this->quadTree->maxBox = XMFLOAT3(400, 100, 400);
+	//this->quadTree->maxBox = XMFLOAT3(400, 40, 400);
 	this->quadTree->minBox = minestModel;
 	this->quadTree->maxBox = maxestModel;
 
 	this->CreateQuadrants(this->quadTree, levels);
 
+	/*result = this->CreateBBModels(device, deviceContext, this->quadTree);
+	if (!result) {
+		return false;
+	}*/
 
 	return true;
 }

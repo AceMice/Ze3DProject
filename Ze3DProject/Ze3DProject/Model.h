@@ -52,7 +52,7 @@ private:
 	bool hasBB;
 	std::vector<XMFLOAT3> vertPositions;
 	
-	bool InitializeBuffers(ID3D11Device*, std::string, std::string&);
+	bool InitializeBuffers(ID3D11Device*, std::string, std::string&, std::vector<Vertex>* vertices);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, std::string);
@@ -65,7 +65,7 @@ public:
 	Model(const Model&);
 	~Model();
 
-	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, std::string, std::string, int, bool);
+	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, std::string, std::string, int, bool, std::vector<Vertex>* vertices = nullptr);
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 

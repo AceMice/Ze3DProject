@@ -60,6 +60,9 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output)
 			element.tex = input[i].tex;
 			element.worldPos = input[i].worldPos;
 			element.normal = input[i].normal;
+			if (input[i].normal.x == 0 && input[i].normal.y == 0 && input[i].normal.z == 0) {
+				element.normal = normal;
+			}
 			element.tangent = tangent;
 
 			output.Append(element);

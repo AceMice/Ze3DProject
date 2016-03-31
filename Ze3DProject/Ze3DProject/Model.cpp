@@ -20,7 +20,7 @@ Model::~Model()
 
 }
 
-bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, std::string modelFilename, std::string modelName, int modelId, bool hasBB)
+bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, std::string modelFilename, std::string modelName, int modelId, bool hasBB, std::vector<Vertex>* verticesIn)
 {
 	bool result;
 	std::string materialLib;
@@ -32,7 +32,7 @@ bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 	
 
 	//Initialze the vertex and index buffer
-	result = this->InitializeBuffers(device, modelFilename, materialLib);
+	result = this->InitializeBuffers(device, modelFilename, materialLib, verticesIn);
 	if (!result) {
 		return false;
 	}
@@ -75,7 +75,7 @@ ID3D11ShaderResourceView* Model::GetTexture(int textureIndex)
 	return this->texture->GetTexture(textureIndex);
 }
 
-bool Model::InitializeBuffers(ID3D11Device* device, std::string modelFilename, std::string& materialName)
+bool Model::InitializeBuffers(ID3D11Device* device, std::string modelFilename, std::string& materialName, std::vector<Vertex>* verticesIn)
 {
 	std::vector<Vertex> vertices;
 	unsigned long* indices = nullptr;
@@ -87,19 +87,34 @@ bool Model::InitializeBuffers(ID3D11Device* device, std::string modelFilename, s
 	D3D11_SUBRESOURCE_DATA indexData;
 	HRESULT hresult;
 	bool result;
-	std::string path = "../Ze3DProject/OBJ/";
-	/*std::string format = ".obj";
-	std::string bin = ".bin";
-	std::string finalBinPath = path + modelFilename + bin;*/
-	std::string finalPath = path + modelFilename;
-	result = this->LoadObj(finalPath.c_str(), vertices, indices, sizeVertices, sizeIndices, materialName);
-	if (!result) {
-		return false;
+	if (!verticesIn) {
+		std::string path = "../Ze3DProject/OBJ/";
+		/*std::string format = ".obj";
+		std::string bin = ".bin";
+		std::string finalBinPath = path + modelFilename + bin;*/
+		std::string finalPath = path + modelFilename;
+		result = this->LoadObj(finalPath.c_str(), vertices, indices, sizeVertices, sizeIndices, materialName);
+		if (!result) {
+			return false;
+		}
+		//Set the number of vertices in the vertex array
+		this->vertexCount = sizeVertices;
+		//Set the numer of indices in the index array
+		this->indexCount = sizeIndices;
 	}
-	//Set the number of vertices in the vertex array
-	this->vertexCount = sizeVertices;
-	//Set the numer of indices in the index array
-	this->indexCount = sizeIndices;
+	else {
+		vertices = *verticesIn;
+		this->vertexCount = verticesIn->size();
+		this->indexCount = this->vertexCount;
+		indices = new unsigned long[this->indexCount];
+		for (int i = 0; i < this->indexCount; i++) {
+			indices[i] = i;
+		}
+		materialName = "box.mtl";
+		this->subsetIndices.push_back(0);
+		this->materialNames.push_back("box");
+	}
+	
 
 	////SUBJECT TO CHANGE//
 	////Set the number of vertices in the vertex array
