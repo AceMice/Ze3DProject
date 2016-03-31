@@ -23,6 +23,7 @@ private:
 	float camYaw;
 	float camPitch;
 	float camRoll;
+	bool lockToTerrain;
 
 public:
 	CameraHandler();

@@ -78,7 +78,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 	//Insert model into vector
-	this->models.push_back(tempModel);
+	//this->models.push_back(tempModel);
 
 	// Create the model2 object.
 	tempModel = new Model;
@@ -215,7 +215,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	//Ground
 	GroundModel* tempGroundModel = this->groundModels.at(0);
 	if (tempGroundModel) {
-		modelWorld = XMMatrixTranslation(10.0f, -3.0f, 20.0f);
+		modelWorld = XMMatrixTranslation(10.0f, -4.0f, 10.0f);
 		tempGroundModel->SetWorldMatrix(modelWorld);
 	}
 	//Generate the view matrix based on the camera's position
