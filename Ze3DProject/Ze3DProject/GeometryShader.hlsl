@@ -25,8 +25,8 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output)
 
 	
 
-	float3 edge0 = input[1].position.xyz - input[0].position.xyz;
-	float3 edge1 = input[2].position.xyz - input[0].position.xyz;
+	float3 edge0 = input[1].worldPos.xyz - input[0].worldPos.xyz;
+	float3 edge1 = input[2].worldPos.xyz - input[0].worldPos.xyz;
 
 	normal = normalize(cross(edge0, edge1));
 
