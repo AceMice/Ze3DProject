@@ -45,7 +45,7 @@ private:
 	Texture* texture;
 	XMMATRIX worldMatrix;
 	std::string name;
-
+	
 	bool InitializeBuffers(ID3D11Device*, char*,std::string&);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
@@ -53,6 +53,7 @@ private:
 	void ReleaseTexture();
 	bool GenerateGround(char*, std::string, std::vector<Vertex>&, unsigned long*&, int&, int&);
 	
+
 public:
 	GroundModel();
 	GroundModel(const GroundModel&);
@@ -71,6 +72,7 @@ public:
 	void GetSubsetInfo(int, int&, int&, int&, int&, XMFLOAT4&, XMFLOAT4&, bool&);
 
 	std::string GetName();
+	HeightMap::HeightMapInfo getHeightMapInfo();
 };
 
 

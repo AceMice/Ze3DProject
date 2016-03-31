@@ -212,8 +212,14 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 		tempModel->SetWorldMatrix(modelWorld);
 	}
 
+	//Ground
+	GroundModel* tempGroundModel = this->groundModels.at(0);
+	if (tempGroundModel) {
+		modelWorld = XMMatrixTranslation(10.0f, -3.0f, 20.0f);
+		tempGroundModel->SetWorldMatrix(modelWorld);
+	}
 	//Generate the view matrix based on the camera's position
-	this->cameraH->Frame(dTime, inputH);
+	this->cameraH->Frame(dTime, inputH, this->groundModels.at(0));	//Sending down the mesh to check if it and the camera intersect
 
 	result = this->Render();
 	if (!result) {

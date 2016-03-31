@@ -32,7 +32,7 @@ XMVECTOR CameraHandler::GetPosition()
 	return this->camPos;
 }
 
-void CameraHandler::updateCamera(float dt, InputHandler* inputH) {
+void CameraHandler::updateCamera(float dt, InputHandler* inputH, GroundModel*model) {
 
 	float speed = 90000;
 
@@ -61,13 +61,13 @@ void CameraHandler::updateCamera(float dt, InputHandler* inputH) {
 	}
 
 	if (inputH->IsKeyDown(49)) {	//1
-		this->moveUpDown += dt/speed;
+		this->moveUpDown += dt / speed;
 	}
 
 	if (inputH->IsKeyDown(50)) {	//2
 		this->moveUpDown -= dt/speed;
 	}
-
+	this->CameraMeshIntersect(model);
 	//Change Pitch/yaw values depending on mouse movement
 	this->camPitch += (XMVectorGetY(inputH->GetMouseDeltaPos()) * 0.005);
 	this->camYaw += (XMVectorGetX(inputH->GetMouseDeltaPos()) * 0.005);
@@ -75,14 +75,14 @@ void CameraHandler::updateCamera(float dt, InputHandler* inputH) {
 	return;
 }
 
-void CameraHandler::Frame(float dt, InputHandler* inputH)
+void CameraHandler::Frame(float dt, InputHandler* inputH, GroundModel* model)
 {
 	XMVECTOR lookAt = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 	XMVECTOR camRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 	XMVECTOR camUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	//Get input from keyboard and mouse movement to change camera values
-	this->updateCamera(dt, inputH);
+	this->updateCamera(dt, inputH, model);
 
 	this->camRotationMatrix = XMMatrixRotationRollPitchYaw(this->camPitch, this->camYaw, 0);
 
@@ -156,4 +156,99 @@ void CameraHandler::GetBaseViewMatrix(XMMATRIX& baseViewMatrix)
 	baseViewMatrix = this->baseViewMatrix;
 
 	return;
+}
+
+bool CameraHandler::CameraMeshIntersect(GroundModel* model) {
+	int fp;
+	float y1;
+	float y2;
+	float y3;
+	float avY;
+	bool result = false;
+	XMVECTOR tempCamPos = this->GetPosition();
+	XMFLOAT3 camLocalPos;
+	XMMATRIX modelWorldMatrix;
+	XMMATRIX modelWorldMatrixInverse;
+	int modelWidth = model->getHeightMapInfo().terrainWidth;
+	int modelHeight = model->getHeightMapInfo().terrainHeight;
+
+	//Move camera into the models local space
+	model->GetWorldMatrix(modelWorldMatrix);
+	
+	HeightMap::HeightMapInfo hmInfo = model->getHeightMapInfo();
+
+	modelWorldMatrixInverse = XMMatrixInverse(nullptr,modelWorldMatrix);
+	
+	XMVECTOR camPosLocalMesh = XMVector3TransformCoord(tempCamPos, modelWorldMatrixInverse);	//CamPos in the mesh local space
+	
+	XMStoreFloat3(&camLocalPos, camPosLocalMesh);
+	
+	//Check if we are inside the x and z
+	if ((camLocalPos.x >= 0 && camLocalPos.x <= modelWidth) &&
+		(camLocalPos.z >= 0 && camLocalPos.z <= modelHeight)
+		) 
+	{
+
+		//Find whitch triangel we are inside
+		if ((camLocalPos.x - (int)camLocalPos.x) + (camLocalPos.z - (int)camLocalPos.z) <= 1.0f) {	// Top left triangle
+			
+			fp = ((int)camLocalPos.x) + ((int) camLocalPos.z * modelWidth);
+			y1 = hmInfo.heightMap[fp].y;
+			
+			if ((int)camLocalPos.z == modelHeight-1) {
+				y2 = 0;
+			}
+			else {
+				y2 = hmInfo.heightMap[fp + modelWidth].y;
+			}
+
+			if ((int)camLocalPos.x == modelWidth) {
+				y3 = 0;
+			}
+			else {
+				y3 = hmInfo.heightMap[fp + 1].y;
+			}
+
+			avY = (y1 + y2 + y3) / 3;
+			if (avY > 1000) {
+				int j = 0;
+			}
+			this->SetPosition(XMVectorGetX(this->GetPosition()), avY, XMVectorGetZ(this->GetPosition()));
+		}
+		else {										// Bottom right triangle
+			int fp = ((int)camLocalPos.x) + ((int)camLocalPos.z * modelWidth);
+			y1 = hmInfo.heightMap[fp].y;
+			
+			if ((int)camLocalPos.z == 0) {
+				y2 = 0;
+			}
+			else {
+				y2 = hmInfo.heightMap[fp - modelHeight].y;
+			}
+
+			if ((int)camLocalPos.x == 0) {
+				y3 = 0;
+			}
+			else {
+				y3 = hmInfo.heightMap[fp - 1].y;
+			}
+			
+			avY = (y1 + y2 + y3) / 3;
+			if (avY > 1000) {
+				int j = 0;
+			}
+
+		}
+
+		XMVECTOR tempV = XMVectorSet(1,avY, 1, 1);
+		XMVector3TransformCoord(tempV, modelWorldMatrix);
+
+		this->SetPosition(XMVectorGetX(this->GetPosition()), XMVectorGetY(tempV), XMVectorGetZ(this->GetPosition()));
+		result = true;
+	}
+	
+	//Check if the point is inside the triangel plane 
+
+	// return bool if it is inside or not which will cancel the questioned action in updateCamera
+	return result;
 }

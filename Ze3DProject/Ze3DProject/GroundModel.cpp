@@ -385,6 +385,7 @@ bool GroundModel::GenerateGround(char* bmpFile, std::string matrialLib, std::vec
 	}
 	//outputVertices = v;
 	outputVertices = std::vector<Vertex>(v.size());
+
 	sizeVertices = v.size();
 	sizeIndices = indices.size();
 
@@ -405,6 +406,7 @@ bool GroundModel::GenerateGround(char* bmpFile, std::string matrialLib, std::vec
 void GroundModel::GetWorldMatrix(XMMATRIX& worldMatrix)
 {
 	worldMatrix = this->worldMatrix;
+
 	return;
 }
 
@@ -455,4 +457,8 @@ void GroundModel::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCoun
 std::string GroundModel::GetName()
 {
 	return this->name;
+}
+
+HeightMap::HeightMapInfo GroundModel::getHeightMapInfo() {
+	return this->hmInfo;
 }

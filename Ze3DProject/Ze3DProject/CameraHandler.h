@@ -3,6 +3,8 @@
 
 #include <DirectXMath.h>
 #include "InputHandler.h"
+#include "GroundModel.h"
+
 using namespace DirectX;
 
 class CameraHandler
@@ -21,6 +23,7 @@ private:
 	float camYaw;
 	float camPitch;
 	float camRoll;
+
 public:
 	CameraHandler();
 	~CameraHandler();
@@ -28,11 +31,13 @@ public:
 	void SetPosition(float, float, float);
 	XMVECTOR GetPosition();
 
-	void Frame(float, InputHandler*);
-	void updateCamera(float, InputHandler*);
+	void Frame(float, InputHandler*, GroundModel*);
+	void updateCamera(float, InputHandler*, GroundModel*);
 	void GetViewMatrix(XMMATRIX&);
 	void GenerateBaseViewMatrix();
 	void GetBaseViewMatrix(XMMATRIX&);
+	bool CameraMeshIntersect(GroundModel*);
+
 };
 
 #endif
