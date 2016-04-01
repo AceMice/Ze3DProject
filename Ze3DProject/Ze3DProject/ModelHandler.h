@@ -31,6 +31,7 @@ private:
 	std::vector<Model*> models;
 	std::vector<Model*> modelsNoBB;
 	QuadNode* quadTree;
+	int pickedModels;
 
 	void DeleteQuadNode(QuadNode* node);
 	void CreateQuadrants(QuadNode* node, int level);
@@ -52,6 +53,7 @@ public:
 	std::vector<Model*> GetModels();
 	void Shutdown();
 	void GenerateModelsMinMaxVerts();
+	int GetNrPickableModels();
 };
 
 #endif

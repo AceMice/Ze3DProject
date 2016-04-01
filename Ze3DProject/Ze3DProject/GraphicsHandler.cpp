@@ -16,6 +16,7 @@ GraphicsHandler::GraphicsHandler()
 	this->moveLight = 0.0f;
 	this->increase = true;
 	this->runTime = 0.0f;
+	this->modelsLeft = 0;
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -230,6 +231,8 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	this->modelHandler->GenerateModelsMinMaxVerts();
 	this->modelHandler->CreateQuadTree(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), 3);
 
+	this->modelsLeft = this->modelHandler->GetNrPickableModels();
+
 	this->textHandler = new TextHandler;
 	if (!this->textHandler) {
 		return false;
@@ -244,6 +247,10 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 0, "Hello World!", 100, 100, XMFLOAT3(1.0f, 0.0f, 0.0f));
 	if (!result) {
+		return false;
+	}
+	sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 20);
+	if (sentenceId == -1) {
 		return false;
 	}
 
@@ -282,7 +289,14 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 
 	std::string text = "Time: " + std::to_string((int)this->runTime);
 
-	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 0, text, 100, 100, XMFLOAT3(1.0f, 0.0f, 0.0f));
+	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 0, text, 50, 50, XMFLOAT3(1.0f, 0.0f, 0.0f));
+	if (!result) {
+		return false;
+	}
+
+	text = "Left to pick: " + std::to_string(this->modelsLeft);
+
+	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 1, text, 50, 70, XMFLOAT3(1.0f, 0.0f, 0.0f));
 	if (!result) {
 		return false;
 	}
@@ -569,16 +583,4 @@ void GraphicsHandler::Shutdown()
 		delete this->direct3DH;
 		this->direct3DH = nullptr;
 	}
-}
-
-Model* GraphicsHandler::GetModel(std::string name)
-{
-	////Find the correct model by name
-	//for (int i = 0; i < this->models.size(); i++) {
-	//	if (this->models.at(i)->GetName() == name) {
-	//		return this->models.at(i);
-	//	}
-	//}
-
-	return NULL;
 }

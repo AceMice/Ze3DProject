@@ -33,12 +33,12 @@ private:
 	TextHandler* textHandler;
 
 	bool Render();
-	Model* GetModel(std::string);
 	//For testing
 	float rotY;
 	float moveLight;
 	bool increase;
 	float runTime;
+	int modelsLeft;
 public:
 	GraphicsHandler();
 	~GraphicsHandler();

@@ -3,6 +3,7 @@
 ModelHandler::ModelHandler()
 {
 	this->quadTree = nullptr;
+	this->pickedModels = 0;
 }
 
 ModelHandler::~ModelHandler()
@@ -469,4 +470,9 @@ void ModelHandler::GenerateModelsMinMaxVerts()
 	for (int i = 0; i < this->models.size(); i++) {
 		this->models.at(i)->GenerateMinMaxVertex();
 	}
+}
+
+int ModelHandler::GetNrPickableModels()
+{
+	return this->models.size() - this->pickedModels;
 }

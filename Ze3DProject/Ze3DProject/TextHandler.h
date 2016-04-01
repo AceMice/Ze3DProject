@@ -15,6 +15,27 @@ public:
 		int indexCount;
 		int maxLength;
 		XMFLOAT3 color;
+
+		Sentence() 
+		{
+			this->vertexBuffer = nullptr;
+			this->indexBuffer = nullptr;
+		}
+
+		void ShutdownBuffers()
+		{
+			//Release the index buffer
+			if (this->indexBuffer) {
+				this->indexBuffer->Release();
+				this->indexBuffer = nullptr;
+			}
+
+			//Release the vertex buffer
+			if (this->vertexBuffer) {
+				this->vertexBuffer->Release();
+				this->vertexBuffer = nullptr;
+			}
+		}
 	};
 
 	struct Vertex {

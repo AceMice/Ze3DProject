@@ -131,6 +131,7 @@ void TextHandler::ReleaseSentences()
 {
 	for (int i = 0; i < this->sentences.size(); i++) {
 		if (this->sentences.at(i)) {
+			this->sentences.at(i)->ShutdownBuffers();
 			delete this->sentences.at(i);
 			this->sentences.at(i) = nullptr;
 		}
