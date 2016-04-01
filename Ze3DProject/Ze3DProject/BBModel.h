@@ -5,8 +5,8 @@
 
 class Model {
 
-public:
-	
+private:
+
 	struct Vertex {
 		XMFLOAT3 position;
 		XMFLOAT2 texture;
@@ -18,7 +18,7 @@ public:
 			texture = XMFLOAT2(0.0f, 0.0f);
 			normal = XMFLOAT3(0.0f, 0.0f, 0.0f);
 		}
-		Vertex(const Vertex& other) 
+		Vertex(const Vertex& other)
 		{
 			position = other.position;
 			texture = other.texture;
@@ -34,8 +34,6 @@ public:
 		}
 	};
 
-private:
-
 	ID3D11Buffer* vertexBuffer;
 	ID3D11Buffer* indexBuffer;
 	int vertexCount;
@@ -50,14 +48,12 @@ private:
 	XMFLOAT3 minVertex;
 	XMFLOAT3 maxVertex;
 	bool hasBB;
-	std::vector<XMFLOAT3> vertPositions;
-	
-	bool InitializeBuffers(ID3D11Device*, std::string, std::string&, std::vector<Vertex>* vertices);
+
+	bool InitializeBuffers(ID3D11Device*, std::string, std::string&);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, std::string);
 	void ReleaseTexture();
-	bool LoadObj(const char*, std::vector<Vertex>&, unsigned long*&, int&, int&, std::string&);
 	void CreateBoundingBox(XMFLOAT3, XMFLOAT3);
 
 public:
@@ -65,7 +61,7 @@ public:
 	Model(const Model&);
 	~Model();
 
-	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, std::string, std::string, int, bool, std::vector<Vertex>* vertices = nullptr);
+	bool Initialize(ID3D11Device*, ID3D11DeviceContext*, std::string, std::string, int, bool);
 	void Shutdown();
 	void Render(ID3D11DeviceContext*);
 
@@ -79,10 +75,6 @@ public:
 
 	std::string GetName();
 	XMVECTOR* GetBouningBox(XMMATRIX);
-	bool GethasBB();
-	int GetId();
-	void GetMinMaxVertex(XMFLOAT3& minVert, XMFLOAT3& maxVert);
-	void GenerateMinMaxVertex();
 };
 
 

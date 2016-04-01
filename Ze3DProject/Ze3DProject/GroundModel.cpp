@@ -248,13 +248,13 @@ void GroundModel::ReleaseTexture()
 
 bool GroundModel::GenerateGround(char* bmpFile, std::string matrialLib, std::vector<Vertex>& outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices) {
 	HeightMap hmObj;
-	bool result = hmObj.HeightMapLoad(bmpFile, hmInfo);
+	bool result = hmObj.HeightMapLoad(bmpFile, this->hmInfo);
 	
 	if (result != true) {
 			return false;
 	}
-	int cols = hmInfo.terrainWidth;
-	int rows = hmInfo.terrainHeight;
+	int cols = this->hmInfo.terrainWidth;
+	int rows = this->hmInfo.terrainHeight;
 
 	//Create the grid
 	int NumVertices = rows * cols;

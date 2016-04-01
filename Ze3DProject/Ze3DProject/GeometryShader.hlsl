@@ -25,8 +25,8 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output)
 
 	
 
-	float3 edge0 = input[1].position.xyz - input[0].position.xyz;
-	float3 edge1 = input[2].position.xyz - input[0].position.xyz;
+	float3 edge0 = input[1].worldPos.xyz - input[0].worldPos.xyz;
+	float3 edge1 = input[2].worldPos.xyz - input[0].worldPos.xyz;
 
 	normal = normalize(cross(edge0, edge1));
 
@@ -60,6 +60,9 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output)
 			element.tex = input[i].tex;
 			element.worldPos = input[i].worldPos;
 			element.normal = input[i].normal;
+			if (input[i].normal.x == 0 && input[i].normal.y == 0 && input[i].normal.z == 0) {
+				element.normal = normal;
+			}
 			element.tangent = tangent;
 
 			output.Append(element);

@@ -146,7 +146,7 @@ void CameraHandler::GenerateBaseViewMatrix()
 
 	camRight = XMVector3TransformCoord(camRight, this->camRotationMatrix);
 	camUp = XMVector3TransformCoord(camUp, this->camRotationMatrix);
-
+	
 
 	//Set new camPos
 	this->camPos += this->moveLeftRight * camRight;

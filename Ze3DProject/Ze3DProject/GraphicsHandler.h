@@ -10,6 +10,8 @@
 #include "ColorShaderHandler.h"
 #include "ModelWindow.h"
 #include "ShadowShaderHandler.h"
+#include "Frustum.h"
+#include "ModelHandler.h"
 
 //Constants
 const bool FULL_SCREEN = false;
@@ -21,15 +23,17 @@ class GraphicsHandler {
 private:
 	D3DHandler* direct3DH;
 	CameraHandler* cameraH;
-	std::vector<Model*> models;
 	std::vector<GroundModel*> groundModels;
+
 	ShaderHandler* shaderH;
 	ColorShaderHandler* colorShaderH;
 	ModelWindow* modelWindow;
 	ShadowShaderHandler* shadowShaderH;
+	Frustum* frustum;
+	ModelHandler* modelHandler;
 
 	bool Render();
-	Model* GetModel(char*);
+	Model* GetModel(std::string);
 	//For testing
 	float rotY;
 	float moveLight;
