@@ -313,7 +313,7 @@ bool GraphicsHandler::Render()
 	this->frustum->SetViewProjMatrix(viewMatrix, projectionMatrix);
 
 	//Get the models in frustum
-	models = this->modelHandler->GetModelsInViewFrustum(this->frustum);
+	models = this->modelHandler->GetModels();
 
 	for (int i = 0; i < models.size(); i++) {
 		models.at(i)->GetWorldMatrix(worldMatrix);
