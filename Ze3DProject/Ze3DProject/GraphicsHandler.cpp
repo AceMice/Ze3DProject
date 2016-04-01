@@ -229,7 +229,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	this->frustum->SetViewProjMatrix(viewMatrix, projectionMatrix);
 
 	this->modelHandler->GenerateModelsMinMaxVerts();
-	this->modelHandler->CreateQuadTree(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), 3);
+	this->modelHandler->CreateQuadTree(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), 2);
 
 	this->modelsLeft = this->modelHandler->GetNrPickableModels();
 
@@ -355,7 +355,11 @@ bool GraphicsHandler::Render()
 	this->frustum->SetViewProjMatrix(viewMatrix, projectionMatrix);
 
 	//Get the models in frustum
-	models = this->modelHandler->GetModels();
+	int path[2] = { 1, 0 };
+	int levels = 2;
+	//models = this->modelHandler->GetModels();
+	models = this->modelHandler->GetModelsInViewFrustum(this->frustum);
+	//models = this->modelHandler->GetModelsInNode(path, levels);
 
 	for (int i = 0; i < models.size(); i++) {
 		models.at(i)->GetWorldMatrix(worldMatrix);

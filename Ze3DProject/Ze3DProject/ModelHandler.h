@@ -51,6 +51,7 @@ public:
 	bool CreateQuadTree(ID3D11Device* device, ID3D11DeviceContext* deviceContext, int levels);
 	std::vector<Model*> GetModelsInViewFrustum(Frustum* viewFrustum);
 	std::vector<Model*> GetModels();
+	std::vector<Model*> GetModelsInNode(int path[], int levels);
 	void Shutdown();
 	void GenerateModelsMinMaxVerts();
 	int GetNrPickableModels();

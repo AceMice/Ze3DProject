@@ -263,9 +263,9 @@ bool ModelHandler::CreateBBModels(ID3D11Device* device, ID3D11DeviceContext* dev
 		return false;
 	}
 
-	delete vertices;
-
 	this->modelsNoBB.push_back(tempModel);
+
+	delete vertices;
 
 	return true;
 }
@@ -347,10 +347,10 @@ bool ModelHandler::CreateQuadTree(ID3D11Device* device, ID3D11DeviceContext* dev
 
 	this->CreateQuadrants(this->quadTree, levels);
 
-	/*result = this->CreateBBModels(device, deviceContext, this->quadTree);
+	result = this->CreateBBModels(device, deviceContext, this->quadTree);
 	if (!result) {
 		return false;
-	}*/
+	}
 
 	return true;
 }
@@ -460,6 +460,29 @@ std::vector<Model*> ModelHandler::GetModels()
 	}
 	for (int i = 0; i < this->modelsNoBB.size(); i++) {
 		outputModels.push_back(this->modelsNoBB.at(i));
+	}
+
+	return outputModels;
+}
+
+std::vector<Model*> ModelHandler::GetModelsInNode(int path[], int levels)
+{
+	std::vector<Model*> outputModels;
+	QuadNode* node = this->quadTree;
+
+	for (int i = 0; i < levels; i++) {
+		if (path[i] == 0 || !node->child[path[i] - 1]) {
+			for (int i = 0; i < node->models.size(); i++) {
+				outputModels.push_back(node->models.at(i));
+			}
+			for (int i = 0; i < this->modelsNoBB.size(); i++) {
+				outputModels.push_back(this->modelsNoBB.at(i));
+			}
+
+			return outputModels;
+		}
+
+		node = node->child[path[i] - 1];
 	}
 
 	return outputModels;
