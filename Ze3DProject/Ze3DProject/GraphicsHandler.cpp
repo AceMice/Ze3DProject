@@ -10,6 +10,7 @@ GraphicsHandler::GraphicsHandler()
 	this->shadowShaderH = nullptr;
 	this->frustum = nullptr;
 	this->modelHandler = nullptr;
+	this->textHandler = nullptr;
 
 	this->rotY = 0.0f;
 	this->moveLight = 0.0f;
@@ -227,6 +228,23 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	this->modelHandler->GenerateModelsMinMaxVerts();
 	this->modelHandler->CreateQuadTree(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), 3);
+
+	this->textHandler = new TextHandler;
+	if (!this->textHandler) {
+		return false;
+	}
+	result = this->textHandler->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), viewMatrix, screenWidth, screenHeight);
+	if (!result) {
+		return false;
+	}
+	int sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 16);
+	if (sentenceId == -1) {
+		return false;
+	}
+	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 0, "Hello World!", 100, 100, XMFLOAT3(1.0f, 0.0f, 0.0f));
+	if (!result) {
+		return false;
+	}
 
 	return true;
 }
@@ -467,6 +485,8 @@ bool GraphicsHandler::Render()
 	//}
 
 
+	this->textHandler->Render(this->direct3DH->GetDeviceContext(), orthoMatrix);
+
 
 	//Display the rendered scene to screen
 	this->direct3DH->EndScene();
@@ -525,6 +545,12 @@ void GraphicsHandler::Shutdown()
 	if (this->cameraH) {
 		delete this->cameraH;
 		this->cameraH = 0;
+	}
+
+	if (!this->textHandler) {
+		this->textHandler->Shutdown();
+		delete this->textHandler;
+		this->textHandler = nullptr;
 	}
 
 	//Release the direct

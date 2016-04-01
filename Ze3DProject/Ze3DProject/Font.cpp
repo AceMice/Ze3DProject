@@ -12,37 +12,87 @@ Font::~Font()
 
 bool Font::LoadFontData(std::string fontFilename)
 {
+	std::ifstream file;
+	char junkChar;
+	int junkInt;
+	std::stringstream ss;
+	std::string line;
+	std::string path = "../Ze3DProject/Data/" + fontFilename;
+	file.open(path, std::ios::in);
+	if (!file.is_open()) {
+		return false;
+	}
 
+	this->fontChar = new FontChar[95];
+
+	for (int i = 0; i < 95; i++) {
+		std::getline(file, line);
+		ss.str(line);
+		ss >> junkInt >> junkChar >> this->fontChar[i].left >> this->fontChar[i].right >> this->fontChar[i].size;
+		ss.clear();
+	}
 
 	return true;
 }
 
 void Font::ReleaseFontData()
 {
+	if (this->fontChar) {
+		delete[] this->fontChar;
+		this->fontChar = nullptr;
+	}
 
 	return;
 }
 
-bool Font::LoadTexture(ID3D11Device*, std::string textureFilename)
+bool Font::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, std::string textureFilename)
 {
+	bool result;
+	this->fontTexture = new Texture;
+	if (!this->fontTexture) {
+		return false;
+	}
+
+	result = this->fontTexture->Initialize(device, deviceContext, textureFilename);
+	if (!result) {
+		return false;
+	}
 
 	return true;
 }
 
 void Font::ReleaseTexture()
 {
+	if (this->fontTexture) {
+		this->fontTexture->Shutdown();
+		delete this->fontTexture;
+		this->fontTexture = nullptr;
+	}
 
 	return;
 }
 
-bool Font::Initialize(ID3D11Device*, char*, WCHAR*)
+bool Font::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* fontFilename, char* textureFilename)
 {
+	bool result;
 
+	result = this->LoadFontData(fontFilename);
+	if (!result) {
+		return false;
+	}
+
+	result = this->LoadTexture(device, deviceContext, textureFilename);
+	if (!result) {
+		return false;
+	}
 
 	return true;
 }
 void Font::Shutdown()
 {
+	this->ReleaseFontData();
+
+	this->ReleaseTexture();
 	
 	return;
 }
@@ -52,9 +102,47 @@ ID3D11ShaderResourceView* Font::GetTexture()
 	return this->fontTexture->GetTexture(0);
 }
 
-void Font::BuildVertexArray(Vertex*, char*, float, float)
+void Font::BuildVertexArray(void* vertices, const char* text, float drawPosX, float drawPosY)
 {
+	Vertex* verticesPtr = (Vertex*)vertices;
+	int nrLetters = (int)strlen(text);
+	int letter = 0;
+	int index = 0;
 
+	for (int i = 0; i < nrLetters; i++) {
+		letter = text[i] - 32;
+
+		if (letter == 0) {
+			drawPosX += 3.0f;
+		}
+		else {
+			verticesPtr[index].position = XMFLOAT3(drawPosX, drawPosY - 16, 0.0f); //Bottom left
+			verticesPtr[index].texture = XMFLOAT2(this->fontChar[letter].left, 1.0f);
+			index++;
+
+			verticesPtr[index].position = XMFLOAT3(drawPosX + this->fontChar[letter].size, drawPosY, 0.0f); //Top right
+			verticesPtr[index].texture = XMFLOAT2(this->fontChar[letter].right, 0.0f);
+			index++;
+
+			verticesPtr[index].position = XMFLOAT3(drawPosX, drawPosY, 0.0f); //Top left
+			verticesPtr[index].texture = XMFLOAT2(this->fontChar[letter].left, 0.0f);
+			index++;
+
+			verticesPtr[index].position = XMFLOAT3(drawPosX, drawPosY - 16, 0.0f); //Bottom left
+			verticesPtr[index].texture = XMFLOAT2(this->fontChar[letter].left, 1.0f);
+			index++;
+
+			verticesPtr[index].position = XMFLOAT3(drawPosX + this->fontChar[letter].size, drawPosY - 16, 0.0f); //Bottom right
+			verticesPtr[index].texture = XMFLOAT2(this->fontChar[letter].right, 1.0f);
+			index++;
+
+			verticesPtr[index].position = XMFLOAT3(drawPosX + this->fontChar[letter].size, drawPosY, 0.0f); //Top right
+			verticesPtr[index].texture = XMFLOAT2(this->fontChar[letter].right, 0.0f);
+			index++;
+
+			drawPosX += this->fontChar[letter].size + 1.0f;
+		}
+	}
 
 	return;
 }

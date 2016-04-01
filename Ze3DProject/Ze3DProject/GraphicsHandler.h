@@ -11,6 +11,7 @@
 #include "ShadowShaderHandler.h"
 #include "Frustum.h"
 #include "ModelHandler.h"
+#include "TextHandler.h"
 
 //Constants
 const bool FULL_SCREEN = false;
@@ -29,6 +30,7 @@ private:
 	ShadowShaderHandler* shadowShaderH;
 	Frustum* frustum;
 	ModelHandler* modelHandler;
+	TextHandler* textHandler;
 
 	bool Render();
 	Model* GetModel(std::string);

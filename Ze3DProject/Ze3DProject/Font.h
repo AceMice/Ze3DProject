@@ -15,41 +15,22 @@ private:
 	struct Vertex {
 		XMFLOAT3 position;
 		XMFLOAT2 texture;
-
-		Vertex()
-		{
-			position = XMFLOAT3(0.0f, 0.0f, 0.0f);
-			texture = XMFLOAT2(0.0f, 0.0f);
-		}
-		Vertex(const Vertex& other)
-		{
-			position = other.position;
-			texture = other.texture;
-		}
-		Vertex& operator=(const Vertex& other)
-		{
-			position = other.position;
-			texture = other.texture;
-
-			return *this;
-		}
 	};
 
 public:
 	Font();
-	Font(const Font&);
 	~Font();
 
-	bool Initialize(ID3D11Device*, char*, WCHAR*);
+	bool Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext, char* fontFilename, char* textureFilename);
 	void Shutdown();
 
 	ID3D11ShaderResourceView* GetTexture();
-	void BuildVertexArray(Vertex*, char*, float, float);
+	void BuildVertexArray(void* vertices, const char* text, float drawPosX, float drawPosY);
 
 private:
 	bool LoadFontData(std::string fontFilename);
 	void ReleaseFontData();
-	bool LoadTexture(ID3D11Device*, std::string textureFilename);
+	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext* deviceContext, std::string textureFilename);
 	void ReleaseTexture();
 
 private:
