@@ -15,6 +15,7 @@ GraphicsHandler::GraphicsHandler()
 	this->rotY = 0.0f;
 	this->moveLight = 0.0f;
 	this->increase = true;
+	this->runTime = 0.0f;
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -237,7 +238,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	if (!result) {
 		return false;
 	}
-	int sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 16);
+	int sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 32);
 	if (sentenceId == -1) {
 		return false;
 	}
@@ -276,6 +277,15 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH);
+
+	this->runTime += dTime / 1000000;
+
+	std::string text = "Time: " + std::to_string((int)this->runTime);
+
+	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 0, text, 100, 100, XMFLOAT3(1.0f, 0.0f, 0.0f));
+	if (!result) {
+		return false;
+	}
 
 	result = this->Render();
 	if (!result) {

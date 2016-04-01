@@ -38,6 +38,7 @@ private:
 	float rotY;
 	float moveLight;
 	bool increase;
+	float runTime;
 public:
 	GraphicsHandler();
 	~GraphicsHandler();
