@@ -26,7 +26,7 @@ struct GSInput
 	float2 tex : TEXCOORD0;
 	float4 worldPos : POSITION;
 	float3 normal : NORMAL;
-	float3 viewDir : TEXCOORD1;
+	float3 viewDir : NORMAL1;
 };
 
 GSInput main(VertexInput input)

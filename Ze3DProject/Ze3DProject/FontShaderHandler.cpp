@@ -275,6 +275,7 @@ void FontShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int ind
 	//Set the vertex and pixel shaders that will be used to render this triangle
 	deviceContext->VSSetShader(this->vertexShader, NULL, 0);
 	deviceContext->PSSetShader(this->pixelShader, NULL, 0);
+	deviceContext->GSSetShader(NULL, NULL, 0);
 
 	//Set the sampler state in pixel shader
 	deviceContext->PSSetSamplers(0, 1, &this->samplerState);
