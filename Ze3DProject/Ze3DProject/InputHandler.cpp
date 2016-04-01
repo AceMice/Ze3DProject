@@ -46,7 +46,7 @@ void InputHandler::Initialize(HINSTANCE hInstance, HWND hwnd, int screenWidth, i
 		MessageBox(hwnd, L"DIMouse->SetDataFormat", L"Error", MB_OK);
 	}
 
-	hr = this->DIMouse->SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_NOWINKEY | DISCL_FOREGROUND);
+	hr = this->DIMouse->SetCooperativeLevel(hwnd, DISCL_NONEXCLUSIVE | DISCL_NOWINKEY | DISCL_FOREGROUND);	//MOUSE THING
 	if (FAILED(hr)) {
 		MessageBox(hwnd, L"DIMouse->SetCooperativeLevel", L"Error", MB_OK);
 	}
@@ -153,4 +153,14 @@ void InputHandler::ProcessInput() {
 DirectX::XMVECTOR InputHandler::GetMouseDeltaPos() {
 
 	return DirectX::XMVectorSet(this->mouseState.lX, this->mouseState.lY, 0, 0);	//z,y is not used so set to 0;
+}
+
+DirectX::XMVECTOR InputHandler::GetMouseViewPos() {
+	float viewSpaceX = ((2 * this->mouseX) / this->screenWidth) -1;
+	float viewSpaceY = ((2 * this->mouseY) / this->screenHeight) -1;
+	float viewSpaceZ = 1 / tan((( 3.14 / 2.0f) / 2));
+
+	DirectX::XMVECTOR result = DirectX::XMVectorSet(viewSpaceX, viewSpaceY, viewSpaceZ, 0);
+	
+	return result;
 }

@@ -1,7 +1,7 @@
 #ifndef MODELHANDLER_H
 #define MODELHANDLER_H
 
-
+#include "CameraHandler.h"
 #include "Model.h"
 #include "Frustum.h"
 
@@ -40,6 +40,10 @@ private:
 	Model* GetModelFromName(std::string name);
 	bool CreateBBModels(ID3D11Device* device, ID3D11DeviceContext* deviceContext, QuadNode* node);
 	bool CreateBBModel(ID3D11Device* device, ID3D11DeviceContext* deviceContext, QuadNode* node);
+
+	bool RayAABBCheack(XMFLOAT3&, XMFLOAT3&, XMVECTOR, XMVECTOR, float&);
+	void swap(float&, float&);
+
 public:
 	ModelHandler();
 	~ModelHandler();
@@ -52,6 +56,8 @@ public:
 	std::vector<Model*> GetModels();
 	void Shutdown();
 	void GenerateModelsMinMaxVerts();
+	bool SelectModel(XMVECTOR, CameraHandler*);
+	
 };
 
 #endif

@@ -31,6 +31,7 @@ public:
 	bool readMouse();
 	void ProcessInput();
 	DirectX::XMVECTOR GetMouseDeltaPos();
+	DirectX::XMVECTOR GetMouseViewPos();
 };
 
 

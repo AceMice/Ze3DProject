@@ -8,6 +8,7 @@ Model::Model()
 	this->texture = nullptr;
 	this->worldMatrix = XMMatrixIdentity();
 	this->boundingBox = nullptr;
+	this->isSelected = false;
 }
 
 Model::Model(const Model& originalObj)
@@ -43,6 +44,8 @@ bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 		return false;
 	}
 	
+
+
 	return true;
 }
 
@@ -627,7 +630,7 @@ void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int
 	}
 	Texture::Material tempMaterial = this->texture->GetMaterial(this->materialNames.at(subsetIndex));
 
-	if (tempMaterial.hasTexture) {
+	if (tempMaterial.hasTexture && !this->IsModelSelected() ) {	//REMOVE LATER HALF
 		textureIndex = tempMaterial.textureIndex;
 	}
 	else {
@@ -742,4 +745,12 @@ void Model::GenerateMinMaxVertex()
 
 	this->minVertex = minVert;
 	this->maxVertex = maxVert;
+}
+
+bool Model::IsModelSelected() {
+	return this->isSelected;
+}
+
+void Model::SetModelSelectionState(bool newState) {
+	this->isSelected = newState;
 }

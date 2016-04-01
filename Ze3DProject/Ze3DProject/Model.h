@@ -51,6 +51,7 @@ private:
 	XMFLOAT3 maxVertex;
 	bool hasBB;
 	std::vector<XMFLOAT3> vertPositions;
+	bool isSelected;
 	
 	bool InitializeBuffers(ID3D11Device*, std::string, std::string&, std::vector<Vertex>* vertices);
 	void ShutdownBuffers();
@@ -83,6 +84,8 @@ public:
 	int GetId();
 	void GetMinMaxVertex(XMFLOAT3& minVert, XMFLOAT3& maxVert);
 	void GenerateMinMaxVertex();
+	bool IsModelSelected();
+	void SetModelSelectionState(bool);
 };
 
 

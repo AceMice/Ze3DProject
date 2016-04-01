@@ -470,3 +470,122 @@ void ModelHandler::GenerateModelsMinMaxVerts()
 		this->models.at(i)->GenerateMinMaxVertex();
 	}
 }
+
+bool ModelHandler::SelectModel(XMVECTOR mouseViewPos, CameraHandler* cameraH) {
+	bool result = true;
+	
+	//Get our point in View space
+	XMFLOAT3 min;
+	XMFLOAT3 max;
+	XMVECTOR normal = XMVectorSet(0,0,-1,0);
+	float t = NULL;
+	int index = -1;
+	XMMATRIX CameraViewMatrix;
+	cameraH->GetViewMatrix(CameraViewMatrix);
+	XMMATRIX inverseViewMatrix = XMMatrixInverse(NULL,CameraViewMatrix);	//Invert the view matrix to move from view to worl space
+
+	XMVECTOR r = XMVector3TransformCoord(mouseViewPos,inverseViewMatrix); 
+	XMVECTOR n = XMVector3TransformCoord(normal, inverseViewMatrix);
+
+	n = XMVector3Normalize(n);
+	
+	for (int i = 0; i < this->models.size(); i++) {
+		Model* b = this->models.at(i);
+		this->models.at(i)->GetMinMaxVertex(min, max);
+
+		if (this->RayAABBCheack(min, max, r, n, t)) {
+			index = i;
+		}
+
+	}
+
+	if (index != -1) {
+		this->models.at(index)->SetModelSelectionState(true);
+	}
+	
+	//Debug
+	Model* a = this->models.at(index);
+	float x = XMVectorGetX(r);
+	float y = XMVectorGetY(r);
+	float z = XMVectorGetZ(r);
+	
+	
+	return result;
+}
+
+bool ModelHandler::RayAABBCheack(XMFLOAT3& min, XMFLOAT3& max, XMVECTOR r, XMVECTOR n, float& t) {
+	
+	//Check X
+	float tmin = (min.x - XMVectorGetX(r)) / XMVectorGetX(n);
+	float tmax = (max.x - XMVectorGetX(r)) / XMVectorGetX(n);
+
+	if (tmin > tmax) {
+		this->swap(tmin, tmax);
+	}
+
+	//Check Y
+	float tymin = (min.y - XMVectorGetY(r)) / XMVectorGetY(n);
+	float tymax = (max.y - XMVectorGetY(r)) / XMVectorGetY(n);
+
+	if (tymin > tymax) {
+		this->swap(tymin, tymax);
+	}
+
+	if ((tmin > tymax) || (tymin > tmax)) {
+		return false;
+	}
+
+	if (tymin > tmin) {
+		tmin = tymin;
+	}
+
+	if (tymax < tmax) {
+		tmax = tymax;
+	}
+
+	//Check Z
+	float tzmin = (min.z - XMVectorGetZ(r)) / XMVectorGetZ(n);
+	float tzmax = (max.z - XMVectorGetZ(r)) / XMVectorGetZ(n);
+
+	if (tzmin > tzmax) {
+		this->swap(tzmin, tzmax);
+	}
+
+	if ((tmin > tzmax) || (tzmin > tmax)) {
+		return false;
+	}
+
+	if (tzmin > tmin) {
+		tmin = tzmin;
+	}
+
+	if (tzmax < tmax) {
+		tmax = tzmax;
+	}
+
+	// Return the distance
+	if (tmin > 0) {
+		if (t == NULL || abs(tmin) < t) {
+			t = abs(tmin);
+		}
+		else {
+			return false;
+		}
+	}
+	else {
+		if (t == NULL || abs(tmax) < t) {
+			t = abs(tmax);
+		}
+		else {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void ModelHandler::swap(float& v1, float& v2) {
+	float temp = v1;
+	v1 = v2;
+	v2 = temp;
+}

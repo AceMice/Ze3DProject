@@ -281,6 +281,11 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH, this->groundModels.at(0));	//Sending down the mesh to check if it and the camera intersect
 
+	//Picking
+	if (inputH->IsKeyDown(0x50)) {	//P
+		this->modelHandler->SelectModel(inputH->GetMouseViewPos(), this->cameraH);
+	}
+
 	result = this->Render();
 	if (!result) {
 		return false;
@@ -365,7 +370,8 @@ bool GraphicsHandler::Render()
 
 	for (int i = 0; i < models.size(); i++) {
 		models.at(i)->GetWorldMatrix(worldMatrix);
-
+		
+		
 		////Check against frustum
 		//if (this->models.at(i)->GethasBB()) {
 		//	//Get the world matrix from model
