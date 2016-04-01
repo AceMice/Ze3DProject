@@ -138,6 +138,7 @@ void TextHandler::ReleaseSentences()
 
 	return;
 }
+
 void TextHandler::RenderSentence(ID3D11DeviceContext* deviceContext, int id)
 {
 	Sentence* tempSentence = this->sentences.at(id);

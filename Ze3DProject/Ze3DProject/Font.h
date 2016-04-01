@@ -17,6 +17,14 @@ private:
 		XMFLOAT2 texture;
 	};
 
+	FontChar* fontChars;
+	Texture* fontTexture;
+
+	bool LoadFontData(std::string fontFilename);
+	void ReleaseFontData();
+	bool LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext, std::string textureFilename);
+	void ReleaseTexture();
+
 public:
 	Font();
 	~Font();
@@ -25,17 +33,8 @@ public:
 	void Shutdown();
 
 	ID3D11ShaderResourceView* GetTexture();
+
 	void BuildVertexArray(void* vertices, const char* text, float drawPosX, float drawPosY);
-
-private:
-	bool LoadFontData(std::string fontFilename);
-	void ReleaseFontData();
-	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext* deviceContext, std::string textureFilename);
-	void ReleaseTexture();
-
-private:
-	FontChar* fontChar;
-	Texture* fontTexture;
 };
 
 #endif

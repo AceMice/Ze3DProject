@@ -30,6 +30,7 @@ private:
 	int screenWidth;
 	int screenHeight;
 
+
 	void RenderSentence(ID3D11DeviceContext* deviceContext, int id);
 	void ReleaseSentences();
 

@@ -2,7 +2,7 @@
 
 Font::Font()
 {
-	this->fontChar = nullptr;
+	this->fontChars = nullptr;
 	this->fontTexture = nullptr;
 }
 
@@ -13,6 +13,7 @@ Font::~Font()
 bool Font::LoadFontData(std::string fontFilename)
 {
 	std::ifstream file;
+
 	char junkChar;
 	int junkInt;
 	std::stringstream ss;
@@ -23,23 +24,26 @@ bool Font::LoadFontData(std::string fontFilename)
 		return false;
 	}
 
-	this->fontChar = new FontChar[95];
+	this->fontChars = new FontChar[95];
 
 	for (int i = 0; i < 95; i++) {
 		std::getline(file, line);
 		ss.str(line);
-		ss >> junkInt >> junkChar >> this->fontChar[i].left >> this->fontChar[i].right >> this->fontChar[i].size;
+		ss >> junkInt >> junkChar >> this->fontChars[i].left >> this->fontChars[i].right >> this->fontChars[i].size;
 		ss.clear();
 	}
+
+
+	file.close();
 
 	return true;
 }
 
 void Font::ReleaseFontData()
 {
-	if (this->fontChar) {
-		delete[] this->fontChar;
-		this->fontChar = nullptr;
+	if (this->fontChars) {
+		delete[] this->fontChars;
+		this->fontChars = nullptr;
 	}
 
 	return;
@@ -57,7 +61,6 @@ bool Font::LoadTexture(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 	if (!result) {
 		return false;
 	}
-
 	return true;
 }
 
@@ -93,7 +96,7 @@ void Font::Shutdown()
 	this->ReleaseFontData();
 
 	this->ReleaseTexture();
-	
+
 	return;
 }
 
@@ -117,30 +120,30 @@ void Font::BuildVertexArray(void* vertices, const char* text, float drawPosX, fl
 		}
 		else {
 			verticesPtr[index].position = XMFLOAT3(drawPosX, drawPosY - 16, 0.0f); //Bottom left
-			verticesPtr[index].texture = XMFLOAT2(this->fontChar[letter].left, 1.0f);
+			verticesPtr[index].texture = XMFLOAT2(this->fontChars[letter].left, 1.0f);
 			index++;
 
-			verticesPtr[index].position = XMFLOAT3(drawPosX + this->fontChar[letter].size, drawPosY, 0.0f); //Top right
-			verticesPtr[index].texture = XMFLOAT2(this->fontChar[letter].right, 0.0f);
+			verticesPtr[index].position = XMFLOAT3(drawPosX + this->fontChars[letter].size, drawPosY, 0.0f); //Top right
+			verticesPtr[index].texture = XMFLOAT2(this->fontChars[letter].right, 0.0f);
 			index++;
 
 			verticesPtr[index].position = XMFLOAT3(drawPosX, drawPosY, 0.0f); //Top left
-			verticesPtr[index].texture = XMFLOAT2(this->fontChar[letter].left, 0.0f);
+			verticesPtr[index].texture = XMFLOAT2(this->fontChars[letter].left, 0.0f);
 			index++;
 
 			verticesPtr[index].position = XMFLOAT3(drawPosX, drawPosY - 16, 0.0f); //Bottom left
-			verticesPtr[index].texture = XMFLOAT2(this->fontChar[letter].left, 1.0f);
+			verticesPtr[index].texture = XMFLOAT2(this->fontChars[letter].left, 1.0f);
 			index++;
 
-			verticesPtr[index].position = XMFLOAT3(drawPosX + this->fontChar[letter].size, drawPosY - 16, 0.0f); //Bottom right
-			verticesPtr[index].texture = XMFLOAT2(this->fontChar[letter].right, 1.0f);
+			verticesPtr[index].position = XMFLOAT3(drawPosX + this->fontChars[letter].size, drawPosY - 16, 0.0f); //Bottom right
+			verticesPtr[index].texture = XMFLOAT2(this->fontChars[letter].right, 1.0f);
 			index++;
 
-			verticesPtr[index].position = XMFLOAT3(drawPosX + this->fontChar[letter].size, drawPosY, 0.0f); //Top right
-			verticesPtr[index].texture = XMFLOAT2(this->fontChar[letter].right, 0.0f);
+			verticesPtr[index].position = XMFLOAT3(drawPosX + this->fontChars[letter].size, drawPosY, 0.0f); //Top right
+			verticesPtr[index].texture = XMFLOAT2(this->fontChars[letter].right, 0.0f);
 			index++;
 
-			drawPosX += this->fontChar[letter].size + 1.0f;
+			drawPosX += this->fontChars[letter].size + 1.0f;
 		}
 	}
 
