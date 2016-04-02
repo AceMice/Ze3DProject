@@ -111,7 +111,7 @@ bool SystemHandler::Frame(float dTime) {
 	//OPS! RIGHT NOW INPUT->FRAME() CANT RETURN FALSE SINCE WE WANT THE PROGRAM TO WORK EVEN IF WE LOSE CONTACT WITH THE MOUSE //
 
 	//Do the frame processing for the graphics object
-	result = this->graphicsH->Frame(dTime, this->inputH);
+	result = this->graphicsH->Frame(dTime, this->inputH, this->hwnd);
 
 	if (!result) {
 		return false;

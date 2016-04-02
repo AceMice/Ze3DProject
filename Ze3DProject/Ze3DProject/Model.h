@@ -76,7 +76,7 @@ public:
 
 	ID3D11ShaderResourceView* GetTexture(int);
 	int NrOfSubsets();
-	void GetSubsetInfo(int, int&, int&, int&, int&, XMFLOAT4&, XMFLOAT4&, bool&);
+	void GetSubsetInfo(int, int&, int&, int&, int&, XMFLOAT4&, XMFLOAT4&, bool&, bool& picked);
 
 	std::string GetName();
 	XMVECTOR* GetBouningBox(XMMATRIX);

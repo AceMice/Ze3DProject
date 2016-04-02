@@ -9,7 +9,8 @@ cbuffer MatrixBuffer
 	float4 specColor;
 	bool hasTexture;
 	bool hasNormMap;
-	//  padding 8 bytes
+	bool picked;
+	//  padding 4 bytes
 	float4 cameraPos;
 };
 

@@ -35,18 +35,20 @@ private:
 	TextHandler* textHandler;
 
 	bool Render();
-	//For testing
-	float rotY;
 	float moveLight;
 	bool increase;
 	float runTime;
 	int modelsLeft;
+	int highscore;
+
+	bool saveHighscore();
+	bool loadHighscore();
 public:
 	GraphicsHandler();
 	~GraphicsHandler();
 
 	bool Initialize(int, int, HWND);
-	bool Frame(float, InputHandler*);
+	bool Frame(float, InputHandler*, HWND);
 	void Shutdown();
 	void GetProjectionMatrix(XMMATRIX&);
 };

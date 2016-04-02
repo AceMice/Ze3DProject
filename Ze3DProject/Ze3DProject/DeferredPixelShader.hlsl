@@ -12,6 +12,7 @@ cbuffer MatrixBuffer
 	float4 specColor;
 	bool hasTexture;
 	bool hasNormMap;
+	bool picked;
 };
 
 struct PixelInput
@@ -47,6 +48,9 @@ PixelOutput main(PixelInput input) : SV_TARGET
 	}
 	else {
 		output.color = difColor;
+	}
+	if (picked) {
+		output.color.r *= 1.5f;
 	}
 	if (hasNormMap) {
 		//Load normals from normal map

@@ -12,7 +12,6 @@ GraphicsHandler::GraphicsHandler()
 	this->modelHandler = nullptr;
 	this->textHandler = nullptr;
 
-	this->rotY = 0.0f;
 	this->moveLight = 0.0f;
 	this->increase = true;
 	this->runTime = 0.0f;
@@ -74,20 +73,37 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 
 	std::stringstream ss;
-	for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < 10; i++) {
 		
-		// Create the model2 object.
+		//Create the box objects
 		ss.str("");
 		ss << i;
-		std::string ogreName = "ogreFullG" + ss.str();
+		std::string boxName = "WoodBox" + ss.str();
 		ss.clear();
-		result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreFullG", ogreName, true);
+		result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "WoodBox", boxName, true);
 		if (!result)
 		{
-			MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
+			MessageBox(hwnd, L"this->modelHandler->CreateModelWoodBox", L"Error", MB_OK);
 			return false;
 		}
 
+	}
+
+	//Create the ogre
+	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreFullG", "ogreFullG", false);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
+		return false;
+	}
+
+
+	//Create the ogre
+	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "carSLS3", "carSLS3", false);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelHandler->CreateModelcarSLS3", L"Error", MB_OK);
+		return false;
 	}
 
 	// Create the deferred shader object.
@@ -152,15 +168,15 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	
 	float z = 0.0f;
 	float x = 0.0f;
-	for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < 10; i++) {
 		std::string ogreName;
 		ss.str("");
 		ss << i;
-		ogreName = "ogreFullG" + ss.str();
-		z = (i / 5 * 50) - 50;
-		x = ((i % 5) * 50) - 90;
-		modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-		modelWorld = XMMatrixTranslation(x + 200, -5.75f, z) * modelWorld;
+		ogreName = "WoodBox" + ss.str();
+		z = (i / 5 * 40) - 50;
+		x = ((i % 5) * 40);
+		modelWorld = XMMatrixScaling(0.25f, 0.25f, 0.25f);
+		modelWorld = XMMatrixTranslation(x, -5.75f, z) * modelWorld;
 		//modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
 		if (!this->modelHandler->UpdateModelWorldMatrix(ogreName, modelWorld)) {
 			return false;
@@ -169,12 +185,19 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		ss.clear();
 	}
 	
+
 	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(0, -5.75f, 10) * modelWorld;
 	modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
-	if (!this->modelHandler->UpdateModelWorldMatrix("ogreFullG19", modelWorld)) {
+	if (!this->modelHandler->UpdateModelWorldMatrix("ogreFullG", modelWorld)) {
 		return false;
 	}
 
+	modelWorld = XMMatrixScaling(4.25f, 4.25f, 4.25f);
+	modelWorld = XMMatrixTranslation(-1.5f, -0.5f, 2.5f) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("carSLS3", modelWorld)) {
+		return false;
+	}
 
 	XMMATRIX viewMatrix, projectionMatrix;
 	this->cameraH->GetBaseViewMatrix(viewMatrix);
@@ -206,16 +229,20 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	if (sentenceId == -1) {
 		return false;
 	}
-	sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 60);
+	sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 32);
 	if (sentenceId == -1) {
 		return false;
+	}
+
+	if (!this->loadHighscore()) {
+		this->highscore = 1337;
 	}
 
 
 	return true;
 }
 
-bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
+bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 {
 	bool result;
 	XMMATRIX modelWorld;
@@ -223,24 +250,27 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	XMMATRIX projM;
 	this->direct3DH->GetProjectionMatrix(projM);
 	
-	this->rotY += dTime / 800000;
-	
-	/*if (this->moveLight > 5.0f) {
+	if (this->moveLight > 5.0f) {
 		this->increase = false;
 	}
 	if (this->moveLight < -30.0f) {
 		this->increase = true;
-	}*/
-	this->moveLight = -10.0f;
-	/*if (this->increase) {
+	}
+	//this->moveLight = -10.0f;
+	if (this->increase) {
 		this->moveLight += dTime / 80000;
 	}
 	else {
 		this->moveLight -= dTime / 80000;
-	}*/
+	}
 
+	if (this->runTime == -1) {
+		this->runTime = 0;
+	}
+	else {
+		this->runTime += dTime / 1000000;
+	}
 	
-
 	//Ground
 	GroundModel* tempGroundModel = this->groundModels.at(0);
 	if (tempGroundModel) {
@@ -249,14 +279,36 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	}
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH, this->groundModels.at(0));	//Sending down the mesh to check if it and the camera intersect
+	
+	if (this->modelHandler->GetNrPickableModels() == 0) {
+		int playAgain;
+		std::wstring text;
+		if (this->runTime < this->highscore) {
+			this->highscore = (int)this->runTime;
+			this->saveHighscore();
+			text = L"You beat the game highscore with a score of " + std::to_wstring(this->highscore) + L"!\n Do you want to play again?";
+			playAgain = MessageBox(hwnd, text.c_str(), L"Congratulations!", MB_YESNO);
+		}
+		else {
+			text = L"Good run, you got a score of " + std::to_wstring((int)this->runTime) + L" so not quite enough for a highscore!\n Do you want to play again?";
+			playAgain = MessageBox(hwnd, text.c_str(), L"Well done!", MB_YESNO);
+		}
+		
+		if (playAgain == 7) {
+			return false;
+		}
+		else {
+			this->runTime = -1;
+			this->modelHandler->resetSelectedModels();
+			this->cameraH->SetPosition(0.0f, 0.0f, -20.0f);
+		}
+	}
 
 	//Picking
 	if (inputH->IsKeyReleased(0x50)) {	//P
 	
 		this->modelsLeft -= this->modelHandler->SelectModel(inputH->GetMouseViewPos(projM), this->cameraH);
 	}
-
-	this->runTime += dTime / 1000000;
 
 	std::string text = "Time: " + std::to_string((int)this->runTime);
 
@@ -274,14 +326,12 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 		return false;
 
 	}
-	XMFLOAT3 mx; 
-	XMStoreFloat3(&mx, inputH->GetMouseViewPos(projM));
-	text = "MousePos: " + std::to_string(mx.x) + "x , " + std::to_string(mx.y) + "y, " + std::to_string(mx.z) + "z";
+
+	text = "Hightscore: " + std::to_string(this->highscore);
 
 	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 2, text, 50, 90, XMFLOAT3(1.0f, 0.0f, 0.0f));
 	if (!result) {
 		return false;
-
 	}
 
 	result = this->Render();
@@ -304,6 +354,7 @@ bool GraphicsHandler::Render()
 	XMFLOAT4 difColor;
 	XMFLOAT4 specColor;
 	bool transparent;
+	bool picked;
 	XMVECTOR* modelBB;
 	bool renderModel = true;
 	int modelsRendered = 0;
@@ -313,8 +364,8 @@ bool GraphicsHandler::Render()
 	XMFLOAT4 camPos = XMFLOAT4(XMVectorGetX(camPosVec), XMVectorGetY(camPosVec), XMVectorGetZ(camPosVec), XMVectorGetW(camPosVec));
 	
 	//Create the view, and projection matrices based on light pos(25, 15, -6)
-	XMVECTOR lookAt = XMVectorSet(150.0f, 0.0f, 25.0f, 0.0f);
-	XMVECTOR lightPos = XMVectorSet(-25.0f, 75.0f, this->moveLight, 0.0f);
+	XMVECTOR lookAt = XMVectorSet(50.0f, 0.0f, 25.0f, 0.0f);
+	XMVECTOR lightPos = XMVectorSet(-25.0f, 25.0f, this->moveLight, 0.0f);
 	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	lightViewMatrix = XMMatrixLookAtLH(lightPos, lookAt, lightUp);
 
@@ -349,7 +400,7 @@ bool GraphicsHandler::Render()
 			if (!transparent) {
 				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
 					worldMatrix, viewMatrix, projectionMatrix, this->groundModels.at(i)->GetTexture(textureIndex),
-					this->groundModels.at(i)->GetTexture(normMapIndex), difColor, specColor, false, camPos);
+					this->groundModels.at(i)->GetTexture(normMapIndex), difColor, specColor, false, false, camPos);
 				if (!result)
 				{
 					return false;
@@ -399,13 +450,13 @@ bool GraphicsHandler::Render()
 			modelSubsets = models.at(i)->NrOfSubsets();
 			for (int j = 0; j < modelSubsets; j++) {
 				//Get all the nessecary information from the model
-				models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+				models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent, picked);
 
 				//Render the model using the shader-handler
 				if (!transparent) {
 					result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
 						worldMatrix, viewMatrix, projectionMatrix, models.at(i)->GetTexture(textureIndex),
-						models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, camPos);
+						models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, picked, camPos);
 					if (!result)
 					{
 						return false;
@@ -465,7 +516,7 @@ bool GraphicsHandler::Render()
 		modelSubsets = models.at(i)->NrOfSubsets();
 		for (int j = 0; j < modelSubsets; j++) {
 			//Get all the nessecary information from the model
-			models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+			models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent, picked);
 
 			//Render the model using the shader-handler
 			if (!transparent) {
@@ -623,4 +674,41 @@ void GraphicsHandler::Shutdown()
 
 void GraphicsHandler::GetProjectionMatrix(XMMATRIX &projectionMatrix) {
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
+}
+
+bool GraphicsHandler::loadHighscore()
+{
+	std::ifstream file;
+	std::string line;
+	std::stringstream ss;
+	file.open("../Ze3DProject/Data/highscore.txt");
+	if (!file.is_open()) {
+		return false;
+	}
+
+	std::getline(file, line);
+	ss.str(line);
+	ss >> this->highscore;
+	ss.clear();
+
+	file.close();
+
+	return true;
+}
+
+bool GraphicsHandler::saveHighscore()
+{
+	std::ofstream file;
+	std::string line;
+	std::stringstream ss;
+	file.open("../Ze3DProject/Data/highscore.txt");
+	if (!file.is_open()) {
+		return false;
+	}
+
+	file << this->highscore;
+
+	file.close();
+	
+	return true;
 }

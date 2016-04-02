@@ -25,6 +25,10 @@ void CameraHandler::SetPosition(float x, float y, float z)
 {
 	this->camPos = XMVectorSet(x, y, z, 0);
 
+	this->camYaw = 0.0f;
+	this->camPitch = 0.0f;
+	this->camRoll = 0.0f;
+
 	return;
 }
 

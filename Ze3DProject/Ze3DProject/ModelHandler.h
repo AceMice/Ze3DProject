@@ -59,6 +59,7 @@ public:
 	void Shutdown();
 	void GenerateModelsMinMaxVerts();
 	bool SelectModel(XMVECTOR, CameraHandler*);
+	void resetSelectedModels();
 	
 	int GetNrPickableModels();
 
