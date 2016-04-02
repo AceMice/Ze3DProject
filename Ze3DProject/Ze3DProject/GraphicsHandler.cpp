@@ -78,24 +78,9 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	//// Create the model1 object.
-	//tempModel = new Model;
-	//if (!tempModel)
-	//{
-	//	return false;
-	//}
-
-	////Initialize the ground object
-	//result = tempModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ground", "ground", 0, false);
-	//if (!result)
-	//{
-	//	MessageBox(hwnd, L"this->ground->Initialize", L"Error", MB_OK);
-	//	return false;
-	//}
-	////Insert model into vector
-	//this->models.push_back(tempModel);
 	std::stringstream ss;
 	for (int i = 0; i < 20; i++) {
+		
 		// Create the model2 object.
 		ss.str("");
 		ss << i;
@@ -107,38 +92,8 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 			MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
 			return false;
 		}
-		//tempModel = new Model;
-		//if (!tempModel)
-		//{
-		//	return false;
-		//}
-		////Initialize the OgreFullG object
-		//result = tempModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreFullG", ogreName, 1 + i, true);
-		//if (!result)
-		//{
-		//	MessageBox(hwnd, L"this->OgreFullG->Initialize", L"Error", MB_OK);
-		//	return false;
-		//}
-		////Insert model into vector
-		//this->models.push_back(tempModel);
-	}
-	
 
-	//// Create the carSLS3 object.
-	//tempModel = new Model;
-	//if (!tempModel)
-	//{
-	//	return false;
-	//}
-	////Initialize the carSLS3 object
-	//result = tempModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "carSLS3", "carSLS3");
-	//if (!result)
-	//{
-	//	MessageBox(hwnd, L"this->carSLS3->Initialize", L"Error", MB_OK);
-	//	return false;
-	//}
-	////Insert model into vector
-	//this->models.push_back(tempModel);
+	}
 
 	// Create the deferred shader object.
 	this->shaderH = new ShaderHandler;
@@ -200,16 +155,9 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	XMMATRIX modelWorld;
 	
-	/*tempModel = this->GetModel("carSLS3");
-	if (tempModel) {
-		modelWorld = XMMatrixScaling(5.0f, 5.0f, 5.0f);
-		modelWorld = XMMatrixRotationY(3.0f) * modelWorld;
-		modelWorld = XMMatrixTranslation(-1.5f, -0.33f, 1.0f) * modelWorld;
-		tempModel->SetWorldMatrix(modelWorld);
-	}*/
 	float z = 0.0f;
 	float x = 0.0f;
-	for (int i = 0; i < 19; i++) {
+	for (int i = 0; i < 20; i++) {
 		std::string ogreName;
 		ss.str("");
 		ss << i;
@@ -269,6 +217,11 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	if (sentenceId == -1) {
 		return false;
 	}
+	sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 60);
+	if (sentenceId == -1) {
+		return false;
+	}
+
 
 	return true;
 }
@@ -278,7 +231,8 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	bool result;
 	XMMATRIX modelWorld;
 	Model* tempModel = nullptr;
-	
+	XMMATRIX projM;
+	this->direct3DH->GetProjectionMatrix(projM);
 	
 	this->rotY += dTime / 800000;
 	
@@ -308,8 +262,9 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	this->cameraH->Frame(dTime, inputH, this->groundModels.at(0));	//Sending down the mesh to check if it and the camera intersect
 
 	//Picking
-	if (inputH->IsKeyDown(0x50)) {	//P
-		this->modelHandler->SelectModel(inputH->GetMouseViewPos(), this->cameraH);
+	if (inputH->IsKeyReleased(0x50)) {	//P
+	
+		this->modelsLeft -= this->modelHandler->SelectModel(inputH->GetMouseViewPos(projM), this->cameraH);
 	}
 
 	this->runTime += dTime / 1000000;
@@ -324,6 +279,15 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	text = "Left to pick: " + std::to_string(this->modelsLeft);
 
 	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 1, text, 50, 70, XMFLOAT3(1.0f, 0.0f, 0.0f));
+	if (!result) {
+		return false;
+
+	}
+	XMFLOAT3 mx; 
+	XMStoreFloat3(&mx, inputH->GetMouseViewPos(projM));
+	text = "MousePos: " + std::to_string(mx.x) + "x , " + std::to_string(mx.y) + "y, " + std::to_string(mx.z) + "z";
+
+	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 2, text, 50, 90, XMFLOAT3(1.0f, 0.0f, 0.0f));
 	if (!result) {
 		return false;
 
@@ -411,8 +375,9 @@ bool GraphicsHandler::Render()
 	//Get the models in frustum
 	int path[2] = { 1, 0 };
 	int levels = 2;
-	//models = this->modelHandler->GetModels();
-	models = this->modelHandler->GetModelsInViewFrustum(this->frustum);
+	
+	models = this->modelHandler->GetModels();
+	//models = this->modelHandler->GetModelsInViewFrustum(this->frustum);
 	//models = this->modelHandler->GetModelsInNode(path, levels);
 
 	for (int i = 0; i < models.size(); i++) {
@@ -663,4 +628,8 @@ void GraphicsHandler::Shutdown()
 		delete this->direct3DH;
 		this->direct3DH = nullptr;
 	}
+}
+
+void GraphicsHandler::GetProjectionMatrix(XMMATRIX &projectionMatrix) {
+	this->direct3DH->GetProjectionMatrix(projectionMatrix);
 }

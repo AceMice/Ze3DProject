@@ -2,6 +2,11 @@
 
 
 InputHandler::InputHandler() {
+	this->lastKeyPressed = -1;
+	this->mouseX = 0;
+	this->mouseY = 0;
+	this->screenWidth = 0;
+	this->screenHeight = 0;
 
 }
 
@@ -15,9 +20,9 @@ InputHandler::~InputHandler() {
 
 void InputHandler::Initialize(HINSTANCE hInstance, HWND hwnd, int screenWidth, int screenHeight) {
 	HRESULT hr;
-
-	this->mouseX = 0;
-	this->mouseY = 0;
+	SetPhysicalCursorPos((GetSystemMetrics(SM_CXSCREEN) - screenWidth) / 2, (GetSystemMetrics(SM_CYSCREEN) - screenHeight) / 2);
+	this->mouseX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth) / 2;
+	this->mouseY = (GetSystemMetrics(SM_CYSCREEN) - screenHeight) / 2;
 	this->screenWidth = screenWidth;
 	this->screenHeight = screenHeight;
 
@@ -56,6 +61,7 @@ void InputHandler::Initialize(HINSTANCE hInstance, HWND hwnd, int screenWidth, i
 		MessageBox(hwnd, L"DIMouse->Acquire", L"Error", MB_OK);
 	}
 
+
 	return;
 }
 
@@ -92,6 +98,7 @@ bool InputHandler::Frame() {
 void InputHandler::KeyDown(unsigned int input) {
 	//If a key is pressed then save that in the key array
 	this->keys[input] = true;
+
 	
 	return;
 }
@@ -99,12 +106,23 @@ void InputHandler::KeyDown(unsigned int input) {
 void InputHandler::KeyUp(unsigned int input) {
 	//If a key is released then clear the state in the key array
 	this->keys[input] = false;
+	this->lastKeyPressed = input;
+
 	return;
 }
 
 bool InputHandler::IsKeyDown(unsigned int key) {
 	//Return what state the key is in
 	return this->keys[key];
+}
+
+bool InputHandler::IsKeyReleased(unsigned int key) {
+	if ( this->lastKeyPressed == key ) {
+		this->lastKeyPressed = -1;
+		return true;
+	}
+	
+	return false;
 }
 
 bool InputHandler::readMouse() {
@@ -130,21 +148,23 @@ bool InputHandler::readMouse() {
 void InputHandler::ProcessInput() {
 
 	//Update the location of the mouse cursor based on the change of the mouse location during frame
-	this->mouseX += this->mouseState.lX;
-	this->mouseY += this->mouseState.lY;
+	POINT tempP;
+	GetCursorPos(&tempP);
+	this->mouseX = tempP.x - (GetSystemMetrics(SM_CXSCREEN) - this->screenWidth) / 2;
+	this->mouseY = tempP.y - (GetSystemMetrics(SM_CYSCREEN) - this->screenHeight) / 2;
 
 	//Check if the mouse exits the screen
 	if (this->mouseX < 0) {
-		this->mouseX = 0;
+		SetPhysicalCursorPos((GetSystemMetrics(SM_CXSCREEN) - this->screenWidth) / 2, tempP.y);
 	}
 	if (this->mouseX > this->screenWidth) {
-		this->mouseX = this->screenWidth;
+		SetPhysicalCursorPos(((GetSystemMetrics(SM_CXSCREEN) - this->screenWidth) / 2) + this->screenWidth, tempP.y);
 	}
 	if (this->mouseY < 0) {
-		this->mouseY = 0;
+		SetPhysicalCursorPos(tempP.x, (GetSystemMetrics(SM_CYSCREEN) - this->screenHeight) / 2);
 	}
 	if (this->mouseY > this->screenHeight) {
-		this->mouseY = this->screenHeight;
+		SetPhysicalCursorPos(tempP.x, ((GetSystemMetrics(SM_CYSCREEN) - this->screenHeight) / 2) + this->screenHeight);
 	}
 
 	return;
@@ -155,10 +175,16 @@ DirectX::XMVECTOR InputHandler::GetMouseDeltaPos() {
 	return DirectX::XMVectorSet(this->mouseState.lX, this->mouseState.lY, 0, 0);	//z,y is not used so set to 0;
 }
 
-DirectX::XMVECTOR InputHandler::GetMouseViewPos() {
+DirectX::XMVECTOR InputHandler::GetMouseViewPos(DirectX::XMMATRIX projM) {
+	DirectX::XMFLOAT4X4 tempM;
+	DirectX::XMStoreFloat4x4(&tempM,projM);
+	
 	float viewSpaceX = ((2 * this->mouseX) / this->screenWidth) -1;
-	float viewSpaceY = ((2 * this->mouseY) / this->screenHeight) -1;
-	float viewSpaceZ = 1 / tan((( 3.14 / 2.0f) / 2));
+	float viewSpaceY = ((-2 * this->mouseY) / this->screenHeight) +1;
+	float viewSpaceZ = 1.f;
+
+	viewSpaceX = viewSpaceX / tempM._11;
+	viewSpaceY = viewSpaceY / tempM._22;
 
 	DirectX::XMVECTOR result = DirectX::XMVectorSet(viewSpaceX, viewSpaceY, viewSpaceZ, 0);
 	

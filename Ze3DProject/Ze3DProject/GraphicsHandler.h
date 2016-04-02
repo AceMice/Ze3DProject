@@ -48,6 +48,7 @@ public:
 	bool Initialize(int, int, HWND);
 	bool Frame(float, InputHandler*);
 	void Shutdown();
+	void GetProjectionMatrix(XMMATRIX&);
 };
 
 #endif

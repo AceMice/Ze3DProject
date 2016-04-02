@@ -632,7 +632,7 @@ void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int
 	}
 	Texture::Material tempMaterial = this->texture->GetMaterial(this->materialNames.at(subsetIndex));
 
-	if (tempMaterial.hasTexture) {	//REMOVE LATER HALF
+	if (tempMaterial.hasTexture && !this->isSelected) {	//REMOVE LATER HALF
 		textureIndex = tempMaterial.textureIndex;
 	}
 	else {

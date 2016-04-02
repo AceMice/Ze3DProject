@@ -501,111 +501,155 @@ bool ModelHandler::SelectModel(XMVECTOR mouseViewPos, CameraHandler* cameraH) {
 	//Get our point in View space
 	XMFLOAT3 min;
 	XMFLOAT3 max;
-	XMVECTOR normal = XMVectorSet(0,0,-1,0);
+	XMVECTOR pos = XMVectorSet(0,0,0,0);
 	float t = NULL;
+	float lastT = 99099;
 	int index = -1;
 	XMMATRIX CameraViewMatrix;
 	cameraH->GetViewMatrix(CameraViewMatrix);
 	XMMATRIX inverseViewMatrix = XMMatrixInverse(NULL,CameraViewMatrix);	//Invert the view matrix to move from view to worl space
 
-	XMVECTOR r = XMVector3TransformCoord(mouseViewPos,inverseViewMatrix); 
-	XMVECTOR n = XMVector3TransformCoord(normal, inverseViewMatrix);
+	XMVECTOR dir = XMVector3TransformNormal(mouseViewPos,inverseViewMatrix); 
+	XMVECTOR oriPos = XMVector3TransformCoord(pos, inverseViewMatrix);
 
-	n = XMVector3Normalize(n);
 	
 	for (int i = 0; i < this->models.size(); i++) {
 		Model* b = this->models.at(i);
 		this->models.at(i)->GetMinMaxVertex(min, max);
 
-		if (this->RayAABBCheack(min, max, r, n, t)) {
-			index = i;
-		}
+		if (!this->models.at(i)->IsModelSelected() )  {
 
+			if (this->RayAABBCheack(min, max, oriPos, dir, t)) {
+				if (t < lastT) {
+					index = i;
+					lastT = t;
+				}
+			}
+
+		}
 	}
 
 	if (index != -1) {
 		this->models.at(index)->SetModelSelectionState(true);
 	}
-	
-	//Debug
-	Model* a = this->models.at(index);
-	float x = XMVectorGetX(r);
-	float y = XMVectorGetY(r);
-	float z = XMVectorGetZ(r);
+	else{
+		result = false;
+	}
 	
 	
 	return result;
 }
 
-bool ModelHandler::RayAABBCheack(XMFLOAT3& min, XMFLOAT3& max, XMVECTOR r, XMVECTOR n, float& t) {
-	
-	//Check X
-	float tmin = (min.x - XMVectorGetX(r)) / XMVectorGetX(n);
-	float tmax = (max.x - XMVectorGetX(r)) / XMVectorGetX(n);
+bool ModelHandler::RayAABBCheack(XMFLOAT3& min, XMFLOAT3& max, XMVECTOR ori, XMVECTOR dir, float& t) {
+	XMFLOAT3 dirfrac;
+	XMFLOAT3 dirf;
+	XMFLOAT3 orif;
+	XMStoreFloat3(&dirf,dir);
+	XMStoreFloat3(&orif, ori);
+	// r.dir is unit direction vector of ray
+	dirfrac.x = 1.0f / dirf.x;
+	dirfrac.y = 1.0f / dirf.y;
+	dirfrac.z = 1.0f / dirf.z;
+	// lb is the corner of AABB with minimal coordinates - left bottom, rt is maximal corner
+	// r.org is origin of ray
+	float t1 = (min.x - orif.x)*dirfrac.x;
+	float t2 = (max.x - orif.x)*dirfrac.x;
+	float t3 = (min.y - orif.y)*dirfrac.y;
+	float t4 = (max.y - orif.y)*dirfrac.y;
+	float t5 = (min.z - orif.z)*dirfrac.z;
+	float t6 = (max.z - orif.z)*dirfrac.z;
 
-	if (tmin > tmax) {
-		this->swap(tmin, tmax);
-	}
+	float tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
+	float tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
 
-	//Check Y
-	float tymin = (min.y - XMVectorGetY(r)) / XMVectorGetY(n);
-	float tymax = (max.y - XMVectorGetY(r)) / XMVectorGetY(n);
-
-	if (tymin > tymax) {
-		this->swap(tymin, tymax);
-	}
-
-	if ((tmin > tymax) || (tymin > tmax)) {
+	// if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behing us
+	if (tmax < 0)
+	{
+		t = tmax;
 		return false;
 	}
 
-	if (tymin > tmin) {
-		tmin = tymin;
-	}
-
-	if (tymax < tmax) {
-		tmax = tymax;
-	}
-
-	//Check Z
-	float tzmin = (min.z - XMVectorGetZ(r)) / XMVectorGetZ(n);
-	float tzmax = (max.z - XMVectorGetZ(r)) / XMVectorGetZ(n);
-
-	if (tzmin > tzmax) {
-		this->swap(tzmin, tzmax);
-	}
-
-	if ((tmin > tzmax) || (tzmin > tmax)) {
+	// if tmin > tmax, ray doesn't intersect AABB
+	if (tmin > tmax)
+	{
+		t = tmax;
 		return false;
 	}
 
-	if (tzmin > tmin) {
-		tmin = tzmin;
-	}
-
-	if (tzmax < tmax) {
-		tmax = tzmax;
-	}
-
-	// Return the distance
-	if (tmin > 0) {
-		if (t == NULL || abs(tmin) < t) {
-			t = abs(tmin);
-		}
-		else {
-			return false;
-		}
-	}
-	else {
-		if (t == NULL || abs(tmax) < t) {
-			t = abs(tmax);
-		}
-		else {
-			return false;
-		}
-	}
-
+	t = tmin;
 	return true;
+
+
+
+
+
+	////Check X
+	//float tmin = (min.x - XMVectorGetX(ori)) / XMVectorGetX(dir);
+	//float tmax = (max.x - XMVectorGetX(ori)) / XMVectorGetX(dir);
+
+	//if (tmin > tmax) {
+	//	this->swap(tmin, tmax);
+	//}
+
+	////Check Y
+	//float tymin = (min.y - XMVectorGetY(ori)) / XMVectorGetY(dir);
+	//float tymax = (max.y - XMVectorGetY(ori)) / XMVectorGetY(dir);
+
+	//if (tymin > tymax) {
+	//	this->swap(tymin, tymax);
+	//}
+
+	//if ((tmin > tymax) || (tymin > tmax)) {
+	//	return false;
+	//}
+
+	//if (tymin > tmin) {
+	//	tmin = tymin;
+	//}
+
+	//if (tymax < tmax) {
+	//	tmax = tymax;
+	//}
+
+	////Check Z
+	//float tzmin = (min.z - XMVectorGetZ(ori)) / XMVectorGetZ(dir);
+	//float tzmax = (max.z - XMVectorGetZ(ori)) / XMVectorGetZ(dir);
+
+	//if (tzmin > tzmax) {
+	//	this->swap(tzmin, tzmax);
+	//}
+
+	//if ((tmin > tzmax) || (tzmin > tmax)) {
+	//	return false;
+	//}
+
+	//if (tzmin > tmin) {
+	//	tmin = tzmin;
+	//}
+
+	//if (tzmax < tmax) {
+	//	tmax = tzmax;
+	//}
+
+	//// Return the distance
+	//if (tmin > 0) {
+	//	if (t == NULL || abs(tmin) < t) {
+	//		t = abs(tmin);
+	//	}
+	//	else {
+	//		return false;
+	//	}
+	//}
+	//else {
+	//	if (t == NULL || abs(tmax) < t) {
+	//		t = abs(tmax);
+	//	}
+	//	else {
+	//		return false;
+	//	}
+	//}
+
+	//return true;
 }
 
 void ModelHandler::swap(float& v1, float& v2) {
