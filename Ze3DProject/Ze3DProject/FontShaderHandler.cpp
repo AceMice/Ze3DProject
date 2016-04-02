@@ -13,12 +13,12 @@ FontShaderHandler::~FontShaderHandler()
 {
 }
 
-bool FontShaderHandler::Initialize(ID3D11Device* device, HWND hwnd)
+bool FontShaderHandler::Initialize(ID3D11Device* device)
 {
 	bool result = false;
 
 	//Initialize vertex and pixel shaders
-	result = this->InitializeShader(device, hwnd, L"../Ze3DProject/ColorVertexShader.hlsl", L"../Ze3DProject/ColorPixelShader.hlsl");
+	result = this->InitializeShader(device, L"../Ze3DProject/FontVertexShader.hlsl", L"../Ze3DProject/FontPixelShader.hlsl");
 	if (!result) {
 		return false;
 	}
@@ -36,7 +36,7 @@ void FontShaderHandler::Shutdown()
 
 
 bool FontShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCount, XMMATRIX worldMatrix,
-	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* fontTexture, XMFLOAT4 color)
+	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* fontTexture, XMFLOAT3 color)
 {
 	bool result = false;
 
@@ -51,7 +51,7 @@ bool FontShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCoun
 	return true;
 }
 
-bool FontShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
+bool FontShaderHandler::InitializeShader(ID3D11Device* device, WCHAR* vsFilename, WCHAR* psFilename)
 {
 	HRESULT hresult;
 	ID3D10Blob* errorMessage;
@@ -71,10 +71,7 @@ bool FontShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR*
 	hresult = D3DCompileFromFile(vsFilename, NULL, NULL, "main", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
 	if (FAILED(hresult)) {
 		if (errorMessage) {
-			OutputShaderErrorMessage(errorMessage, hwnd, vsFilename);
-		}
-		else {
-			MessageBox(hwnd, L"D3DCompileFromFile(VS)", L"Error", MB_OK);
+			OutputShaderErrorMessage(errorMessage, vsFilename);
 		}
 		return false;
 	}
@@ -83,10 +80,7 @@ bool FontShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR*
 	hresult = D3DCompileFromFile(psFilename, NULL, NULL, "main", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
 	if (FAILED(hresult)) {
 		if (errorMessage) {
-			OutputShaderErrorMessage(errorMessage, hwnd, psFilename);
-		}
-		else {
-			MessageBox(hwnd, L"D3DCompileFromFile(PS)", L"Error", MB_OK);
+			OutputShaderErrorMessage(errorMessage, psFilename);
 		}
 		return false;
 	}
@@ -94,14 +88,12 @@ bool FontShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR*
 	//Create the vertex shader from buffer
 	hresult = device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &this->vertexShader);
 	if (FAILED(hresult)) {
-		MessageBox(hwnd, L"device->CreateVertexShader", L"Error", MB_OK);
 		return false;
 	}
 
 	//Create the pixel shader from buffer
 	hresult = device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &this->pixelShader);
 	if (FAILED(hresult)) {
-		MessageBox(hwnd, L"device->CreatePixelShader", L"Error", MB_OK);
 		return false;
 	}
 
@@ -130,7 +122,6 @@ bool FontShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR*
 	//Create the vertex input layout.
 	hresult = device->CreateInputLayout(polygonLayout, numElements, vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), &this->layout);
 	if (FAILED(hresult)) {
-		MessageBox(hwnd, L"device->CreateInputLayout", L"Error", MB_OK);
 		return false;
 	}
 
@@ -151,7 +142,6 @@ bool FontShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR*
 	// Create the constant buffer pointer so we can access the vertex shader constant buffer from within this class.
 	hresult = device->CreateBuffer(&matrixBufferDesc, NULL, &this->matrixBuffer);
 	if (FAILED(hresult)) {
-		MessageBox(hwnd, L"device->CreateBuffer", L"Error", MB_OK);
 		return false;
 	}
 
@@ -198,7 +188,7 @@ bool FontShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR*
 	return true;
 }
 
-void FontShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND hwnd, WCHAR* shaderFilename)
+void FontShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, WCHAR* shaderFilename)
 {
 	char* compileErrors;
 	unsigned long long bufferSize, i;
@@ -226,14 +216,11 @@ void FontShaderHandler::OutputShaderErrorMessage(ID3D10Blob* errorMessage, HWND 
 	errorMessage->Release();
 	errorMessage = nullptr;
 
-	//Notify the user to check error log
-	MessageBox(hwnd, L"Error compiling shader, check shader_error.txt for message.", shaderFilename, MB_OK);
-
 	return;
 }
 
 bool FontShaderHandler::SetShaderParameters(ID3D11DeviceContext* deviceContext, XMMATRIX worldMatrix,
-	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* fontTexture, XMFLOAT4 color)
+	XMMATRIX viewMatrix, XMMATRIX projectionMatrix, ID3D11ShaderResourceView* fontTexture, XMFLOAT3 color)
 {
 	HRESULT hresult;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
@@ -288,6 +275,7 @@ void FontShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int ind
 	//Set the vertex and pixel shaders that will be used to render this triangle
 	deviceContext->VSSetShader(this->vertexShader, NULL, 0);
 	deviceContext->PSSetShader(this->pixelShader, NULL, 0);
+	deviceContext->GSSetShader(NULL, NULL, 0);
 
 	//Set the sampler state in pixel shader
 	deviceContext->PSSetSamplers(0, 1, &this->samplerState);

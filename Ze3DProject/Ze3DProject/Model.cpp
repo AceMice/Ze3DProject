@@ -106,8 +106,10 @@ bool Model::InitializeBuffers(ID3D11Device* device, std::string modelFilename, s
 		this->indexCount = sizeIndices;
 	}
 	else {
-		vertices = *verticesIn;
-		this->vertexCount = verticesIn->size();
+		for (int i = 0; i < verticesIn->size(); i++) {
+			vertices.push_back(verticesIn->at(i));
+		}
+		this->vertexCount = vertices.size();
 		this->indexCount = this->vertexCount;
 		indices = new unsigned long[this->indexCount];
 		for (int i = 0; i < this->indexCount; i++) {

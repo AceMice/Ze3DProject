@@ -31,6 +31,7 @@ private:
 	std::vector<Model*> models;
 	std::vector<Model*> modelsNoBB;
 	QuadNode* quadTree;
+	int pickedModels;
 
 	void DeleteQuadNode(QuadNode* node);
 	void CreateQuadrants(QuadNode* node, int level);
@@ -54,10 +55,13 @@ public:
 	bool CreateQuadTree(ID3D11Device* device, ID3D11DeviceContext* deviceContext, int levels);
 	std::vector<Model*> GetModelsInViewFrustum(Frustum* viewFrustum);
 	std::vector<Model*> GetModels();
+	std::vector<Model*> GetModelsInNode(int path[], int levels);
 	void Shutdown();
 	void GenerateModelsMinMaxVerts();
 	bool SelectModel(XMVECTOR, CameraHandler*);
 	
+	int GetNrPickableModels();
+
 };
 
 #endif

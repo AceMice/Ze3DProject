@@ -24,7 +24,7 @@ private:
 		BOOL hasTexture;
 		BOOL hasNormMap;
 
-		int padding[2];
+		float padding[2];
 
 		XMFLOAT4 camPos;
 	};
