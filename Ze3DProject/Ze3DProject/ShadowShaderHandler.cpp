@@ -230,6 +230,7 @@ void ShadowShaderHandler::RenderShader(ID3D11DeviceContext* deviceContext, int i
 	//Set the vertex and pixel shaders that will be used to render this triangle
 	deviceContext->VSSetShader(this->vertexShader, NULL, 0);
 	deviceContext->PSSetShader(NULL, NULL, 0);
+	deviceContext->GSSetShader(NULL, NULL, 0);
 
 	//Render the vertex buffer
 	deviceContext->DrawIndexed(indexCount, indexStart, 0);

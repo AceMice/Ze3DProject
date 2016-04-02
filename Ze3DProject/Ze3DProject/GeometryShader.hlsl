@@ -5,7 +5,7 @@ struct GSInput
 	float2 tex : TEXCOORD0;
 	float4 worldPos : POSITION;
 	float3 normal : NORMAL;
-	float3 viewDir : TEXCOORD1;
+	float3 viewDir : NORMAL1;
 };
 
 struct PSInput
@@ -32,13 +32,13 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output)
 
 	for (uint i = 0; i < 3; i++)
 	{
-		if (dot(input[i].normal, input[i].viewDir) >= -0.1f) {
+		if (dot(input[i].normal, input[i].viewDir) >= 0.0f) {
 			cull = false;
 		}
 	}
 
 
-	if (true) {
+	if (!cull) {
 		PSInput element;
 		float3 tangent;
 		

@@ -3,6 +3,7 @@
 ModelHandler::ModelHandler()
 {
 	this->quadTree = nullptr;
+	this->pickedModels = 0;
 }
 
 ModelHandler::~ModelHandler()
@@ -262,9 +263,9 @@ bool ModelHandler::CreateBBModels(ID3D11Device* device, ID3D11DeviceContext* dev
 		return false;
 	}
 
-	delete vertices;
-
 	this->modelsNoBB.push_back(tempModel);
+
+	delete vertices;
 
 	return true;
 }
@@ -464,9 +465,37 @@ std::vector<Model*> ModelHandler::GetModels()
 	return outputModels;
 }
 
+std::vector<Model*> ModelHandler::GetModelsInNode(int path[], int levels)
+{
+	std::vector<Model*> outputModels;
+	QuadNode* node = this->quadTree;
+
+	for (int i = 0; i < levels; i++) {
+		if (path[i] == 0 || !node->child[path[i] - 1]) {
+			for (int i = 0; i < node->models.size(); i++) {
+				outputModels.push_back(node->models.at(i));
+			}
+			for (int i = 0; i < this->modelsNoBB.size(); i++) {
+				outputModels.push_back(this->modelsNoBB.at(i));
+			}
+
+			return outputModels;
+		}
+
+		node = node->child[path[i] - 1];
+	}
+
+	return outputModels;
+}
+
 void ModelHandler::GenerateModelsMinMaxVerts()
 {
 	for (int i = 0; i < this->models.size(); i++) {
 		this->models.at(i)->GenerateMinMaxVertex();
 	}
+}
+
+int ModelHandler::GetNrPickableModels()
+{
+	return this->models.size() - this->pickedModels;
 }

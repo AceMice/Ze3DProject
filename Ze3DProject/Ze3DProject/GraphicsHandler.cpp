@@ -10,10 +10,13 @@ GraphicsHandler::GraphicsHandler()
 	this->shadowShaderH = nullptr;
 	this->frustum = nullptr;
 	this->modelHandler = nullptr;
+	this->textHandler = nullptr;
 
 	this->rotY = 0.0f;
 	this->moveLight = 0.0f;
 	this->increase = true;
+	this->runTime = 0.0f;
+	this->modelsLeft = 0;
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -242,7 +245,30 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	this->frustum->SetViewProjMatrix(viewMatrix, projectionMatrix);
 
 	this->modelHandler->GenerateModelsMinMaxVerts();
-	this->modelHandler->CreateQuadTree(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), 3);
+	this->modelHandler->CreateQuadTree(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), 2);
+
+	this->modelsLeft = this->modelHandler->GetNrPickableModels();
+
+	this->textHandler = new TextHandler;
+	if (!this->textHandler) {
+		return false;
+	}
+	result = this->textHandler->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), viewMatrix, screenWidth, screenHeight);
+	if (!result) {
+		return false;
+	}
+	int sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 32);
+	if (sentenceId == -1) {
+		return false;
+	}
+	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 0, "Hello World!", 100, 100, XMFLOAT3(1.0f, 0.0f, 0.0f));
+	if (!result) {
+		return false;
+	}
+	sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 20);
+	if (sentenceId == -1) {
+		return false;
+	}
 
 	return true;
 }
@@ -280,6 +306,22 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	}
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH, this->groundModels.at(0));	//Sending down the mesh to check if it and the camera intersect
+
+	this->runTime += dTime / 1000000;
+
+	std::string text = "Time: " + std::to_string((int)this->runTime);
+
+	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 0, text, 50, 50, XMFLOAT3(1.0f, 0.0f, 0.0f));
+	if (!result) {
+		return false;
+	}
+
+	text = "Left to pick: " + std::to_string(this->modelsLeft);
+
+	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 1, text, 50, 70, XMFLOAT3(1.0f, 0.0f, 0.0f));
+	if (!result) {
+		return false;
+	}
 
 	result = this->Render();
 	if (!result) {
@@ -361,7 +403,11 @@ bool GraphicsHandler::Render()
 	this->frustum->SetViewProjMatrix(viewMatrix, projectionMatrix);
 
 	//Get the models in frustum
-	models = this->modelHandler->GetModels();
+	int path[2] = { 1, 0 };
+	int levels = 2;
+	//models = this->modelHandler->GetModels();
+	models = this->modelHandler->GetModelsInViewFrustum(this->frustum);
+	//models = this->modelHandler->GetModelsInNode(path, levels);
 
 	for (int i = 0; i < models.size(); i++) {
 		models.at(i)->GetWorldMatrix(worldMatrix);
@@ -536,6 +582,8 @@ bool GraphicsHandler::Render()
 	//}
 
 
+	this->textHandler->Render(this->direct3DH->GetDeviceContext(), orthoMatrix);
+
 
 	//Display the rendered scene to screen
 	this->direct3DH->EndScene();
@@ -596,22 +644,16 @@ void GraphicsHandler::Shutdown()
 		this->cameraH = 0;
 	}
 
+	if (!this->textHandler) {
+		this->textHandler->Shutdown();
+		delete this->textHandler;
+		this->textHandler = nullptr;
+	}
+
 	//Release the direct
 	if (this->direct3DH) {
 		this->direct3DH->Shutdown();
 		delete this->direct3DH;
 		this->direct3DH = nullptr;
 	}
-}
-
-Model* GraphicsHandler::GetModel(std::string name)
-{
-	////Find the correct model by name
-	//for (int i = 0; i < this->models.size(); i++) {
-	//	if (this->models.at(i)->GetName() == name) {
-	//		return this->models.at(i);
-	//	}
-	//}
-
-	return NULL;
 }
