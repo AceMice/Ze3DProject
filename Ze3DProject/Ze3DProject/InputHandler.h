@@ -26,13 +26,13 @@ public:
 
 	void Initialize(HINSTANCE, HWND, int, int);
 	void Shutdown();
-	bool Frame();
+	bool Frame(bool windowFocus);
 	void KeyDown(unsigned int);
 	void KeyUp(unsigned int);
 	bool IsKeyDown(unsigned int);
 	bool IsKeyReleased(unsigned int);
 	bool readMouse();
-	void ProcessInput();
+	void ProcessInput(bool windowFocus);
 	DirectX::XMVECTOR GetMouseDeltaPos();
 	DirectX::XMVECTOR GetMouseViewPos(DirectX::XMMATRIX);
 };

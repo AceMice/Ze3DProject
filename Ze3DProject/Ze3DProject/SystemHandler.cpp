@@ -101,8 +101,12 @@ bool SystemHandler::Frame(float dTime) {
 		return false;
 	}
 
+	bool windowFocus = false;
+	if (GetActiveWindow() == this->hwnd) {
+		windowFocus = true;
+	}
 	//Do the frame processing for the input object
-	result = this->inputH->Frame();
+	result = this->inputH->Frame(windowFocus);
 
 	//OPS! RIGHT NOW INPUT->FRAME() CANT RETURN FALSE SINCE WE WANT THE PROGRAM TO WORK EVEN IF WE LOSE CONTACT WITH THE MOUSE //
 

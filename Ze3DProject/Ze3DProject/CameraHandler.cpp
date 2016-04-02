@@ -61,7 +61,7 @@ void CameraHandler::updateCamera(float dt, InputHandler* inputH, GroundModel*mod
 		this->camYaw -= 0.02;
 	}
 
-	if (inputH->IsKeyDown(VK_SPACE)) {	//SPACE
+	if (inputH->IsKeyReleased(VK_SPACE)) {	//SPACE
 		if (this->lockToTerrain == true) {
 			this->lockToTerrain = false;
 		}
@@ -84,6 +84,12 @@ void CameraHandler::updateCamera(float dt, InputHandler* inputH, GroundModel*mod
 	
 	//Change Pitch/yaw values depending on mouse movement
 	this->camPitch += (XMVectorGetY(inputH->GetMouseDeltaPos()) * 0.005);
+	if (this->camPitch > 1.5f) {
+		this->camPitch = 1.5f;
+	}
+	else if (this->camPitch < -1.5f) {
+		this->camPitch = -1.5f;
+	}
 	this->camYaw += (XMVectorGetX(inputH->GetMouseDeltaPos()) * 0.005);
 
 	return;

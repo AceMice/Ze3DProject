@@ -514,23 +514,22 @@ bool ModelHandler::SelectModel(XMVECTOR mouseViewPos, CameraHandler* cameraH) {
 
 	
 	for (int i = 0; i < this->models.size(); i++) {
-		Model* b = this->models.at(i);
 		this->models.at(i)->GetMinMaxVertex(min, max);
 
-		if (!this->models.at(i)->IsModelSelected() )  {
-
-			if (this->RayAABBCheack(min, max, oriPos, dir, t)) {
-				if (t < lastT) {
-					index = i;
-					lastT = t;
-				}
+		if (this->RayAABBCheack(min, max, oriPos, dir, t)) {
+			if (t < lastT) {
+				index = i;
+				lastT = t;
 			}
-
 		}
 	}
 
-	if (index != -1) {
+	if (index != -1 && !this->models.at(index)->IsModelSelected()) {
 		this->models.at(index)->SetModelSelectionState(true);
+		this->pickedModels++;
+	}
+	else if (index != -1) {
+		result = true;
 	}
 	else{
 		result = false;

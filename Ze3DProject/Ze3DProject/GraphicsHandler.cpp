@@ -71,12 +71,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ground", "ground", false);
-	if (!result)
-	{
-		MessageBox(hwnd, L"this->modelHandler->CreateModelground", L"Error", MB_OK);
-		return false;
-	}
+
 
 	std::stringstream ss;
 	for (int i = 0; i < 20; i++) {
@@ -180,12 +175,6 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 
-	
-	modelWorld = XMMatrixTranslation(0.0f, -4.0f, 0.0f);
-	if (!this->modelHandler->UpdateModelWorldMatrix("ground", modelWorld)) {
-		return false;
-		
-	}
 
 	XMMATRIX viewMatrix, projectionMatrix;
 	this->cameraH->GetBaseViewMatrix(viewMatrix);
@@ -275,6 +264,8 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	if (!result) {
 		return false;
 	}
+
+	this->modelsLeft = this->modelHandler->GetNrPickableModels();
 
 	text = "Left to pick: " + std::to_string(this->modelsLeft);
 
@@ -585,14 +576,14 @@ void GraphicsHandler::Shutdown()
 		this->shadowShaderH = nullptr;
 	}
 
-	////Release the Model objects
-	//for (int i = 0; i < this->models.size(); i++) {
-	//	if (this->models.at(i)) {
-	//		this->models.at(i)->Shutdown();
-	//		delete this->models.at(i);
-	//		this->models.at(i) = nullptr;
-	//	}
-	//}
+	//Release the Model objects
+	for (int i = 0; i < this->groundModels.size(); i++) {
+		if (this->groundModels.at(i)) {
+			this->groundModels.at(i)->Shutdown();
+			delete this->groundModels.at(i);
+			this->groundModels.at(i) = nullptr;
+		}
+	}
 	if (this->modelHandler) {
 		this->modelHandler->Shutdown();
 		delete this->modelHandler;

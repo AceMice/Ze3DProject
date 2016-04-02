@@ -81,7 +81,7 @@ void InputHandler::Shutdown() {
 	return;
 }
 
-bool InputHandler::Frame() {
+bool InputHandler::Frame(bool windowFocus) {
 	bool result;
 
 	//Read the current state of the mouse
@@ -90,7 +90,7 @@ bool InputHandler::Frame() {
 	//Even if we cant read the mouse, we will still use the old information
 	
 	//Process the changes in the mouse
-	this->ProcessInput();
+	this->ProcessInput(windowFocus);
 
 	return true;
 }
@@ -145,7 +145,7 @@ bool InputHandler::readMouse() {
 	return true;
 }
 
-void InputHandler::ProcessInput() {
+void InputHandler::ProcessInput(bool windowFocus) {
 
 	//Update the location of the mouse cursor based on the change of the mouse location during frame
 	POINT tempP;
@@ -153,19 +153,22 @@ void InputHandler::ProcessInput() {
 	this->mouseX = tempP.x - (GetSystemMetrics(SM_CXSCREEN) - this->screenWidth) / 2;
 	this->mouseY = tempP.y - (GetSystemMetrics(SM_CYSCREEN) - this->screenHeight) / 2;
 
-	//Check if the mouse exits the screen
-	if (this->mouseX < 0) {
-		SetPhysicalCursorPos((GetSystemMetrics(SM_CXSCREEN) - this->screenWidth) / 2, tempP.y);
+	if (windowFocus) {
+		//Check if the mouse exits the screen
+		if (this->mouseX < 0) {
+			SetPhysicalCursorPos((GetSystemMetrics(SM_CXSCREEN) - this->screenWidth) / 2, tempP.y);
+		}
+		if (this->mouseX > this->screenWidth) {
+			SetPhysicalCursorPos(((GetSystemMetrics(SM_CXSCREEN) - this->screenWidth) / 2) + this->screenWidth, tempP.y);
+		}
+		if (this->mouseY < 0) {
+			SetPhysicalCursorPos(tempP.x, (GetSystemMetrics(SM_CYSCREEN) - this->screenHeight) / 2);
+		}
+		if (this->mouseY > this->screenHeight) {
+			SetPhysicalCursorPos(tempP.x, ((GetSystemMetrics(SM_CYSCREEN) - this->screenHeight) / 2) + this->screenHeight);
+		}
 	}
-	if (this->mouseX > this->screenWidth) {
-		SetPhysicalCursorPos(((GetSystemMetrics(SM_CXSCREEN) - this->screenWidth) / 2) + this->screenWidth, tempP.y);
-	}
-	if (this->mouseY < 0) {
-		SetPhysicalCursorPos(tempP.x, (GetSystemMetrics(SM_CYSCREEN) - this->screenHeight) / 2);
-	}
-	if (this->mouseY > this->screenHeight) {
-		SetPhysicalCursorPos(tempP.x, ((GetSystemMetrics(SM_CYSCREEN) - this->screenHeight) / 2) + this->screenHeight);
-	}
+	
 
 	return;
 }
