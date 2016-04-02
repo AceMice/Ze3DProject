@@ -16,9 +16,6 @@
     <FxCompile Include="GeometryShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="ShadowPixelShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="ShadowVertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
@@ -75,9 +72,6 @@
     <ClCompile Include="ModelWindow.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="ShaderHandler.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="ShadowShaderHandler.cpp">
       <Filter>Source</Filter>
     </ClCompile>
@@ -94,6 +88,9 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="ModelHandler.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="DeferredShaderHandler.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -137,9 +134,6 @@
     <ClInclude Include="ModelWindow.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="ShaderHandler.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="ShadowShaderHandler.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -156,6 +150,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="HeightMap.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="DeferredShaderHandler.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

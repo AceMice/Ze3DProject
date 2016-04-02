@@ -47,7 +47,7 @@ GSInput main(VertexInput input)
 	//Store the color for output
 	output.tex = input.tex;
 
-	//Store the normal for output
+	//Multiply normal with world matrix and normalize
 	output.normal = normalize(mul(input.normal, worldMatrix));
 
 	output.viewDir = normalize(cameraPos.xyz - output.worldPos.xyz);

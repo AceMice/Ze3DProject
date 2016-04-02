@@ -21,14 +21,16 @@ CameraHandler::~CameraHandler()
 {
 }
 
-void CameraHandler::SetPosition(float x, float y, float z)
+void CameraHandler::SetPosition(float x, float y, float z, bool resetRotation)
 {
 	this->camPos = XMVectorSet(x, y, z, 0);
 
-	this->camYaw = 0.0f;
-	this->camPitch = 0.0f;
-	this->camRoll = 0.0f;
-
+	if (resetRotation) {
+		this->camYaw = 0.0f;
+		this->camPitch = 0.0f;
+		this->camRoll = 0.0f;
+	}
+	
 	return;
 }
 
@@ -237,7 +239,7 @@ bool CameraHandler::CameraMeshIntersect(GroundModel* model) {
 			if (avY > 1000) {
 				int j = 0;
 			}
-			this->SetPosition(XMVectorGetX(this->GetPosition()), avY, XMVectorGetZ(this->GetPosition()));
+			this->SetPosition(XMVectorGetX(this->GetPosition()), avY, XMVectorGetZ(this->GetPosition()), false);
 		}
 		else {										// Bottom right triangle
 			int fp = ((int)camLocalPos.x) + ((int)camLocalPos.z * modelWidth);
@@ -267,7 +269,7 @@ bool CameraHandler::CameraMeshIntersect(GroundModel* model) {
 		XMVECTOR tempV = XMVectorSet(1,avY, 1, 1);
 		XMVector3TransformCoord(tempV, modelWorldMatrix);
 
-		this->SetPosition(XMVectorGetX(this->GetPosition()), XMVectorGetY(tempV), XMVectorGetZ(this->GetPosition()));
+		this->SetPosition(XMVectorGetX(this->GetPosition()), XMVectorGetY(tempV), XMVectorGetZ(this->GetPosition()), false);
 		result = true;
 	}
 	

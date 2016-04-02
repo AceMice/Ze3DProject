@@ -16,7 +16,6 @@ struct VertexInput
 struct PSInput
 {
 	float4 position : SV_POSITION;
-	/*float4 depthPosition : TEXCOORD0;*/
 };
 
 PSInput main(VertexInput input)
@@ -31,9 +30,6 @@ PSInput main(VertexInput input)
 	output.position = mul(input.position, worldMatrix);
 	output.position = mul(output.position, viewMatrix);
 	output.position = mul(output.position, projectionMatrix);
-
-	//// Store the position value in a second input value for depth value calculations.
-	//output.depthPosition = output.position;
 
 	return output;
 }

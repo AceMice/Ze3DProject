@@ -98,8 +98,8 @@ bool Frustum::IntersectBB(XMVECTOR* boundingBox)
 	bool pointInside = false;
 	int insideAll = 0;
 
-	for (int i = 0; i < 8; i++) {
-		for (int j = 0; j < 6; j++) {
+	for (int i = 0; i < 8; i++) { //Loop through all the corner points for bounding box
+		for (int j = 0; j < 6; j++) { //Check if any point is inside all frustum planes
 			if (XMVectorGetX(XMPlaneDotCoord(this->planes[i], boundingBox[j])) + XMVectorGetW(this->planes[i]) >= 0.0f) {
 				insideAll++;
 			}
@@ -107,7 +107,7 @@ bool Frustum::IntersectBB(XMVECTOR* boundingBox)
 				insideAll++;
 			}*/
 		}
-		if (insideAll == 6) {
+		if (insideAll == 6) { //If any point is inside frustum -> return intersection
 			return true;
 		}
 		insideAll = 0;

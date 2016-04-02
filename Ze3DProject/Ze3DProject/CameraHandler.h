@@ -29,7 +29,7 @@ public:
 	CameraHandler();
 	~CameraHandler();
 
-	void SetPosition(float, float, float);
+	void SetPosition(float, float, float, bool resetRotation);
 	XMVECTOR GetPosition();
 
 	void Frame(float, InputHandler*, GroundModel*);

@@ -35,13 +35,6 @@ struct PixelOutput
 PixelOutput main(PixelInput input) : SV_TARGET
 {
 	PixelOutput output;
-	float4 s;	//Texture color for the current pixel
-	float ambientStr = 0.2;
-	float diffuseStr = 0.8;
-	float shineFactor = 5;
-	float lightSpecular = 0.5;
-	float3 specular = float3(0.0f, 0.0f, 0.0f);
-
 
 	if (hasTexture) {
 		output.color = shaderTexture.Sample(shaderSampler, input.tex).rgba;
@@ -50,7 +43,7 @@ PixelOutput main(PixelInput input) : SV_TARGET
 		output.color = difColor;
 	}
 	if (picked) {
-		output.color.r *= 1.5f;
+		output.color *= 0.2f; //Paint the model dark if picked
 	}
 	if (hasNormMap) {
 		//Load normals from normal map

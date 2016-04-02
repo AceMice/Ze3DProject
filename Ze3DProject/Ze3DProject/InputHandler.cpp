@@ -20,9 +20,9 @@ InputHandler::~InputHandler() {
 
 void InputHandler::Initialize(HINSTANCE hInstance, HWND hwnd, int screenWidth, int screenHeight) {
 	HRESULT hr;
-	SetPhysicalCursorPos((GetSystemMetrics(SM_CXSCREEN) - screenWidth) / 2, (GetSystemMetrics(SM_CYSCREEN) - screenHeight) / 2);
-	this->mouseX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth) / 2;
-	this->mouseY = (GetSystemMetrics(SM_CYSCREEN) - screenHeight) / 2;
+	SetPhysicalCursorPos((GetSystemMetrics(SM_CXSCREEN)) / 2, (GetSystemMetrics(SM_CYSCREEN)) / 2);
+	this->mouseX = (GetSystemMetrics(SM_CXSCREEN)) / 2;
+	this->mouseY = (GetSystemMetrics(SM_CYSCREEN)) / 2;
 	this->screenWidth = screenWidth;
 	this->screenHeight = screenHeight;
 

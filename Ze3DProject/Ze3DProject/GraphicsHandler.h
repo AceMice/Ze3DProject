@@ -2,7 +2,7 @@
 #define GRAPHICSHANDLER_H
 
 #include "D3DHandler.h"
-#include "ShaderHandler.h"
+#include "DeferredShaderHandler.h"
 #include "Model.h"
 #include "CameraHandler.h"
 #include "Inputhandler.h"
@@ -26,7 +26,7 @@ private:
 	CameraHandler* cameraH;
 	std::vector<GroundModel*> groundModels;
 
-	ShaderHandler* shaderH;
+	DeferredShaderHandler* deferredShaderH;
 	ColorShaderHandler* colorShaderH;
 	ModelWindow* modelWindow;
 	ShadowShaderHandler* shadowShaderH;

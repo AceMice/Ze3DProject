@@ -4,7 +4,7 @@ GraphicsHandler::GraphicsHandler()
 {
 	this->direct3DH = nullptr;
 	this->cameraH = nullptr;
-	this->shaderH = nullptr;
+	this->deferredShaderH = nullptr;
 	this->colorShaderH = nullptr;
 	this->modelWindow = nullptr;
 	this->shadowShaderH = nullptr;
@@ -47,7 +47,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Set the initial position of the camera
-	this->cameraH->SetPosition(0.0f, 0.0f, -20.0f);
+	this->cameraH->SetPosition(0.0f, 0.0f, -20.0f, true);
 	this->cameraH->GenerateBaseViewMatrix();
 
 	//Create the GroundModel Object
@@ -107,13 +107,13 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	// Create the deferred shader object.
-	this->shaderH = new ShaderHandler;
-	if (!this->shaderH) {
+	this->deferredShaderH = new DeferredShaderHandler;
+	if (!this->deferredShaderH) {
 		return false;
 	}
 
 	// Initialize the deferred shader object.
-	result = this->shaderH->Initialize(this->direct3DH->GetDevice(), hwnd);
+	result = this->deferredShaderH->Initialize(this->direct3DH->GetDevice(), hwnd);
 	if (!result) {
 		MessageBox(hwnd, L"this->shaderH->Initialize", L"Error", MB_OK);
 		return false;
@@ -173,8 +173,8 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		ss.str("");
 		ss << i;
 		ogreName = "WoodBox" + ss.str();
-		z = (i / 5 * 40) - 50;
-		x = ((i % 5) * 40);
+		z = (i / 5 * 40) + 50;
+		x = ((i % 5) * 40) + 20;
 		modelWorld = XMMatrixScaling(0.25f, 0.25f, 0.25f);
 		modelWorld = XMMatrixTranslation(x, -5.75f, z) * modelWorld;
 		//modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
@@ -233,6 +233,10 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	if (sentenceId == -1) {
 		return false;
 	}
+	sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 16);
+	if (sentenceId == -1) {
+		return false;
+	}
 
 	if (!this->loadHighscore()) {
 		this->highscore = 1337;
@@ -286,11 +290,11 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 		if (this->runTime < this->highscore) {
 			this->highscore = (int)this->runTime;
 			this->saveHighscore();
-			text = L"You beat the game highscore with a score of " + std::to_wstring(this->highscore) + L"!\n Do you want to play again?";
+			text = L"You beat the game highscore with a time of " + std::to_wstring(this->highscore) + L", well painted!\nDo you want to play again?";
 			playAgain = MessageBox(hwnd, text.c_str(), L"Congratulations!", MB_YESNO);
 		}
 		else {
-			text = L"Good run, you got a score of " + std::to_wstring((int)this->runTime) + L" so not quite enough for a highscore!\n Do you want to play again?";
+			text = L"Good job, you painted the boxes in " + std::to_wstring((int)this->runTime) + L" seconds so not quite enough for a highscore!\nDo you want to play again?";
 			playAgain = MessageBox(hwnd, text.c_str(), L"Well done!", MB_YESNO);
 		}
 		
@@ -300,7 +304,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 		else {
 			this->runTime = -1;
 			this->modelHandler->resetSelectedModels();
-			this->cameraH->SetPosition(0.0f, 0.0f, -20.0f);
+			this->cameraH->SetPosition(0.0f, 0.0f, -20.0f, true);
 		}
 	}
 
@@ -319,7 +323,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 
 	this->modelsLeft = this->modelHandler->GetNrPickableModels();
 
-	text = "Left to pick: " + std::to_string(this->modelsLeft);
+	text = "Left to paint: " + std::to_string(this->modelsLeft);
 
 	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 1, text, 50, 70, XMFLOAT3(1.0f, 0.0f, 0.0f));
 	if (!result) {
@@ -330,6 +334,13 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 	text = "Hightscore: " + std::to_string(this->highscore);
 
 	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 2, text, 50, 90, XMFLOAT3(1.0f, 0.0f, 0.0f));
+	if (!result) {
+		return false;
+	}
+
+	text = "FPS: " + std::to_string((int)(1000000/dTime));
+
+	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 3, text, 50, 30, XMFLOAT3(1.0f, 0.0f, 0.0f));
 	if (!result) {
 		return false;
 	}
@@ -364,14 +375,15 @@ bool GraphicsHandler::Render()
 	XMFLOAT4 camPos = XMFLOAT4(XMVectorGetX(camPosVec), XMVectorGetY(camPosVec), XMVectorGetZ(camPosVec), XMVectorGetW(camPosVec));
 	
 	//Create the view, and projection matrices based on light pos(25, 15, -6)
-	XMVECTOR lookAt = XMVectorSet(50.0f, 0.0f, 25.0f, 0.0f);
-	XMVECTOR lightPos = XMVectorSet(-25.0f, 25.0f, this->moveLight, 0.0f);
+	XMVECTOR lookAt = XMVectorSet(25.0f, 0.0f, 0.0f, 0.0f);
+	XMVECTOR lightPos = XMVectorSet(-35.0f, 25.0f, this->moveLight, 0.0f);
 	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	lightViewMatrix = XMMatrixLookAtLH(lightPos, lookAt, lightUp);
 
 	float fieldOfView = (float)XM_PI / 4.0f;
 	float screenAspect = 1.0f;
 	lightProjectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, 1.0f, 1000.0f);
+
 	//**DEFERRED RENDER**\\
 
 	//Clear the buffers to begin the scene
@@ -398,7 +410,7 @@ bool GraphicsHandler::Render()
 
 			//Render the model using the shader-handler
 			if (!transparent) {
-				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+				result = this->deferredShaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
 					worldMatrix, viewMatrix, projectionMatrix, this->groundModels.at(i)->GetTexture(textureIndex),
 					this->groundModels.at(i)->GetTexture(normMapIndex), difColor, specColor, false, false, camPos);
 				if (!result)
@@ -424,54 +436,31 @@ bool GraphicsHandler::Render()
 
 	for (int i = 0; i < models.size(); i++) {
 		models.at(i)->GetWorldMatrix(worldMatrix);
-		
-		
-		////Check against frustum
-		//if (this->models.at(i)->GethasBB()) {
-		//	//Get the world matrix from model
-		//	MVP = XMMatrixMultiply(worldMatrix, viewMatrix);
-
-		//	modelBB = this->models.at(i)->GetBouningBox(MVP);
-		//	renderModel = this->frustum->IntersectBB(modelBB);
-		//	delete[] modelBB;
-		//}
-		//else {
-		//	renderModel = true;
-		//}
-		
-		//if (renderModel) {
-			modelsRendered++;
-
 			
-			//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
-			models.at(i)->Render(this->direct3DH->GetDeviceContext());
+		//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
+		models.at(i)->Render(this->direct3DH->GetDeviceContext());
 
-			//Draw all non transparent subsets
-			modelSubsets = models.at(i)->NrOfSubsets();
-			for (int j = 0; j < modelSubsets; j++) {
-				//Get all the nessecary information from the model
-				models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent, picked);
+		//Draw all non transparent subsets
+		modelSubsets = models.at(i)->NrOfSubsets();
+		for (int j = 0; j < modelSubsets; j++) {
+			//Get all the nessecary information from the model
+			models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent, picked);
 
-				//Render the model using the shader-handler
-				if (!transparent) {
-					result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-						worldMatrix, viewMatrix, projectionMatrix, models.at(i)->GetTexture(textureIndex),
-						models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, picked, camPos);
-					if (!result)
-					{
-						return false;
-					}
-
+			//Render the model using the shader-handler
+			if (!transparent) {
+				result = this->deferredShaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+					worldMatrix, viewMatrix, projectionMatrix, models.at(i)->GetTexture(textureIndex),
+					models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, picked, camPos);
+				if (!result)
+				{
+					return false;
 				}
+				modelsRendered++;
 			}
-		//}
+		}
 		
 	}
 
-	if (modelsRendered  == 1) {
-		int lol = modelsRendered;
-	}
-	
 
 	//**SHADOW RENDER**\\
 
@@ -608,10 +597,10 @@ bool GraphicsHandler::Render()
 void GraphicsHandler::Shutdown()
 {
 	//Release the shaderHandler object
-	if (this->shaderH) {
-		this->shaderH->Shutdown();
-		delete this->shaderH;
-		this->shaderH = nullptr;
+	if (this->deferredShaderH) {
+		this->deferredShaderH->Shutdown();
+		delete this->deferredShaderH;
+		this->deferredShaderH = nullptr;
 	}
 
 	//Release the shaderHandler object

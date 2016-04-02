@@ -212,13 +212,13 @@ void SystemHandler::Run() {
 			elapsedTime.QuadPart *= 1000000;
 			elapsedTime.QuadPart /= frequency.QuadPart;
 
-			if (elapsedTime.QuadPart > (1000000 / fpsLimit)) { //If it's time to render a frame ->
+			//if (elapsedTime.QuadPart > (1000000 / fpsLimit)) { //If it's time to render a frame ->
 				result = this->Frame((float)elapsedTime.QuadPart); //do the frame processing
 				if (!result) {
 					done = true;
 				}
 				prevTime = currTime;
-			}
+			//}
 		}
 	}
 
