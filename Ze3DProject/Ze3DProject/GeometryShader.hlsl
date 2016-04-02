@@ -38,7 +38,7 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output)
 	}
 
 
-	if (true) {
+	if (!cull) {
 		PSInput element;
 		float3 tangent;
 		

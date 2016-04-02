@@ -347,10 +347,10 @@ bool ModelHandler::CreateQuadTree(ID3D11Device* device, ID3D11DeviceContext* dev
 
 	this->CreateQuadrants(this->quadTree, levels);
 
-	result = this->CreateBBModels(device, deviceContext, this->quadTree);
+	/*result = this->CreateBBModels(device, deviceContext, this->quadTree);
 	if (!result) {
 		return false;
-	}
+	}*/
 
 	return true;
 }
