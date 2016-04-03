@@ -54,14 +54,14 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	//Create the GroundModel Object
 	tempGroundModel = new GroundModel;
 
-	result = tempGroundModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "BMP24Bit");
+	result = tempGroundModel->Initialize(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "Vally24Bit");
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->groundModel->Initialize", L"Error", MB_OK);
 		return false;
 	}
 	//Insert model into vector
-	this->groundModels.push_back(tempGroundModel);
+	this->groundModel = tempGroundModel;
 	tempGroundModel = nullptr;
 
 
@@ -242,13 +242,13 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	
 
 	//Ground
-	GroundModel* tempGroundModel = this->groundModels.at(0);
+	GroundModel* tempGroundModel = this->groundModel;
 	if (tempGroundModel) {
 		modelWorld = XMMatrixTranslation(10.0f, -4.0f, 10.0f);
 		tempGroundModel->SetWorldMatrix(modelWorld);
 	}
 	//Generate the view matrix based on the camera's position
-	this->cameraH->Frame(dTime, inputH, this->groundModels.at(0));	//Sending down the mesh to check if it and the camera intersect
+	this->cameraH->Frame(dTime, inputH, this->groundModel);	//Sending down the mesh to check if it and the camera intersect
 
 	//Picking
 	if (inputH->IsKeyReleased(0x50)) {	//P
@@ -336,27 +336,27 @@ bool GraphicsHandler::Render()
 	//**NON TRANSPARENT RENDER**\\
 	
 	//Ground Render
-	for (int i = 0; i < this->groundModels.size(); i++) {
-		this->groundModels.at(i)->GetWorldMatrix(worldMatrix);
+	
+		this->groundModel->GetWorldMatrix(worldMatrix);
 
-		this->groundModels.at(i)->Render(this->direct3DH->GetDeviceContext());
-		modelSubsets = this->groundModels.at(i)->NrOfSubsets();
+		this->groundModel->Render(this->direct3DH->GetDeviceContext());
+		modelSubsets = this->groundModel->NrOfSubsets();
 		for (int j = 0; j < modelSubsets; j++) {
 			//Get all the nessecary information from the model
-			this->groundModels.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+			this->groundModel->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
 
 			//Render the model using the shader-handler
 			if (!transparent) {
 				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-					worldMatrix, viewMatrix, projectionMatrix, this->groundModels.at(i)->GetTexture(textureIndex),
-					this->groundModels.at(i)->GetTexture(normMapIndex), difColor, specColor, false, camPos);
+					worldMatrix, viewMatrix, projectionMatrix, this->groundModel->GetTexture(textureIndex),
+					this->groundModel->GetTexture(normMapIndex), difColor, specColor, false, camPos);
 				if (!result)
 				{
 					return false;
 				}
 
 			}
-		}
+		
 	}
 
 	//Create the frustum
@@ -431,14 +431,14 @@ bool GraphicsHandler::Render()
 	this->direct3DH->SetShadowViewport(true);
 
 	//Ground Render
-	for (int i = 0; i < this->groundModels.size(); i++) {
-		this->groundModels.at(i)->GetWorldMatrix(worldMatrix);
 
-		this->groundModels.at(i)->Render(this->direct3DH->GetDeviceContext());
-		modelSubsets = this->groundModels.at(i)->NrOfSubsets();
+		this->groundModel->GetWorldMatrix(worldMatrix);
+
+		this->groundModel->Render(this->direct3DH->GetDeviceContext());
+		modelSubsets = this->groundModel->NrOfSubsets();
 		for (int j = 0; j < modelSubsets; j++) {
 			//Get all the nessecary information from the model
-			this->groundModels.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+			this->groundModel->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
 
 			//Render the model using the shader-handler
 			if (!transparent) {
@@ -451,7 +451,7 @@ bool GraphicsHandler::Render()
 
 			}
 		}
-	}
+	
 
 	for (int i = 0; i < models.size(); i++) {
 
@@ -577,13 +577,13 @@ void GraphicsHandler::Shutdown()
 	}
 
 	//Release the Model objects
-	for (int i = 0; i < this->groundModels.size(); i++) {
-		if (this->groundModels.at(i)) {
-			this->groundModels.at(i)->Shutdown();
-			delete this->groundModels.at(i);
-			this->groundModels.at(i) = nullptr;
-		}
+
+	if (this->groundModel) {
+		this->groundModel->Shutdown();
+		delete this->groundModel;
+		this->groundModel = nullptr;
 	}
+
 	if (this->modelHandler) {
 		this->modelHandler->Shutdown();
 		delete this->modelHandler;

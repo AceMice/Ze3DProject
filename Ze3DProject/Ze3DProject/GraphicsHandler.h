@@ -24,7 +24,7 @@ class GraphicsHandler {
 private:
 	D3DHandler* direct3DH;
 	CameraHandler* cameraH;
-	std::vector<GroundModel*> groundModels;
+	GroundModel* groundModel;
 
 	ShaderHandler* shaderH;
 	ColorShaderHandler* colorShaderH;

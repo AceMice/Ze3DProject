@@ -3,6 +3,9 @@
 
 #include "Texture.h"
 #include "HeightMap.h"
+#include <string>
+#include <fstream>
+#include <sstream>
 
 class GroundModel {
 
@@ -45,7 +48,7 @@ private:
 	Texture* texture;
 	XMMATRIX worldMatrix;
 	std::string name;
-	
+
 	bool InitializeBuffers(ID3D11Device*, char*,std::string&);
 	void ShutdownBuffers();
 	void RenderBuffers(ID3D11DeviceContext*);

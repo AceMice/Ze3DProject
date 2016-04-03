@@ -308,13 +308,6 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		ss.clear();
 		ss.str(line);
 		ss >> materialLib;
-		//for (int i = 0; i < 8; i++) {//Load the eight points for bounding box corners
-		//	std::getline(file, line);
-		//	ss.clear();
-		//	ss.str(line);
-		//	ss >> point[0] >> point[1] >> point[2];
-		//	this->boundingBox[i] = XMVectorSet(point[0], point[1], point[2], 1.0f);
-		//}
 		std::getline(file, line);
 		ss.clear();
 		ss.str(line);
@@ -365,11 +358,6 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		outputIndices = new unsigned long[sizeIndices];
 		file.read((char*)outputIndices, sizeof(unsigned long) * sizeVertices);
 		file.close();
-
-		/*outputIndices = new unsigned long[sizeIndices];
-		for (int i = 0; i < sizeIndices; i++) {
-			outputIndices[i] = i;
-		}*/
 	}
 	else {
 		format = ".obj";

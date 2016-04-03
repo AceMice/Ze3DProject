@@ -249,157 +249,260 @@ void GroundModel::ReleaseTexture()
 bool GroundModel::GenerateGround(char* bmpFile, std::string matrialLib, std::vector<Vertex>& outputVertices, unsigned long*& outputIndices, int& sizeVertices, int& sizeIndices) {
 	HeightMap hmObj;
 	bool result = hmObj.HeightMapLoad(bmpFile, this->hmInfo);
+	std::string line;
+	std::fstream file;
+	std::stringstream ss;
+	bool newGroup = false;
+	int tempSubset = 0;
+	std::string format = ".bin";
+	std::string path = "../Ze3DProject/OBJ/" + std::string(bmpFile);
+	std::string fullPath = path;
+	fullPath.append(".ace");
 	
-	if (result != true) {
+	std::string junk;
+	std::string material;
+	int subsets;
+	std::string tempLine;
+	file.open(fullPath, std::ios::in);
+	
+	if (file.is_open()) {
+		std::getline(file, line);
+		ss.str(line);
+		ss >> sizeVertices >> sizeIndices;
+		std::getline(file, line);
+		ss.clear();
+		ss.str(line);
+		ss >> subsets >> material;	//MaterialLib
+		this->subsetIndices.push_back(subsets);
+		this->materialNames.push_back(material);	//One material
+		ss.clear();
+
+		while (std::getline(file, line)) {
+			ss.clear();
+			ss.str(line);
+			ss >> tempSubset >> tempLine;
+			subsetIndices.push_back(tempSubset);
+			materialNames.push_back(tempLine);
+		}
+		ss.clear();
+		file.close();
+
+		fullPath = path;
+		fullPath.append("V.bin");
+		file.open(fullPath, std::ios::binary | std::ios::in);
+		if (!file.is_open()) {
 			return false;
-	}
-	int cols = this->hmInfo.terrainWidth;
-	int rows = this->hmInfo.terrainHeight;
-
-	//Create the grid
-	int NumVertices = rows * cols;
-	int NumFaces = (rows - 1)*(cols - 1) * 2;
-
-	std::vector<Vertex> v(NumVertices);
-
-	//Give each vertex a position and a normal
-	for (DWORD i = 0; i < rows; ++i)
-	{
-		for (DWORD j = 0; j < cols; ++j)
-		{
-			v[i*cols + j].position = hmInfo.heightMap[i*cols + j];
-			v[i*cols + j].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
 		}
-	}
+		Vertex* tempVerticesArray = new Vertex[sizeVertices];
 
-	//Create Index list and UV cords
-	std::vector<DWORD> indices(NumFaces * 3);
-	int k = 0;
-	int texUIndex = 0;
-	int texVIndex = 0;
-	for (unsigned long i = 0; i < rows - 1; i++)
-	{
-		for (unsigned long j = 0; j < cols - 1; j++)
-		{
-			indices[k] = i*cols + j;        // Bottom left of quad
-			v[i*cols + j].texture = XMFLOAT2(texUIndex + 0.0f, texVIndex + 1.0f);
+		file.read((char*)tempVerticesArray, sizeof(Vertex) * sizeVertices);
+		file.close();
 
-			indices[k + 1] = i*cols + j + 1;        // Bottom right of quad
-			v[i*cols + j + 1].texture = XMFLOAT2(texUIndex + 1.0f, texVIndex + 1.0f);
+		outputVertices.insert(outputVertices.end(), &tempVerticesArray[0], &tempVerticesArray[sizeVertices]);
+		//this->vertPositions.insert(this->vertPositions.end(), &tempVerticesArray[0].position, &tempVerticesArray[sizeVertices].position);
 
-			indices[k + 2] = (i + 1)*cols + j;    // Top left of quad
-			v[(i + 1)*cols + j].texture = XMFLOAT2(texUIndex + 0.0f, texVIndex + 0.0f);
+		delete[] tempVerticesArray;
 
-
-			indices[k + 3] = (i + 1)*cols + j;    // Top left of quad
-			v[(i + 1)*cols + j].texture = XMFLOAT2(texUIndex + 0.0f, texVIndex + 0.0f);
-
-			indices[k + 4] = i*cols + j + 1;        // Bottom right of quad
-			v[i*cols + j + 1].texture = XMFLOAT2(texUIndex + 1.0f, texVIndex + 1.0f);
-
-			indices[k + 5] = (i + 1)*cols + j + 1;    // Top right of quad
-			v[(i + 1)*cols + j + 1].texture = XMFLOAT2(texUIndex + 1.0f, texVIndex + 0.0f);
-
-			k += 6; // next quad
-
-			texUIndex++;
+		fullPath = path;
+		fullPath.append("I.bin");
+		file.open(fullPath, std::ios::binary | std::ios::in);
+		if (!file.is_open()) {
+			return false;
 		}
-		texUIndex = 0;
-		texVIndex++;
+
+		outputIndices = new unsigned long[sizeIndices];
+		file.read((char*)outputIndices, sizeof(unsigned long) * sizeIndices);
+		file.close();
+
 	}
+	else {
 
-	//////////////////////Compute Normals///////////////////////////
-	//Now we will compute the normals for each vertex using normal averaging
-	std::vector<XMFLOAT3> tempNormal;
+		if (result != true) {
+			return false;
+		}
+		int cols = this->hmInfo.terrainWidth;
+		int rows = this->hmInfo.terrainHeight;
 
-	//normalized and unnormalized normals
-	XMFLOAT3 unnormalized = XMFLOAT3(0.0f, 0.0f, 0.0f);
+		//Create the grid
+		int NumVertices = rows * cols;
+		int NumFaces = (rows - 1)*(cols - 1) * 2;
 
-	//Used to get vectors (sides) from the position of the verts
-	float vecX, vecY, vecZ;
+		std::vector<Vertex> v(NumVertices);
 
-	//Two edges of our triangle
-	XMVECTOR edge1 = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-	XMVECTOR edge2 = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-
-	//Compute face normals
-	for (int i = 0; i < NumFaces; ++i)
-	{
-		//Get the vector describing one edge of our triangle (edge 0,2)
-		vecX = v[indices[(i * 3)]].position.x - v[indices[(i * 3) + 2]].position.x;
-		vecY = v[indices[(i * 3)]].position.y - v[indices[(i * 3) + 2]].position.y;
-		vecZ = v[indices[(i * 3)]].position.z - v[indices[(i * 3) + 2]].position.z;
-		edge1 = XMVectorSet(vecX, vecY, vecZ, 0.0f);    //Create our first edge
-
-														//Get the vector describing another edge of our triangle (edge 2,1)
-		vecX = v[indices[(i * 3) + 2]].position.x - v[indices[(i * 3) + 1]].position.x;
-		vecY = v[indices[(i * 3) + 2]].position.y - v[indices[(i * 3) + 1]].position.y;
-		vecZ = v[indices[(i * 3) + 2]].position.z - v[indices[(i * 3) + 1]].position.z;
-		edge2 = XMVectorSet(vecX, vecY, vecZ, 0.0f);    //Create our second edge
-
-														//Cross multiply the two edge vectors to get the un-normalized face normal
-		XMStoreFloat3(&unnormalized, XMVector3Cross(edge1, edge2));
-		tempNormal.push_back(unnormalized);            //Save unormalized normal (for normal averaging)
-	}
-
-	//Compute vertex normals (normal Averaging)
-	XMVECTOR normalSum = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-	int facesUsing = 0;
-	float tX;
-	float tY;
-	float tZ;
-
-	//Go through each vertex
-	for (int i = 0; i < NumVertices; ++i)
-	{
-		//Check which triangles use this vertex
-		for (int j = 0; j < NumFaces; ++j)
+		//Give each vertex a position and a normal
+		for (DWORD i = 0; i < rows; ++i)
 		{
-			if (indices[j * 3] == i ||
-				indices[(j * 3) + 1] == i ||
-				indices[(j * 3) + 2] == i)
+			for (DWORD j = 0; j < cols; ++j)
 			{
-				tX = XMVectorGetX(normalSum) + tempNormal[j].x;
-				tY = XMVectorGetY(normalSum) + tempNormal[j].y;
-				tZ = XMVectorGetZ(normalSum) + tempNormal[j].z;
-
-				normalSum = XMVectorSet(tX, tY, tZ, 0.0f);    //If a face is using the vertex, add the unormalized face normal to the normalSum
-				facesUsing++;
+				v[i*cols + j].position = hmInfo.heightMap[i*cols + j];
+				v[i*cols + j].normal = XMFLOAT3(0.0f, 1.0f, 0.0f);
 			}
 		}
 
-		//Get the actual normal by dividing the normalSum by the number of faces sharing the vertex
-		normalSum = normalSum / facesUsing;
+		//Create Index list and UV cords
+		std::vector<DWORD> indices(NumFaces * 3);
+		int k = 0;
+		int texUIndex = 0;
+		int texVIndex = 0;
+		for (unsigned long i = 0; i < rows - 1; i++)
+		{
+			for (unsigned long j = 0; j < cols - 1; j++)
+			{
+				indices[k] = i*cols + j;        // Bottom left of quad
+				v[i*cols + j].texture = XMFLOAT2(texUIndex + 0.0f, texVIndex + 1.0f);
 
-		//Normalize the normalSum vector
-		normalSum = XMVector3Normalize(normalSum);
+				indices[k + 1] = i*cols + j + 1;        // Bottom right of quad
+				v[i*cols + j + 1].texture = XMFLOAT2(texUIndex + 1.0f, texVIndex + 1.0f);
 
-		//Store the normal in our current vertex
-		v[i].normal.x = XMVectorGetX(normalSum);
-		v[i].normal.y = XMVectorGetY(normalSum);
-		v[i].normal.z = XMVectorGetZ(normalSum);
+				indices[k + 2] = (i + 1)*cols + j;    // Top left of quad
+				v[(i + 1)*cols + j].texture = XMFLOAT2(texUIndex + 0.0f, texVIndex + 0.0f);
 
-		//Clear normalSum and facesUsing for next vertex
-		normalSum = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-		facesUsing = 0;
+
+				indices[k + 3] = (i + 1)*cols + j;    // Top left of quad
+				v[(i + 1)*cols + j].texture = XMFLOAT2(texUIndex + 0.0f, texVIndex + 0.0f);
+
+				indices[k + 4] = i*cols + j + 1;        // Bottom right of quad
+				v[i*cols + j + 1].texture = XMFLOAT2(texUIndex + 1.0f, texVIndex + 1.0f);
+
+				indices[k + 5] = (i + 1)*cols + j + 1;    // Top right of quad
+				v[(i + 1)*cols + j + 1].texture = XMFLOAT2(texUIndex + 1.0f, texVIndex + 0.0f);
+
+				k += 6; // next quad
+
+				texUIndex++;
+			}
+			texUIndex = 0;
+			texVIndex++;
+		}
+
+		//////////////////////Compute Normals///////////////////////////
+		//Now we will compute the normals for each vertex using normal averaging
+		std::vector<XMFLOAT3> tempNormal;
+
+		//normalized and unnormalized normals
+		XMFLOAT3 unnormalized = XMFLOAT3(0.0f, 0.0f, 0.0f);
+
+		//Used to get vectors (sides) from the position of the verts
+		float vecX, vecY, vecZ;
+
+		//Two edges of our triangle
+		XMVECTOR edge1 = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+		XMVECTOR edge2 = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+
+		//Compute face normals
+		for (int i = 0; i < NumFaces; ++i)
+		{
+			//Get the vector describing one edge of our triangle (edge 0,2)
+			vecX = v[indices[(i * 3)]].position.x - v[indices[(i * 3) + 2]].position.x;
+			vecY = v[indices[(i * 3)]].position.y - v[indices[(i * 3) + 2]].position.y;
+			vecZ = v[indices[(i * 3)]].position.z - v[indices[(i * 3) + 2]].position.z;
+			edge1 = XMVectorSet(vecX, vecY, vecZ, 0.0f);    //Create our first edge
+
+															//Get the vector describing another edge of our triangle (edge 2,1)
+			vecX = v[indices[(i * 3) + 2]].position.x - v[indices[(i * 3) + 1]].position.x;
+			vecY = v[indices[(i * 3) + 2]].position.y - v[indices[(i * 3) + 1]].position.y;
+			vecZ = v[indices[(i * 3) + 2]].position.z - v[indices[(i * 3) + 1]].position.z;
+			edge2 = XMVectorSet(vecX, vecY, vecZ, 0.0f);    //Create our second edge
+
+															//Cross multiply the two edge vectors to get the un-normalized face normal
+			XMStoreFloat3(&unnormalized, XMVector3Cross(edge1, edge2));
+			tempNormal.push_back(unnormalized);            //Save unormalized normal (for normal averaging)
+		}
+
+		//Compute vertex normals (normal Averaging)
+		XMVECTOR normalSum = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+		int facesUsing = 0;
+		float tX;
+		float tY;
+		float tZ;
+
+		//Go through each vertex
+		for (int i = 0; i < NumVertices; ++i)
+		{
+			//Check which triangles use this vertex
+			for (int j = 0; j < NumFaces; ++j)
+			{
+				if (indices[j * 3] == i ||
+					indices[(j * 3) + 1] == i ||
+					indices[(j * 3) + 2] == i)
+				{
+					tX = XMVectorGetX(normalSum) + tempNormal[j].x;
+					tY = XMVectorGetY(normalSum) + tempNormal[j].y;
+					tZ = XMVectorGetZ(normalSum) + tempNormal[j].z;
+
+					normalSum = XMVectorSet(tX, tY, tZ, 0.0f);    //If a face is using the vertex, add the unormalized face normal to the normalSum
+					facesUsing++;
+				}
+			}
+
+			//Get the actual normal by dividing the normalSum by the number of faces sharing the vertex
+			normalSum = normalSum / facesUsing;
+
+			//Normalize the normalSum vector
+			normalSum = XMVector3Normalize(normalSum);
+
+			//Store the normal in our current vertex
+			v[i].normal.x = XMVectorGetX(normalSum);
+			v[i].normal.y = XMVectorGetY(normalSum);
+			v[i].normal.z = XMVectorGetZ(normalSum);
+
+			//Clear normalSum and facesUsing for next vertex
+			normalSum = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+			facesUsing = 0;
+		}
+		//outputVertices = v;
+		outputVertices = std::vector<Vertex>(v.size());
+
+		sizeVertices = v.size();
+		sizeIndices = indices.size();
+
+		outputIndices = new unsigned long[sizeIndices];
+		for (int i = 0; i < v.size(); i++) {
+			outputVertices.at(i) = v.at(i);
+		}
+
+		for (int i = 0; i < sizeIndices; i++) {
+			outputIndices[i] = indices.at(i);
+		}
+
+		this->materialNames.push_back("Grass");	//One material
+		this->subsetIndices.push_back(0);
+
+		//BINARY SAVE
+
+		path.append(".ace"); //Make the "All Computations Executed" file
+		file.open(path, std::ios::out);
+		if (!file.is_open()) {
+			return false;
+		}
+		file << sizeVertices << " " << sizeIndices << "\n"; //Save the sizes, needed for loading the binary files
+
+		for (int i = 0; i < subsetIndices.size(); i++) {
+			file << subsetIndices.at(i) << " " << materialNames.at(i) << "\n"; //Save all subsets with each material
+		}
+		file.close();
+		///////////////77
+
+
+		format = "V.bin";	//save the vertices as binary
+		path = "../Ze3DProject/OBJ/" + std::string(bmpFile) + format;
+		file.open(path, std::ios::out | std::ios::binary);
+		if (!file.is_open()) {
+			return false;
+		}
+		file.write((char*)&(outputVertices[0]), sizeof(Vertex) * outputVertices.size());
+		file.close();
+
+		format = "I.bin"; //save the indices as binary
+		path = "../Ze3DProject/OBJ/" + std::string(bmpFile) + format;
+		file.open(path, std::ios::out | std::ios::binary);
+		if (!file.is_open()) {
+			return false;
+		}
+		file.write((char*)outputIndices, sizeof(unsigned long) * sizeIndices);
+		file.close();
 	}
-	//outputVertices = v;
-	outputVertices = std::vector<Vertex>(v.size());
 
-	sizeVertices = v.size();
-	sizeIndices = indices.size();
-
-	outputIndices = new unsigned long[sizeIndices];
-	for (int i = 0; i < v.size(); i++) {
-		outputVertices.at(i) = v.at(i);
-	}
-
-	for (int i = 0; i < sizeIndices; i++) {
-		outputIndices[i] = indices.at(i);
-	}
-
-	this->materialNames.push_back("Grass");	//One material
-	this->subsetIndices.push_back(0);
 	return true;
 }
 
