@@ -19,12 +19,6 @@
     <FxCompile Include="ShadowVertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="VertexShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="PixelShader.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="FontVertexShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
@@ -95,9 +89,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BBModel.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
     <ClInclude Include="CameraHandler.h">
       <Filter>Headers</Filter>
     </ClInclude>

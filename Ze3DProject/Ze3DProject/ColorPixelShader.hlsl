@@ -38,7 +38,7 @@ float4 main(PSInput input) : SV_TARGET
 	float4 positionLight;
 
 	// Set the bias value for fixing the floating point precision issues.
-	float bias = 0.00001f;
+	float bias = 0.00005f;
 
 	//Sample the diffuse texture from deferred render
 	color = colorTexture.Sample(pointSampler, input.tex);

@@ -7,7 +7,6 @@ Model::Model()
 	this->indexBuffer = nullptr;
 	this->texture = nullptr;
 	this->worldMatrix = XMMatrixIdentity();
-	this->boundingBox = nullptr;
 	this->isSelected = false;
 }
 
@@ -29,7 +28,6 @@ bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 	this->name = modelName;
 	this->id = modelId;
 	this->hasBB = hasBB;
-	this->boundingBox = new XMVECTOR[8];
 	
 
 	//Initialze the vertex and index buffer
@@ -51,7 +49,6 @@ bool Model::Initialize(ID3D11Device* device, ID3D11DeviceContext* deviceContext,
 
 void Model::Shutdown() 
 {
-	delete[] this->boundingBox;
 	//Release model texute
 	this->ReleaseTexture();
 	//Shutdown the vertex and index buffers
@@ -92,9 +89,6 @@ bool Model::InitializeBuffers(ID3D11Device* device, std::string modelFilename, s
 	bool result;
 	if (!verticesIn) {
 		std::string path = "../Ze3DProject/OBJ/";
-		/*std::string format = ".obj";
-		std::string bin = ".bin";
-		std::string finalBinPath = path + modelFilename + bin;*/
 		std::string finalPath = path + modelFilename;
 		result = this->LoadObj(finalPath.c_str(), vertices, indices, sizeVertices, sizeIndices, materialName);
 		if (!result) {
@@ -105,7 +99,7 @@ bool Model::InitializeBuffers(ID3D11Device* device, std::string modelFilename, s
 		//Set the numer of indices in the index array
 		this->indexCount = sizeIndices;
 	}
-	else {
+	else { //Make box model from incoming vertices for debugging quadtree
 		for (int i = 0; i < verticesIn->size(); i++) {
 			vertices.push_back(verticesIn->at(i));
 		}
@@ -119,41 +113,6 @@ bool Model::InitializeBuffers(ID3D11Device* device, std::string modelFilename, s
 		this->subsetIndices.push_back(0);
 		this->materialNames.push_back("box");
 	}
-	
-
-	////SUBJECT TO CHANGE//
-	////Set the number of vertices in the vertex array
-	//this->vertexCount = 3;
-	////Set the numer of indices in the index array
-	//this->indexCount = 3;
-
-	////Create the vertex array
-	//vertices = new Vertex[this->vertexCount];
-	//if (!vertices) {
-	//	return false;
-	//}
-
-	////Create the index array
-	//indices = new unsigned long[this->indexCount];
-	//if (!indices) {
-	//	return false;
-	//}
-
-	////Load the vertex array with data
-	////Order is important, otherwise the triangle will be facing the opposite direction
-	//vertices[0].position = XMFLOAT3(-1.0, -1.0f, 0.0f); //Bottom left
-	//vertices[0].texture = XMFLOAT2(0.0f, 1.0f);
-
-	//vertices[1].position = XMFLOAT3(0.0, 1.0f, 0.0f); //Top Middle
-	//vertices[1].texture = XMFLOAT2(0.5f, 0.0f);
-
-	//vertices[2].position = XMFLOAT3(1.0, -1.0f, 0.0f); //Bottom right
-	//vertices[2].texture = XMFLOAT2(1.0f, 1.0f);
-
-	////Load the index array with data
-	//indices[0] = 0;	//Bottom left
-	//indices[1] = 1;	//Top Middle
-	//indices[2] = 2;	//Bottom right
 
 	//Set the description of the static vertex buffer
 	ZeroMemory(&vertexBufferDesc, sizeof(vertexBufferDesc));
@@ -300,19 +259,21 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 	std::string path = filename;
 	path.append(".ace");
 	file.open(path, std::ios::in);
-	if (file.is_open()) {
+	if (file.is_open()) { //Model has been loaded before and therefor has binary files to read
 		std::getline(file, line);
 		ss.str(line);
-		ss >> sizeVertices >> sizeIndices;
+		ss >> sizeVertices >> sizeIndices; //Read the sizes
+
 		std::getline(file, line);
 		ss.clear();
 		ss.str(line);
-		ss >> materialLib;
+		ss >> materialLib; //Read the .mtl filename
+
 		std::getline(file, line);
 		ss.clear();
 		ss.str(line);
 		ss >> this->hasBB;
-		if (this->hasBB) {
+		if (this->hasBB) { //If it has a bounding box, read the min max
 			std::getline(file, line);
 			ss.clear();
 			ss.str(line);
@@ -323,7 +284,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 			ss >> this->maxVertex.x >> this->maxVertex.y >> this->maxVertex.z;
 		}
 
-		while (std::getline(file, line)) {
+		while (std::getline(file, line)) { //Read all the subset indices and corresponding materials
 			ss.clear();
 			ss.str(line);
 			ss >> tempSubset >> tempLine;
@@ -340,7 +301,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		}
 		Vertex* tempVerticesArray = new Vertex[sizeVertices];
 
-		file.read((char*)tempVerticesArray, sizeof(Vertex) * sizeVertices);
+		file.read((char*)tempVerticesArray, sizeof(Vertex) * sizeVertices); //Read the binary file containing the vertex data and save for output
 		file.close();
 
 		outputVertices.insert(outputVertices.end(), &tempVerticesArray[0], &tempVerticesArray[sizeVertices]);
@@ -356,10 +317,10 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		}
 		
 		outputIndices = new unsigned long[sizeIndices];
-		file.read((char*)outputIndices, sizeof(unsigned long) * sizeVertices);
+		file.read((char*)outputIndices, sizeof(unsigned long) * sizeVertices);//Read the binary file containing the index data and save for output
 		file.close();
 	}
-	else {
+	else { //If it's the first time models is being loaded read and parse the obj file
 		format = ".obj";
 		path = filename + format;
 		file.open(path, std::ios::in);
@@ -371,11 +332,11 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		while (std::getline(file, line)) {
 			if (line.size() > 0) {
 				if (line.at(0) == 'v') {
-					if (line.at(1) == ' ') {
+					if (line.at(1) == ' ') { //Save vertex position coordinates
 						ss.clear();
 						ss.str(line);
 						ss >> junk >> tempVertex.x >> tempVertex.y >> tempVertex.z;
-						//sscanf_s(line.c_str(), "%f %f %f\n", &tempVertex.x, &tempVertex.y, &tempVertex.z);
+
 						if (tempVertex.x > maxVert.x) {
 							maxVert.x = tempVertex.x;
 						}
@@ -397,27 +358,25 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 						
 						tempVertices.push_back(tempVertex);
 					}
-					else if (line.at(1) == 't') {
+					else if (line.at(1) == 't') { //Save vertex texture coordiantes
 						ss.clear();
 						ss.str(line);
 						ss >> junks >> tempUV.x >> tempUV.y;
 						tempUV.y = 1.0f - tempUV.y;
-						//sscanf_s(line.c_str(), "%f %f\n", &tempUV.x, &tempUV.y);
 						tempUvs.push_back(tempUV);
 					}
-					else if (line.at(1) == 'n') {
+					else if (line.at(1) == 'n') { //Save the vertex normals
 						ss.clear();
 						ss.str(line);
 						ss >> junks >> tempNormal.x >> tempNormal.y >> tempNormal.z;
-						//sscanf_s(line.c_str(), "%f %f %f\n", &tempNormal.x, &tempNormal.y, &tempNormal.z);
 						tempNormals.push_back(tempNormal);
 					}
 				}
-				else if (line.at(0) == 'g') {
+				else if (line.at(0) == 'g') { //Create a new subset
 					this->subsetIndices.push_back(vertexIndices.size());
 					newGroup = true;
 				}
-				else if (line.substr(0, 6) == "usemtl") {
+				else if (line.substr(0, 6) == "usemtl") { //Subset uses this material
 					ss.clear();
 					ss.str(line);
 					ss >> junks >> tempLine;
@@ -429,7 +388,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 						newGroup = false;
 					}
 				}
-				else if (line.at(0) == 'f') {
+				else if (line.at(0) == 'f') { //Save the vertices order from faces
 					if (newGroup) {
 						this->materialNames.push_back(this->materialNames.back());
 						newGroup = false;
@@ -440,14 +399,6 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 						>> vertexIndex[1] >> junk >> uvIndex[1] >> junk >> normalIndex[1]
 						>> vertexIndex[2] >> junk >> uvIndex[2] >> junk >> normalIndex[2];
 
-					/*int matches = sscanf_s(line.c_str(), "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex.x, &uvIndex.x, &normalIndex.x,
-					&vertexIndex.y, &uvIndex.y, &normalIndex.y, &vertexIndex.z, &uvIndex.z, &normalIndex.z);
-					if (matches != 9) {
-					return false;
-					}*/
-					/*if (tempVertices.size() != tempUvs.size() || tempUvs.size() != tempNormals.size()) {
-					return false;
-					}*/
 					vertexIndices.push_back(vertexIndex[0]);
 					vertexIndices.push_back(vertexIndex[1]);
 					vertexIndices.push_back(vertexIndex[2]);
@@ -458,7 +409,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 					normalIndices.push_back(normalIndex[1]);
 					normalIndices.push_back(normalIndex[2]);
 				}
-				else if (line.substr(0, 6) == "mtllib") {
+				else if (line.substr(0, 6) == "mtllib") { //Save the .mtl filename
 					ss.clear();
 					ss.str(line);
 					ss >> junks >> materialLib;
@@ -467,7 +418,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		}
 		file.close();
 
-		if (vertexIndices.size() == 0 || tempVertices.size() == 0) {
+		if (vertexIndices.size() == 0 || tempVertices.size() == 0) { //Makr sure the obj wasn't empty
 			return false;
 		}
 
@@ -476,53 +427,7 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		outputIndices = new unsigned long[sizeIndices];
 		this->vertPositions = tempVertices;
 
-		//XMVECTOR normalSum = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-		//int facesUsingVertex = 0;
-		//bool uvFound = false;
-		//float newX;
-		//float newY;
-		//float newZ;
-
-		////Compute average normal
-		//for (int i = 0; i < sizeVertices; i++) {
-		//	Vertex tempVertex;
-		//	tempVertex.position = tempVertices.at(i);
-
-		//	for (int j = 0; j < sizeIndices; j++) {
-		//		if (vertexIndices.at(j) == i + 1) {
-		//			if (!uvFound) {
-		//				tempVertex.texture = tempUvs.at(uvIndices.at(j) - 1);
-		//				uvFound = true;
-		//			}
-		//			newX = XMVectorGetX(normalSum) + tempNormals.at(normalIndices.at(j) - 1).x;
-		//			newY = XMVectorGetY(normalSum) + tempNormals.at(normalIndices.at(j) - 1).y;
-		//			newZ = XMVectorGetZ(normalSum) + tempNormals.at(normalIndices.at(j) - 1).z;
-
-		//			normalSum = XMVectorSet(newX, newY, newZ, 0.0f);
-		//			facesUsingVertex++;
-		//		}
-		//	}
-
-		//	normalSum = normalSum / facesUsingVertex;
-
-		//	normalSum = XMVector3Normalize(normalSum);
-		//	
-		//	tempVertex.normal.x = XMVectorGetX(normalSum);
-		//	tempVertex.normal.y = XMVectorGetY(normalSum);
-		//	tempVertex.normal.z = XMVectorGetZ(normalSum);
-
-		//	outputVertices.push_back(tempVertex);
-
-		//	normalSum = XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
-		//	facesUsingVertex = 0;
-		//	uvFound = false;
-		//}
-
-		//for (int i = 0; i < sizeIndices; i++) {
-		//	outputIndices[i] = vertexIndices.at(i) - 1;
-		//}
-
-		for (int i = 0; i < sizeVertices; i++) {
+		for (int i = 0; i < sizeVertices; i++) { //Create the output vertex array
 			Vertex tempVertex;
 			tempVertex.position = tempVertices.at(vertexIndices.at(i) - 1);
 			tempVertex.texture = tempUvs.at(uvIndices.at(i) - 1);
@@ -534,10 +439,6 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 
 		this->minVertex = minVert;
 		this->maxVertex = maxVert;
-
-		if (this->hasBB) {
-			this->CreateBoundingBox(minVertex, maxVertex);
-		}
 		
 
 		path = filename;
@@ -550,17 +451,11 @@ bool Model::LoadObj(const char* filename, std::vector<Vertex>& outputVertices, u
 		file << materialLib << "\n";
 		
 		if (this->hasBB) {
-			//for (int i = 0; i < 8; i++) {//Save the eight points for bounding box corners
-			//	file << XMVectorGetX(this->boundingBox[i]) << " " << XMVectorGetY(this->boundingBox[i]) << " " << XMVectorGetZ(this->boundingBox[i]) << "\n";
-			//}
 			file << 1 << "\n";
 			file << this->minVertex.x << " " << this->minVertex.y << " " << this->minVertex.z << "\n";
 			file << this->maxVertex.x << " " << this->maxVertex.y << " " << this->maxVertex.z << "\n";
 		}
 		else {
-			//for (int i = 0; i < 8; i++) {//Save the six planes for bounding box in plane equation form (Ax + By + Cz + D = 0)
-			//	file << 0.0f << " " << 0.0f << " " << 0.0f << "\n";
-			//}
 			file << 0  << "\n";
 		}
 		
@@ -648,25 +543,6 @@ std::string Model::GetName()
 	return this->name;
 }
 
-void Model::CreateBoundingBox(XMFLOAT3 minVertex, XMFLOAT3 maxVertex)
-{
-	this->boundingBox[0] = XMVectorSet(minVertex.x, maxVertex.y, maxVertex.z, 1.0f);
-
-	this->boundingBox[1] = XMVectorSet(minVertex.x, maxVertex.y, minVertex.z, 1.0f);
-
-	this->boundingBox[2] = XMVectorSet(maxVertex.x, maxVertex.y, minVertex.z, 1.0f);
-
-	this->boundingBox[3] = XMVectorSet(maxVertex.x, maxVertex.y, maxVertex.z, 1.0f);
-
-	this->boundingBox[4] = XMVectorSet(minVertex.x, minVertex.y, maxVertex.z, 1.0f);
-
-	this->boundingBox[5] = XMVectorSet(minVertex.x, minVertex.y, minVertex.z, 1.0f);
-
-	this->boundingBox[6] = XMVectorSet(maxVertex.x, minVertex.y, minVertex.z, 1.0f);
-
-	this->boundingBox[7] = XMVectorSet(maxVertex.x, minVertex.y, maxVertex.z, 1.0f);
-
-}
 
 XMVECTOR* Model::GetBouningBox(XMMATRIX MVP)
 {
@@ -689,14 +565,6 @@ int Model::GetId()
 
 void Model::GetMinMaxVertex(XMFLOAT3& minVert, XMFLOAT3& maxVert)
 {
-	//XMVECTOR minVertVec = XMVectorSet(this->minVertex.x, this->minVertex.y, this->minVertex.z, 1.0f);
-	//XMVECTOR maxVertVec = XMVectorSet(this->maxVertex.x, this->maxVertex.y, this->maxVertex.z, 1.0f);
-	////XMMATRIX worldTransed = XMMatrixTranspose(this->worldMatrix);
-	//XMMATRIX worldTransed = this->worldMatrix;
-	//minVertVec = XMVector4Transform(minVertVec, worldTransed);
-	//maxVertVec = XMVector4Transform(maxVertVec, worldTransed);
-	//minVert = XMFLOAT3(XMVectorGetX(minVertVec), XMVectorGetY(minVertVec), XMVectorGetZ(minVertVec));
-	//maxVert = XMFLOAT3(XMVectorGetX(maxVertVec), XMVectorGetY(maxVertVec), XMVectorGetZ(maxVertVec));
 	minVert = this->minVertex;
 	maxVert = this->maxVertex;
 

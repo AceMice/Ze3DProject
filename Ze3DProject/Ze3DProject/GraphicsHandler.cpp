@@ -59,22 +59,17 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		MessageBox(hwnd, L"this->groundModel->Initialize", L"Error", MB_OK);
 		return false;
 	}
-	//Insert model into vector
 	this->groundModel = tempGroundModel;
 	tempGroundModel = nullptr;
 
-
-
+	//Create the modelhandler object
 	this->modelHandler = new ModelHandler;
 	if (!this->modelHandler) {
 		return false;
 	}
 
-
-
 	std::stringstream ss;
 	for (int i = 0; i < 10; i++) {
-		
 		//Create the box objects
 		ss.str("");
 		ss << i;
@@ -98,7 +93,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 
-	//Create the ogre
+	//Create the car
 	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "carSLS3", "carSLS3", false);
 	if (!result)
 	{
@@ -168,17 +163,16 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	
 	float z = 0.0f;
 	float x = 0.0f;
-	for (int i = 0; i < 10; i++) {
-		std::string ogreName;
+	for (int i = 0; i < 10; i++) { //Move the 10 boxes created earlier
+		std::string boxName;
 		ss.str("");
 		ss << i;
-		ogreName = "WoodBox" + ss.str();
+		boxName = "WoodBox" + ss.str();
 		z = (i / 5 * 40) + 50;
 		x = ((i % 5) * 40) + 20;
 		modelWorld = XMMatrixScaling(0.25f, 0.25f, 0.25f);
-		modelWorld = XMMatrixTranslation(x, -6.5f, z) * modelWorld;
-		//modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
-		if (!this->modelHandler->UpdateModelWorldMatrix(ogreName, modelWorld)) {
+		modelWorld = XMMatrixTranslation(x, -7.15f, z) * modelWorld;
+		if (!this->modelHandler->UpdateModelWorldMatrix(boxName, modelWorld)) {
 			return false;
 		}
 
@@ -204,13 +198,10 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	XMMATRIX viewMatrix, projectionMatrix;
 	this->cameraH->GetBaseViewMatrix(viewMatrix);
-	this->direct3DH->GetProjectionMatrix(projectionMatrix);
-	this->frustum->SetViewProjMatrix(viewMatrix, projectionMatrix);
 
+	//Generate the models min max vertices and create the quadtree
 	this->modelHandler->GenerateModelsMinMaxVerts();
-	this->modelHandler->CreateQuadTree(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), 2);
-
-	this->modelsLeft = this->modelHandler->GetNrPickableModels();
+	this->modelHandler->CreateQuadTree(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), 1);
 
 	this->textHandler = new TextHandler;
 	if (!this->textHandler) {
@@ -308,7 +299,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 	//Picking
 	if (inputH->IsKeyReleased(69)) {	//E
 	
-		this->modelsLeft -= this->modelHandler->SelectModel(inputH->GetMouseViewPos(projM), this->cameraH);
+		this->modelHandler->SelectModel(inputH->GetMouseViewPos(projM), this->cameraH);
 	}
 
 	std::string text = "Time: " + std::to_string((int)this->runTime);
@@ -392,8 +383,6 @@ bool GraphicsHandler::Render()
 	//Get the view, and projection matrices from the camera and d3d objects
 	this->cameraH->GetViewMatrix(viewMatrix);
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
-
-	//**NON TRANSPARENT RENDER**\\
 	
 	//Ground Render
 	
@@ -419,11 +408,10 @@ bool GraphicsHandler::Render()
 
 	//Create the frustum
 	this->frustum->CreateFrustum(SCREEN_DEPTH, viewMatrix, projectionMatrix);
-	this->frustum->SetViewProjMatrix(viewMatrix, projectionMatrix);
 
-	//Get the models in frustum
-	int path[2] = { 1, 0 };
-	int levels = 2;
+	//Get the models in node info
+	int path[2] = { 4, 0 };
+	int levels = 1;
 	
 	models = this->modelHandler->GetModels();
 	//models = this->modelHandler->GetModelsInViewFrustum(this->frustum);
@@ -450,10 +438,9 @@ bool GraphicsHandler::Render()
 				{
 					return false;
 				}
-				modelsRendered++;
 			}
 		}
-		
+		modelsRendered++;
 	}
 
 
@@ -467,25 +454,25 @@ bool GraphicsHandler::Render()
 
 	//Ground Render
 
-		this->groundModel->GetWorldMatrix(worldMatrix);
+	this->groundModel->GetWorldMatrix(worldMatrix);
 
-		this->groundModel->Render(this->direct3DH->GetDeviceContext());
-		modelSubsets = this->groundModel->NrOfSubsets();
-		for (int j = 0; j < modelSubsets; j++) {
-			//Get all the nessecary information from the model
-			this->groundModel->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+	this->groundModel->Render(this->direct3DH->GetDeviceContext());
+	modelSubsets = this->groundModel->NrOfSubsets();
+	for (int j = 0; j < modelSubsets; j++) {
+		//Get all the nessecary information from the model
+		this->groundModel->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
 
-			//Render the model using the shader-handler
-			if (!transparent) {
-				result = this->shadowShaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-					worldMatrix, lightViewMatrix, lightProjectionMatrix);
-				if (!result)
-				{
-					return false;
-				}
-
+		//Render the model using the shader-handler
+		if (!transparent) {
+			result = this->shadowShaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+				worldMatrix, lightViewMatrix, lightProjectionMatrix);
+			if (!result)
+			{
+				return false;
 			}
+
 		}
+	}
 	
 
 	for (int i = 0; i < models.size(); i++) {
@@ -493,16 +480,15 @@ bool GraphicsHandler::Render()
 		//Get the world matrix from model
 		models.at(i)->GetWorldMatrix(worldMatrix);
 
-		//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
+		//Put the model vertex and index buffers on the graphics pipeline to prepare them for drawing
 		models.at(i)->Render(this->direct3DH->GetDeviceContext());
 
-		//Draw all non transparent subsets
 		modelSubsets = models.at(i)->NrOfSubsets();
 		for (int j = 0; j < modelSubsets; j++) {
 			//Get all the nessecary information from the model
 			models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent, picked);
 
-			//Render the model using the shader-handler
+			//Render the model using the shadow shaderhandler
 			if (!transparent) {
 				result = this->shadowShaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
 					worldMatrix, lightViewMatrix, lightProjectionMatrix);
@@ -548,36 +534,6 @@ bool GraphicsHandler::Render()
 	}
 
 	this->direct3DH->SetZBuffer(true);
-
-	////**TRANSPARENT RENDER**\\
-
-	//for (int i = 0; i < this->models.size(); i++) {
-
-	//	//Get the world matrix from model
-	//	this->models.at(i)->GetWorldMatrix(worldMatrix);
-
-	//	//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
-	//	this->models.at(i)->Render(this->direct3DH->GetDeviceContext());
-
-	//	//Draw all non transparent subsets
-	//	modelSubsets = this->models.at(i)->NrOfSubsets();
-	//	for (int j = 0; j < modelSubsets; j++) {
-
-	//		//Get all the nessecary information from the model
-	//		models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
-
-	//		if (transparent) {
-	//			//Render the model using the shader-handler
-	//			result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-	//				worldMatrix, viewMatrix, projectionMatrix, this->models.at(i)->GetTexture(textureIndex),
-	//				this->models.at(i)->GetTexture(normMapIndex), difColor, specColor, true, camPos);
-	//			if (!result)
-	//			{
-	//				return false;
-	//			}
-	//		}
-	//	}
-	//}
 
 
 	this->textHandler->Render(this->direct3DH->GetDeviceContext(), orthoMatrix);

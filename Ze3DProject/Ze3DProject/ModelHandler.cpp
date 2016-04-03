@@ -11,6 +11,7 @@ ModelHandler::~ModelHandler()
 
 }
 
+//Create the corners of the bounding box based on min max vertices
 void ModelHandler::QuadNode::GetBoundBox(XMVECTOR* boundingBox)
 {
 	boundingBox[0] = XMVectorSet(this->minBox.x, this->maxBox.y, this->maxBox.z, 1.0f);
@@ -33,6 +34,7 @@ void ModelHandler::QuadNode::GetBoundBox(XMVECTOR* boundingBox)
 	
 }
 
+//Create a model from the nodes bounding box
 void ModelHandler::QuadNode::GetVertices(std::vector<Model::Vertex>* vertices)
 {
 	XMVECTOR* boudingBox = new XMVECTOR[8];
@@ -120,13 +122,6 @@ void ModelHandler::QuadNode::GetVertices(std::vector<Model::Vertex>* vertices)
 	delete[] boudingBox;
 }
 
-bool ModelHandler::Initialize()
-{
-	
-
-	return true;
-}
-
 bool ModelHandler::CreateModel(ID3D11Device* device, ID3D11DeviceContext* deviceContext, std::string modelObj, std::string modelName, bool hasBB)
 {
 	bool result;
@@ -137,7 +132,7 @@ bool ModelHandler::CreateModel(ID3D11Device* device, ID3D11DeviceContext* device
 	{
 		return false;
 	}
-	//Initialize the OgreFullG object
+	//Initialize the model object
 	result = tempModel->Initialize(device, deviceContext, modelObj, modelName, this->models.size(), hasBB);
 	if (!result)
 	{
@@ -155,6 +150,7 @@ bool ModelHandler::CreateModel(ID3D11Device* device, ID3D11DeviceContext* device
 	return true;
 }
 
+//Recursive function to delete the quadtree
 void ModelHandler::DeleteQuadNode(QuadNode* node)
 {
 	if (node == nullptr) {
@@ -198,41 +194,13 @@ void ModelHandler::Shutdown()
 
 bool ModelHandler::BBIntersect(XMFLOAT3 minBB1, XMFLOAT3 maxBB1, XMFLOAT3 minBB2, XMFLOAT3 maxBB2)
 {
+	//Check if box1 intersects box2 based on minimum and maximum points
 	return (minBB1.x <= maxBB2.x && maxBB1.x >= minBB2.x) &&
 		(minBB1.y <= maxBB2.y && maxBB1.y >= minBB2.y) &&
 		(minBB1.z <= maxBB2.z && maxBB1.z >= minBB2.z);
 }
 
-bool ModelHandler::CreateBBModel(ID3D11Device* device, ID3D11DeviceContext* deviceContext, QuadNode* node)
-{
-	if (node == nullptr) {
-		return false;
-	}
-
-	bool result = false;
-
-	std::vector<Model::Vertex>* vertices = new std::vector<Model::Vertex>;
-	node->GetVertices(vertices);
-	Model* tempModel = nullptr;
-	tempModel = new Model;
-	if (!tempModel)
-	{
-		return false;
-	}
-	//Initialize the bounding box model object
-	result = tempModel->Initialize(device, deviceContext, "", "ModelBB", 0, false, vertices);
-	if (!result)
-	{
-		return false;
-	}
-
-	delete vertices;
-
-	this->modelsNoBB.push_back(tempModel);
-
-	return true;
-}
-
+//Used for debug, creates a box of the nodes bounding box
 bool ModelHandler::CreateBBModels(ID3D11Device* device, ID3D11DeviceContext* deviceContext, QuadNode* node)
 {
 	if (node == nullptr) {
@@ -270,11 +238,14 @@ bool ModelHandler::CreateBBModels(ID3D11Device* device, ID3D11DeviceContext* dev
 	return true;
 }
 
+//Recursive function to create a nodes childs
 void ModelHandler::CreateQuadrants(QuadNode* node, int level)
 {
 	if (level == 0) {
 		return;
 	}
+
+	//Calculate differences and make them half
 	float dx = (node->maxBox.x - node->minBox.x) * 0.5f;
 	float dy = (node->maxBox.y - node->minBox.y);
 	float dz = (node->maxBox.z - node->minBox.z) * 0.5f;
@@ -298,9 +269,9 @@ void ModelHandler::CreateQuadrants(QuadNode* node, int level)
 	XMFLOAT3 minModel, maxModel;
 	for (int i = 0; i < node->models.size(); i++) {
 		node->models.at(i)->GetMinMaxVertex(minModel, maxModel);
-		for (int j = 0; j < 4; j++) {
+		for (int j = 0; j < 4; j++) { //Check each model in the nodes bounding box against the all the chils bounding boxes
 			if (this->BBIntersect(node->child[j]->minBox, node->child[j]->maxBox, minModel, maxModel)) {
-				node->child[j]->models.push_back(node->models.at(i));
+				node->child[j]->models.push_back(node->models.at(i)); //Insert pointer to model into child is intersect
 			}
 		}
 	}
@@ -310,6 +281,7 @@ void ModelHandler::CreateQuadrants(QuadNode* node, int level)
 	}
 }
 
+//Function to create the root node and start the recursive function from root node
 bool ModelHandler::CreateQuadTree(ID3D11Device* device, ID3D11DeviceContext* deviceContext, int levels)
 {
 	XMFLOAT3 minModel, maxModel; 
@@ -319,34 +291,36 @@ bool ModelHandler::CreateQuadTree(ID3D11Device* device, ID3D11DeviceContext* dev
 	bool result = false;
 
 	for (int i = 0; i < this->models.size(); i++) {
-		this->quadTree->models.push_back(this->models.at(i));
-		this->models.at(i)->GetMinMaxVertex(minModel, maxModel);
-		if (maxModel.x > maxestModel.x) {
-			maxestModel.x = maxModel.x;
+		this->quadTree->models.push_back(this->models.at(i)); //Insert all models in root node
+
+		this->models.at(i)->GetMinMaxVertex(minModel, maxModel); //Get the min and max size required to contain all models in node
+		if (maxModel.x + 1.0f > maxestModel.x) {
+			maxestModel.x = maxModel.x + 1.0f;
 		}
-		if (maxModel.y > maxestModel.y) {
-			maxestModel.y = maxModel.y;
+		if (maxModel.y + 1.0f > maxestModel.y) {
+			maxestModel.y = maxModel.y + 1.0f;
 		}
-		if (maxModel.z > maxestModel.z) {
-			maxestModel.z = maxModel.z;
+		if (maxModel.z + 1.0f > maxestModel.z) {
+			maxestModel.z = maxModel.z + 1.0f;
 		}
-		if (minModel.x < minestModel.x) {
-			minestModel.x = minModel.x;
+		if (minModel.x - 1.0f < minestModel.x) {
+			minestModel.x = minModel.x - 1.0f;
 		}
-		if (minModel.y < minestModel.y) {
-			minestModel.y = minModel.y;
+		if (minModel.y - 1.0f < minestModel.y) {
+			minestModel.y = minModel.y - 1.0f;
 		}
-		if (minModel.z < minestModel.z) {
-			minestModel.z = minModel.z;
+		if (minModel.z - 1.0f < minestModel.z) {
+			minestModel.z = minModel.z - 1.0f;
 		}
 	}
-	//this->quadTree->minBox = XMFLOAT3(-200, -10, -200);
-	//this->quadTree->maxBox = XMFLOAT3(400, 40, 400);
+	//this->quadTree->minBox = XMFLOAT3(-100, -10, -100);
+	//this->quadTree->maxBox = XMFLOAT3(100, 40, 100);
 	this->quadTree->minBox = minestModel;
 	this->quadTree->maxBox = maxestModel;
 
 	this->CreateQuadrants(this->quadTree, levels);
 
+	//Uncoment this for bounding box models
 	/*result = this->CreateBBModels(device, deviceContext, this->quadTree);
 	if (!result) {
 		return false;
@@ -355,8 +329,10 @@ bool ModelHandler::CreateQuadTree(ID3D11Device* device, ID3D11DeviceContext* dev
 	return true;
 }
 
+//Traverses the quadtree and saves the nodes that intersect the frustum in "nodesToRender"
 void ModelHandler::TraverseQuadTree(QuadNode* node, Frustum* viewFrustum, std::vector<QuadNode*>& nodesToRender)
 {
+	//If the node has no childs, save it to render
 	if (node->child[0] == nullptr) {
 		nodesToRender.push_back(node);
 		return;
@@ -364,6 +340,7 @@ void ModelHandler::TraverseQuadTree(QuadNode* node, Frustum* viewFrustum, std::v
 	
 	XMVECTOR* boundingBox = new XMVECTOR[8];
 
+	//Check each child against the view frustum
 	node->child[0]->GetBoundBox(boundingBox);
 	if (viewFrustum->IntersectBB(boundingBox)) {
 		this->TraverseQuadTree(node->child[0], viewFrustum, nodesToRender);
@@ -386,6 +363,7 @@ void ModelHandler::TraverseQuadTree(QuadNode* node, Frustum* viewFrustum, std::v
 	return;
 }
 
+//Function that calls the traverse quadtree function and outputs all the models in the intersected nodes
 std::vector<Model*> ModelHandler::GetModelsInViewFrustum(Frustum* viewFrustum)
 {
 	std::vector<QuadNode*> nodesToRender;
@@ -394,17 +372,15 @@ std::vector<Model*> ModelHandler::GetModelsInViewFrustum(Frustum* viewFrustum)
 	int modelID = 0;
 	bool alreadyExists = false;
 
+	//Call the recursive function with the root node
 	this->TraverseQuadTree(this->quadTree, viewFrustum, nodesToRender);
 
-	if (nodesToRender.size() != 21) {
-		int lol = 0;
-	}
-
+	//Go through all the nodes that should be rendered and add the models to output
 	for (int i = 0; i < nodesToRender.size(); i++) {
 		for (int j = 0; j < nodesToRender.at(i)->models.size(); j++) {
 			alreadyExists = false;
 			modelID = nodesToRender.at(i)->models.at(j)->GetId();
-			for (int k = 0; k < modelIDs.size(); k++) {
+			for (int k = 0; k < modelIDs.size(); k++) { //The same model can intersect sevral nodes so make sure we only output it once by saving model ID
 				if (modelIDs.at(k) == modelID) {
 					alreadyExists = true;
 				}
@@ -416,7 +392,7 @@ std::vector<Model*> ModelHandler::GetModelsInViewFrustum(Frustum* viewFrustum)
 			}
 		}
 	}
-	for (int i = 0; i < this->modelsNoBB.size(); i++) {
+	for (int i = 0; i < this->modelsNoBB.size(); i++) { //Add all the models without a bounding box that is excluded from the quadtree
 		outputModels.push_back(this->modelsNoBB.at(i));
 	}
 
@@ -451,6 +427,7 @@ bool ModelHandler::UpdateModelWorldMatrix(std::string modelName, XMMATRIX worldM
 	return false;
 }
 
+//Returns all the models
 std::vector<Model*> ModelHandler::GetModels()
 {
 	std::vector<Model*> outputModels;
@@ -465,29 +442,28 @@ std::vector<Model*> ModelHandler::GetModels()
 	return outputModels;
 }
 
+//Returns models in a specific node, path being an array with the childs to go into and levels being how far down
 std::vector<Model*> ModelHandler::GetModelsInNode(int path[], int levels)
 {
 	std::vector<Model*> outputModels;
 	QuadNode* node = this->quadTree;
 
 	for (int i = 0; i < levels; i++) {
-		if (path[i] == 0 || !node->child[path[i] - 1]) {
-			for (int i = 0; i < node->models.size(); i++) {
-				outputModels.push_back(node->models.at(i));
-			}
-			for (int i = 0; i < this->modelsNoBB.size(); i++) {
-				outputModels.push_back(this->modelsNoBB.at(i));
-			}
-
-			return outputModels;
+		if (path[i] != 0 || node->child[path[i] - 1]) {
+			node = node->child[path[i] - 1];
 		}
-
-		node = node->child[path[i] - 1];
+	}
+	for (int i = 0; i < node->models.size(); i++) {
+		outputModels.push_back(node->models.at(i));
+	}
+	for (int i = 0; i < this->modelsNoBB.size(); i++) {
+		outputModels.push_back(this->modelsNoBB.at(i));
 	}
 
 	return outputModels;
 }
 
+//Generate the models minimum and maximum vertices after the world matrix has been set
 void ModelHandler::GenerateModelsMinMaxVerts()
 {
 	for (int i = 0; i < this->models.size(); i++) {
@@ -495,36 +471,37 @@ void ModelHandler::GenerateModelsMinMaxVerts()
 	}
 }
 
-bool ModelHandler::SelectModel(XMVECTOR mouseViewPos, CameraHandler* cameraH) {
+//Check if any model is intersecting ray casted from mouse pointer
+bool ModelHandler::SelectModel(XMVECTOR mouseViewPos, CameraHandler* cameraH) 
+{
 	bool result = true;
 	
-	//Get our point in View space
 	XMFLOAT3 min;
 	XMFLOAT3 max;
 	XMVECTOR pos = XMVectorSet(0,0,0,0);
 	float t = NULL;
-	float lastT = 99099;
+	float lastT = 99999;
 	int index = -1;
 	XMMATRIX CameraViewMatrix;
 	cameraH->GetViewMatrix(CameraViewMatrix);
-	XMMATRIX inverseViewMatrix = XMMatrixInverse(NULL,CameraViewMatrix);	//Invert the view matrix to move from view to worl space
+	XMMATRIX inverseViewMatrix = XMMatrixInverse(NULL,CameraViewMatrix);	//Invert the view matrix to move from view to world space
 
-	XMVECTOR dir = XMVector3TransformNormal(mouseViewPos,inverseViewMatrix); 
+	XMVECTOR dir = XMVector3TransformNormal(mouseViewPos,inverseViewMatrix);  //Transform the ray from view space to world space
 	XMVECTOR oriPos = XMVector3TransformCoord(pos, inverseViewMatrix);
 
-	
+	//Check ray against all the models with a bounding box
 	for (int i = 0; i < this->models.size(); i++) {
 		this->models.at(i)->GetMinMaxVertex(min, max);
 
 		if (this->RayAABBCheack(min, max, oriPos, dir, t)) {
-			if (t < lastT) {
+			if (t < lastT) { //Only save the closest intersecting model
 				index = i;
 				lastT = t;
 			}
 		}
 	}
 
-	if (index != -1 && !this->models.at(index)->IsModelSelected()) {
+	if (index != -1 && !this->models.at(index)->IsModelSelected()) { //If we hit a model that is not selected -> select and increase selected counter
 		this->models.at(index)->SetModelSelectionState(true);
 		this->pickedModels++;
 	}
@@ -543,14 +520,14 @@ bool ModelHandler::RayAABBCheack(XMFLOAT3& min, XMFLOAT3& max, XMVECTOR ori, XMV
 	XMFLOAT3 dirfrac;
 	XMFLOAT3 dirf;
 	XMFLOAT3 orif;
-	XMStoreFloat3(&dirf,dir);
-	XMStoreFloat3(&orif, ori);
-	// r.dir is unit direction vector of ray
+	XMStoreFloat3(&dirf,dir); //dir is unit direction vector of ray
+	XMStoreFloat3(&orif, ori); //ori is the origin of the ray
+	
 	dirfrac.x = 1.0f / dirf.x;
 	dirfrac.y = 1.0f / dirf.y;
 	dirfrac.z = 1.0f / dirf.z;
-	// lb is the corner of AABB with minimal coordinates - left bottom, rt is maximal corner
-	// r.org is origin of ray
+
+	// min is the corner of AABB with minimal coordinates - left bottom, max is maximal coordinates
 	float t1 = (min.x - orif.x)*dirfrac.x;
 	float t2 = (max.x - orif.x)*dirfrac.x;
 	float t3 = (min.y - orif.y)*dirfrac.y;
@@ -561,28 +538,21 @@ bool ModelHandler::RayAABBCheack(XMFLOAT3& min, XMFLOAT3& max, XMVECTOR ori, XMV
 	float tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
 	float tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
 
-	// if tmax < 0, ray (line) is intersecting AABB, but whole AABB is behing us
+	//Ray is intersecting AABB, but whole AABB is behind us
 	if (tmax < 0)
 	{
-		t = tmax;
 		return false;
 	}
 
-	// if tmin > tmax, ray doesn't intersect AABB
+	//Ray doesn't intersect AABB
 	if (tmin > tmax)
 	{
-		t = tmax;
 		return false;
 	}
 
+	//Return intersection true and distance to model
 	t = tmin;
 	return true;
-}
-
-void ModelHandler::swap(float& v1, float& v2) {
-	float temp = v1;
-	v1 = v2;
-	v2 = temp;
 }
 
 int ModelHandler::GetNrPickableModels()
