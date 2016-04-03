@@ -10,12 +10,11 @@ class Frustum {
 
 private:
 	XMVECTOR planes[6];
-	XMMATRIX viewMatrix;
+
 public:
 	Frustum();
 	~Frustum();
 
-	void SetViewProjMatrix(XMMATRIX viewMatrix, XMMATRIX projMatrix);
 	void CreateFrustum(float, XMMATRIX viewMatrix, XMMATRIX projMatrix);
 	bool IntersectBB(XMVECTOR* boundingbox);
 };

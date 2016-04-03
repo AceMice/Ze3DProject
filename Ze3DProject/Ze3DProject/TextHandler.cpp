@@ -212,8 +212,9 @@ void TextHandler::Render(ID3D11DeviceContext* deviceContext, XMMATRIX orthoMatri
 	Sentence* tempSentence;
 	for (int i = 0; i < this->sentences.size(); i++) {
 		tempSentence = this->sentences.at(i);
-		this->RenderSentence(deviceContext, i);
+		this->RenderSentence(deviceContext, i); //Put the sentence vertex buffer on the pipeline
 
+		//Render the sentence
 		this->fontShaderH->Render(deviceContext, tempSentence->indexCount, XMMatrixIdentity(), this->baseViewMatrix, orthoMatrix, this->font->GetTexture(), tempSentence->color);
 	}
 

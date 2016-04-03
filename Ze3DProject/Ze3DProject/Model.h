@@ -46,7 +46,6 @@ private:
 	XMMATRIX worldMatrix;
 	std::string name;
 	int id;
-	XMVECTOR* boundingBox;
 	XMFLOAT3 minVertex;
 	XMFLOAT3 maxVertex;
 	bool hasBB;
@@ -59,7 +58,6 @@ private:
 	bool LoadTexture(ID3D11Device*, ID3D11DeviceContext*, std::string);
 	void ReleaseTexture();
 	bool LoadObj(const char*, std::vector<Vertex>&, unsigned long*&, int&, int&, std::string&);
-	void CreateBoundingBox(XMFLOAT3, XMFLOAT3);
 
 public:
 	Model();
