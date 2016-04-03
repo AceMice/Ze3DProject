@@ -109,7 +109,7 @@ float4 main(PSInput input) : SV_TARGET
 	}
 
 	//Combine everything for the output color
-	outputColor = saturate(((color.rgba + specular.rgba) * lightIntensity * 0.8f) + ((color.rgba + specular.rgba) * 0.2f));
+	outputColor = saturate(((color.rgba + specular.rgba) * lightIntensity * 0.8f) + ((color.rgba) * 0.2f));
 
 	return outputColor;
 }
