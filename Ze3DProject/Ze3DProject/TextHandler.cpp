@@ -28,13 +28,13 @@ int TextHandler::CreateSentence(ID3D11Device* device, int maxLength)
 	bool result;
 	Sentence* tempSentence = new Sentence;
 
-	tempSentence->maxLength = maxLength;
-	tempSentence->vertexCount = tempSentence->indexCount = maxLength * 6;
+	tempSentence->maxLength = maxLength; //Init the max character length of the sentence
+	tempSentence->vertexCount = tempSentence->indexCount = maxLength * 6; //Each letter has 6 vertices
 
-	Vertex* vertices = new Vertex[tempSentence->vertexCount];
+	Vertex* vertices = new Vertex[tempSentence->vertexCount]; //Create an empty vertex array and init to 0
 	memset(vertices, 0, (sizeof(Vertex) * tempSentence->vertexCount));
 
-	unsigned long* indices = new unsigned long[tempSentence->indexCount];
+	unsigned long* indices = new unsigned long[tempSentence->indexCount]; //Create and fill the index buffer
 	for (int i = 0; i < tempSentence->indexCount; i++) {
 		indices[i] = i;
 	}
@@ -80,34 +80,37 @@ int TextHandler::CreateSentence(ID3D11Device* device, int maxLength)
 		return -1;
 	}
 
-	this->sentences.push_back(tempSentence);
+	this->sentences.push_back(tempSentence); //Store the sentence obejct
 
-	delete[] vertices;
+	delete[] vertices; //Delete no longer needed arrays
 	delete[] indices;
 
-	return this->sentences.size() - 1;
+	return this->sentences.size() - 1; //Return string id, starts from 0
 }
 
 bool TextHandler::UpdateSentence(ID3D11DeviceContext* deviceContext, int id, std::string text, int posX, int posY, XMFLOAT3 color)
 {
 	HRESULT result;
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	Sentence* tempSentence = this->sentences.at(id);
-
-	int nrLetters = text.size();
-	if (nrLetters > tempSentence->maxLength) {
+	Sentence* tempSentence = this->sentences.at(id); //Get the sentence by id
+	if (!tempSentence) {
 		return false;
 	}
 
-	Vertex* vertices = new Vertex[tempSentence->vertexCount];
+	int nrLetters = text.size();
+	if (nrLetters > tempSentence->maxLength) { //Check so the new text isn't longer then it can be
+		return false;
+	}
+
+	Vertex* vertices = new Vertex[tempSentence->vertexCount]; //Create an empty vertex array and init to 0
 	memset(vertices, 0, (sizeof(Vertex) * tempSentence->vertexCount));
 
-	float drawPosX = ((this->screenWidth / 2) * -1) + posX;
+	float drawPosX = ((this->screenWidth / 2) * -1) + posX; //Calculate position in window to draw on
 	float drawPosY = (this->screenHeight / 2) - posY;
 
-	this->font->BuildVertexArray((void*)vertices, text.c_str(), drawPosX, drawPosY);
+	this->font->BuildVertexArray((void*)vertices, text.c_str(), drawPosX, drawPosY); //Ask the font object to build the vertex array
 
-	result = deviceContext->Map(tempSentence->vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	result = deviceContext->Map(tempSentence->vertexBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource); //Map the vertex buffer and discard it's content
 	if (FAILED(result))
 	{
 		return false;

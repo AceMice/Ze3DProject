@@ -149,6 +149,7 @@
     <ClCompile Include="CameraHandler.cpp" />
     <ClCompile Include="ColorShaderHandler.cpp" />
     <ClCompile Include="D3DHandler.cpp" />
+    <ClCompile Include="DeferredShaderHandler.cpp" />
     <ClCompile Include="Font.cpp" />
     <ClCompile Include="FontShaderHandler.cpp" />
     <ClCompile Include="Frustum.cpp" />
@@ -160,7 +161,6 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelHandler.cpp" />
     <ClCompile Include="ModelWindow.cpp" />
-    <ClCompile Include="DeferredShaderHandler.cpp" />
     <ClCompile Include="ShadowShaderHandler.cpp" />
     <ClCompile Include="SystemHandler.cpp" />
     <ClCompile Include="TextHandler.cpp" />
@@ -171,6 +171,7 @@
     <ClInclude Include="CameraHandler.h" />
     <ClInclude Include="ColorShaderHandler.h" />
     <ClInclude Include="D3DHandler.h" />
+    <ClInclude Include="DeferredShaderHandler.h" />
     <ClInclude Include="Font.h" />
     <ClInclude Include="FontShaderHandler.h" />
     <ClInclude Include="Frustum.h" />
@@ -181,7 +182,6 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelHandler.h" />
     <ClInclude Include="ModelWindow.h" />
-    <ClInclude Include="DeferredShaderHandler.h" />
     <ClInclude Include="ShadowShaderHandler.h" />
     <ClInclude Include="SystemHandler.h" />
     <ClInclude Include="TextHandler.h" />
