@@ -24,20 +24,21 @@ void main( triangle GSInput input[3], inout TriangleStream< PSInput > output)
 	float3 normal;
 
 	
-
+	//Calculate edges of triandle
 	float3 edge0 = input[1].worldPos.xyz - input[0].worldPos.xyz;
 	float3 edge1 = input[2].worldPos.xyz - input[0].worldPos.xyz;
 
-	normal = normalize(cross(edge0, edge1));
-
-	for (uint i = 0; i < 3; i++)
-	{
-		if (dot(input[i].normal, input[i].viewDir) >= 0.0f) {
+	//Calculate normal for models without normal
+	if (input[0].normal.x == 0 && input[0].normal.y == 0 && input[0].normal.z == 0) {
+		normal = normalize(cross(edge0, edge1));
+		if (dot(normal, input[0].viewDir) >= 0.0f) {
 			cull = false;
 		}
 	}
-
-
+	else if (dot(input[0].normal, input[0].viewDir) >= 0.0f) {
+		cull = false;
+	}
+	
 	if (!cull) {
 		PSInput element;
 		float3 tangent;

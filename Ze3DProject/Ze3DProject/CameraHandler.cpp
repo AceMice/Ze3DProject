@@ -21,10 +21,16 @@ CameraHandler::~CameraHandler()
 {
 }
 
-void CameraHandler::SetPosition(float x, float y, float z)
+void CameraHandler::SetPosition(float x, float y, float z, bool resetRotation)
 {
 	this->camPos = XMVectorSet(x, y, z, 0);
 
+	if (resetRotation) {
+		this->camYaw = 0.0f;
+		this->camPitch = 0.0f;
+		this->camRoll = 0.0f;
+	}
+	
 	return;
 }
 
@@ -51,14 +57,6 @@ void CameraHandler::updateCamera(float dt, InputHandler* inputH, GroundModel*mod
 
 	if (inputH->IsKeyDown(68)) {	//D
 		this->moveLeftRight += dt/speed;
-	}
-
-	if (inputH->IsKeyDown(69)) {	//E
-		this->camYaw += 0.02;
-	}
-
-	if (inputH->IsKeyDown(81)) {	//Q
-		this->camYaw -= 0.02;
 	}
 
 	if (inputH->IsKeyReleased(VK_SPACE)) {	//SPACE
@@ -233,7 +231,7 @@ bool CameraHandler::CameraMeshIntersect(GroundModel* model) {
 			if (avY > 1000) {
 				int j = 0;
 			}
-			this->SetPosition(XMVectorGetX(this->GetPosition()), avY, XMVectorGetZ(this->GetPosition()));
+			this->SetPosition(XMVectorGetX(this->GetPosition()), avY, XMVectorGetZ(this->GetPosition()), false);
 		}
 		else {										// Bottom right triangle
 			int fp = ((int)camLocalPos.x) + ((int)camLocalPos.z * modelWidth);
@@ -263,7 +261,7 @@ bool CameraHandler::CameraMeshIntersect(GroundModel* model) {
 		XMVECTOR tempV = XMVectorSet(1,avY, 1, 1);
 		XMVector3TransformCoord(tempV, modelWorldMatrix);
 
-		this->SetPosition(XMVectorGetX(this->GetPosition()), XMVectorGetY(tempV), XMVectorGetZ(this->GetPosition()));
+		this->SetPosition(XMVectorGetX(this->GetPosition()), XMVectorGetY(tempV), XMVectorGetZ(this->GetPosition()), false);
 		result = true;
 	}
 	

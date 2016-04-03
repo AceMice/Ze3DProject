@@ -149,6 +149,7 @@
     <ClCompile Include="CameraHandler.cpp" />
     <ClCompile Include="ColorShaderHandler.cpp" />
     <ClCompile Include="D3DHandler.cpp" />
+    <ClCompile Include="DeferredShaderHandler.cpp" />
     <ClCompile Include="Font.cpp" />
     <ClCompile Include="FontShaderHandler.cpp" />
     <ClCompile Include="Frustum.cpp" />
@@ -160,7 +161,6 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelHandler.cpp" />
     <ClCompile Include="ModelWindow.cpp" />
-    <ClCompile Include="ShaderHandler.cpp" />
     <ClCompile Include="ShadowShaderHandler.cpp" />
     <ClCompile Include="SystemHandler.cpp" />
     <ClCompile Include="TextHandler.cpp" />
@@ -171,6 +171,7 @@
     <ClInclude Include="CameraHandler.h" />
     <ClInclude Include="ColorShaderHandler.h" />
     <ClInclude Include="D3DHandler.h" />
+    <ClInclude Include="DeferredShaderHandler.h" />
     <ClInclude Include="Font.h" />
     <ClInclude Include="FontShaderHandler.h" />
     <ClInclude Include="Frustum.h" />
@@ -181,7 +182,6 @@
     <ClInclude Include="Model.h" />
     <ClInclude Include="ModelHandler.h" />
     <ClInclude Include="ModelWindow.h" />
-    <ClInclude Include="ShaderHandler.h" />
     <ClInclude Include="ShadowShaderHandler.h" />
     <ClInclude Include="SystemHandler.h" />
     <ClInclude Include="TextHandler.h" />
@@ -235,12 +235,6 @@
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="PixelShader.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="ShadowPixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>

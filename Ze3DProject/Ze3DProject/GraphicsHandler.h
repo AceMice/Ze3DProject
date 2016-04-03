@@ -2,7 +2,7 @@
 #define GRAPHICSHANDLER_H
 
 #include "D3DHandler.h"
-#include "ShaderHandler.h"
+#include "DeferredShaderHandler.h"
 #include "Model.h"
 #include "CameraHandler.h"
 #include "Inputhandler.h"
@@ -26,7 +26,7 @@ private:
 	CameraHandler* cameraH;
 	GroundModel* groundModel;
 
-	ShaderHandler* shaderH;
+	DeferredShaderHandler* deferredShaderH;
 	ColorShaderHandler* colorShaderH;
 	ModelWindow* modelWindow;
 	ShadowShaderHandler* shadowShaderH;
@@ -35,18 +35,20 @@ private:
 	TextHandler* textHandler;
 
 	bool Render();
-	//For testing
-	float rotY;
 	float moveLight;
 	bool increase;
 	float runTime;
 	int modelsLeft;
+	int highscore;
+
+	bool saveHighscore();
+	bool loadHighscore();
 public:
 	GraphicsHandler();
 	~GraphicsHandler();
 
 	bool Initialize(int, int, HWND);
-	bool Frame(float, InputHandler*);
+	bool Frame(float, InputHandler*, HWND);
 	void Shutdown();
 	void GetProjectionMatrix(XMMATRIX&);
 };

@@ -608,7 +608,7 @@ int Model::NrOfSubsets()
 	return this->subsetIndices.size();
 }
 
-void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int& textureIndex, int& normMapIndex, XMFLOAT4& difColor, XMFLOAT4& specColor, bool& transparent)
+void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int& textureIndex, int& normMapIndex, XMFLOAT4& difColor, XMFLOAT4& specColor, bool& transparent, bool& picked)
 {
 	indexStart = this->subsetIndices.at(subsetIndex);
 
@@ -620,7 +620,7 @@ void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int
 	}
 	Texture::Material tempMaterial = this->texture->GetMaterial(this->materialNames.at(subsetIndex));
 
-	if (tempMaterial.hasTexture && !this->isSelected) {	//REMOVE LATER HALF
+	if (tempMaterial.hasTexture) {
 		textureIndex = tempMaterial.textureIndex;
 	}
 	else {
@@ -637,6 +637,8 @@ void Model::GetSubsetInfo(int subsetIndex, int& indexStart, int& indexCount, int
 	difColor = tempMaterial.difColor;
 	specColor = tempMaterial.specColor;
 	transparent = tempMaterial.transparent;
+
+	picked = this->isSelected;
 
 	return;
 }

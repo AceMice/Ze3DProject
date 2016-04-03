@@ -3,7 +3,6 @@
 ShadowShaderHandler::ShadowShaderHandler()
 {
 	this->vertexShader = nullptr;
-	this->pixelShader = nullptr;
 	this->layout = nullptr;
 	this->matrixBuffer = nullptr;
 }
@@ -17,7 +16,7 @@ bool ShadowShaderHandler::Initialize(ID3D11Device* device, HWND hwnd)
 	bool result = false;
 
 	//Initialize vertex and pixel shaders
-	result = this->InitializeShader(device, hwnd, L"../Ze3DProject/ShadowVertexShader.hlsl", L"../Ze3DProject/ShadowPixelShader.hlsl");
+	result = this->InitializeShader(device, hwnd, L"../Ze3DProject/ShadowVertexShader.hlsl");
 	if (!result) {
 		return false;
 	}
@@ -50,13 +49,11 @@ bool ShadowShaderHandler::Render(ID3D11DeviceContext* deviceContext, int indexCo
 	return true;
 }
 
-bool ShadowShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename, WCHAR* psFilename)
+bool ShadowShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHAR* vsFilename)
 {
 	HRESULT hresult;
 	ID3D10Blob* errorMessage;
 	ID3D10Blob* vertexShaderBuffer;
-	ID3D10Blob* geoShaderBuffer;
-	ID3D10Blob* pixelShaderBuffer;
 	D3D11_INPUT_ELEMENT_DESC polygonLayout[1];
 	unsigned int numElements;
 	D3D11_BUFFER_DESC matrixBufferDesc;
@@ -64,8 +61,6 @@ bool ShadowShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHA
 	//init pointers to nullptr
 	errorMessage = nullptr;
 	vertexShaderBuffer = nullptr;
-	pixelShaderBuffer = nullptr;
-	geoShaderBuffer = nullptr;
 
 	//Compile the vertex shader code
 	hresult = D3DCompileFromFile(vsFilename, NULL, NULL, "main", "vs_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &vertexShaderBuffer, &errorMessage);
@@ -79,17 +74,6 @@ bool ShadowShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHA
 		return false;
 	}
 
-	//Compile the pixel shader code
-	hresult = D3DCompileFromFile(psFilename, NULL, NULL, "main", "ps_5_0", D3D10_SHADER_ENABLE_STRICTNESS, 0, &pixelShaderBuffer, &errorMessage);
-	if (FAILED(hresult)) {
-		if (errorMessage) {
-			OutputShaderErrorMessage(errorMessage, hwnd, psFilename);
-		}
-		else {
-			MessageBox(hwnd, L"D3DCompileFromFile(PS)", L"Error", MB_OK);
-		}
-		return false;
-	}
 
 	//Create the vertex shader from buffer
 	hresult = device->CreateVertexShader(vertexShaderBuffer->GetBufferPointer(), vertexShaderBuffer->GetBufferSize(), NULL, &this->vertexShader);
@@ -98,12 +82,6 @@ bool ShadowShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHA
 		return false;
 	}
 
-	//Create the pixel shader from buffer
-	hresult = device->CreatePixelShader(pixelShaderBuffer->GetBufferPointer(), pixelShaderBuffer->GetBufferSize(), NULL, &this->pixelShader);
-	if (FAILED(hresult)) {
-		MessageBox(hwnd, L"device->CreatePixelShader", L"Error", MB_OK);
-		return false;
-	}
 
 	//Fill the vertex input layout description 
 	//This needs to match the Model and shader 
@@ -128,8 +106,6 @@ bool ShadowShaderHandler::InitializeShader(ID3D11Device* device, HWND hwnd, WCHA
 	//Release and nullptr the buffers as they are no longer needed
 	vertexShaderBuffer->Release();
 	vertexShaderBuffer = nullptr;
-	pixelShaderBuffer->Release();
-	pixelShaderBuffer = nullptr;
 
 	//Fill the description of the dynamic matrix constant buffer that is in the vertex shader
 	matrixBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
@@ -245,15 +221,11 @@ void ShadowShaderHandler::ShutdownShader()
 		this->matrixBuffer->Release();
 		this->matrixBuffer = nullptr;
 	}
+
 	//Release layout
 	if (this->layout) {
 		this->layout->Release();
 		this->layout = nullptr;
-	}
-	//Release pixel shader
-	if (this->pixelShader) {
-		this->pixelShader->Release();
-		this->pixelShader = nullptr;
 	}
 
 	//Release vertex shader

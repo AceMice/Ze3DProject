@@ -111,7 +111,7 @@ bool SystemHandler::Frame(float dTime) {
 	//OPS! RIGHT NOW INPUT->FRAME() CANT RETURN FALSE SINCE WE WANT THE PROGRAM TO WORK EVEN IF WE LOSE CONTACT WITH THE MOUSE //
 
 	//Do the frame processing for the graphics object
-	result = this->graphicsH->Frame(dTime, this->inputH);
+	result = this->graphicsH->Frame(dTime, this->inputH, this->hwnd);
 
 	if (!result) {
 		return false;
@@ -212,13 +212,13 @@ void SystemHandler::Run() {
 			elapsedTime.QuadPart *= 1000000;
 			elapsedTime.QuadPart /= frequency.QuadPart;
 
-			if (elapsedTime.QuadPart > (1000000 / fpsLimit)) { //If it's time to render a frame ->
+			//if (elapsedTime.QuadPart > (1000000 / fpsLimit)) { //If it's time to render a frame ->
 				result = this->Frame((float)elapsedTime.QuadPart); //do the frame processing
 				if (!result) {
 					done = true;
 				}
 				prevTime = currTime;
-			}
+			//}
 		}
 	}
 

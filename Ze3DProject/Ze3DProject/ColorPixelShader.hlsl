@@ -40,23 +40,32 @@ float4 main(PSInput input) : SV_TARGET
 	// Set the bias value for fixing the floating point precision issues.
 	float bias = 0.00001f;
 
+	//Sample the diffuse texture from deferred render
 	color = colorTexture.Sample(pointSampler, input.tex);
+	//Sample the normal texture from deferred render
 	normal = normalTexture.Sample(pointSampler, input.tex);
+	//Sample the specual texture from deferred render
 	specColor = specularTexture.Sample(pointSampler, input.tex);
+	//Sample the texture with positions in world space from deferred render
 	worldPos = worldPosTexture.Sample(pointSampler, input.tex);
 
+	//Create the normalized vector from position to light source
 	float3 outVec = normalize(lightPos.xyz - (worldPos).xyz);
 
+	//Create the normalized reflection vector
 	float3 refVec = normalize(reflect(-outVec, normal));	//Create the the reflection
 
+	//Creathe the normalized vector from position to camera
 	float3 viewDir = normalize(camPos - worldPos).xyz;
 
 	float specIntesity = saturate(dot(refVec, viewDir));
 	float shineFactor = 5.0f;
 	float lightSpecular = 0.65f;
 
+	//Calculate the specular part
 	float4 specular = float4(specColor.rgb * lightSpecular * max(pow(specIntesity, shineFactor), 0.0f), 1.0f);
 
+	//Move the position to projection space for the light
 	positionLight = mul(worldPos, lightViewMatrix);
 	positionLight = mul(positionLight, lightProjectionMatrix);
 
@@ -99,6 +108,7 @@ float4 main(PSInput input) : SV_TARGET
 		lightIntensity = saturate(dot(normal.xyz, outVec.xyz));
 	}
 
+	//Combine everything for the output color
 	outputColor = saturate(((color.rgba + specular.rgba) * lightIntensity * 0.8f) + ((color.rgba + specular.rgba) * 0.2f));
 
 	return outputColor;

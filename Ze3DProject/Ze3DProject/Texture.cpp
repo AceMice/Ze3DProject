@@ -21,6 +21,7 @@ bool Texture::Initialize(ID3D11Device* device,ID3D11DeviceContext* deviceContext
 {
 	bool result;
 
+	//Load the .mtl file
 	result = this->LoadMtl(device, deviceContext, materialLib);
 	if (!result) {
 		return false;
@@ -186,7 +187,7 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 
 	while (std::getline(file, line)) {
 		if (line.size() > 0) {
-			if (line.substr(0, 6) == "newmtl") {
+			if (line.substr(0, 6) == "newmtl") { //Create a new material
 				ss.clear();
 				ss.str(line);
 				Material tempMat;
@@ -204,25 +205,25 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 			else if(line.at(0) == 'K'){
 				ss.clear();
 				ss.str(line);
-				if (line.at(1) == 'd') {
+				if (line.at(1) == 'd') { //Save the diffuse color
 					ss >> junk >> this->materials.at(nrOfMaterials - 1).difColor.x
 						>> this->materials.at(nrOfMaterials - 1).difColor.y
 						>> this->materials.at(nrOfMaterials - 1).difColor.z;
 					difSet = true;
 				}
-				else if (!difSet && line.at(1) == 'a') {
+				else if (!difSet && line.at(1) == 'a') { //If there has been no diffuse, save ambient as diffuse
 					ss >> junk >> this->materials.at(nrOfMaterials - 1).difColor.x
 						>> this->materials.at(nrOfMaterials - 1).difColor.y
 						>> this->materials.at(nrOfMaterials - 1).difColor.z;
 					difSet = true;
 				}
-				else if (line.at(1) == 's') {
+				else if (line.at(1) == 's') { //Save the specular color
 					ss >> junk >> this->materials.at(nrOfMaterials - 1).specColor.x
 						>> this->materials.at(nrOfMaterials - 1).specColor.y
 						>> this->materials.at(nrOfMaterials - 1).specColor.z;
 				}
 			}
-			else if (line.at(0) == 'T') {
+			else if (line.at(0) == 'T') { //Save the transparency
 				if (line.at(1) == 'f') {
 					float trans = 0.0f;
 					ss.clear();
@@ -235,7 +236,7 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 					}
 				}
 			}
-			else if (line.substr(0, 6) == "map_Kd") {
+			else if (line.substr(0, 6) == "map_Kd") { //Path to texture file
 				if (line.size() > 8) {
 					bool beenLoaded = false;
 					std::string textureFilename;
@@ -243,7 +244,7 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 					ss.str(line);
 					ss >> junk >> textureFilename;
 
-					for (int i = 0; !beenLoaded && i < this->textureNames.size(); i++) {
+					for (int i = 0; !beenLoaded && i < this->textureNames.size(); i++) { //Check if it's been loaded for this model beofre
 						if (this->textureNames.at(i) == textureFilename) {
 							this->materials.at(nrOfMaterials - 1).hasTexture = true;
 							this->materials.at(nrOfMaterials - 1).textureIndex = i;
@@ -317,7 +318,7 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 				}
 				
 			}
-			else if (line.substr(0, 8) == "map_bump") {
+			else if (line.substr(0, 8) == "map_bump") { //Path to normal map
 				if (line.size() > 8) {
 					bool beenLoaded = false;
 					std::string textureFilename;
@@ -325,7 +326,7 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 					ss.str(line);
 					ss >> junk >> textureFilename;
 
-					for (int i = 0; !beenLoaded && i < this->textureNames.size(); i++) {
+					for (int i = 0; !beenLoaded && i < this->textureNames.size(); i++) { //If the normal map has been loaded before, use that
 						if (this->textureNames.at(i) == textureFilename) {
 							this->materials.at(nrOfMaterials - 1).hasTexture = true;
 							this->materials.at(nrOfMaterials - 1).textureIndex = i;
@@ -409,11 +410,11 @@ bool Texture::LoadMtl(ID3D11Device* device, ID3D11DeviceContext* deviceContext, 
 Texture::Material Texture::GetMaterial(std::string materialName)
 {
 	for (int i = 0; i < this->materials.size(); i++) {
-		if (this->materials.at(i).name == materialName) {
+		if (this->materials.at(i).name == materialName) { //Look for the material by name
 			return this->materials.at(i);
 		}
 	}
-	Material defaultMaterial;
+	Material defaultMaterial; //If no material found, return a default one
 	defaultMaterial.name = "Not found";
 	defaultMaterial.difColor = XMFLOAT4(0.0f, 0.0f, 0.0f, 0.0f);
 	defaultMaterial.hasTexture = false;

@@ -577,78 +577,6 @@ bool ModelHandler::RayAABBCheack(XMFLOAT3& min, XMFLOAT3& max, XMVECTOR ori, XMV
 
 	t = tmin;
 	return true;
-
-
-
-
-
-	////Check X
-	//float tmin = (min.x - XMVectorGetX(ori)) / XMVectorGetX(dir);
-	//float tmax = (max.x - XMVectorGetX(ori)) / XMVectorGetX(dir);
-
-	//if (tmin > tmax) {
-	//	this->swap(tmin, tmax);
-	//}
-
-	////Check Y
-	//float tymin = (min.y - XMVectorGetY(ori)) / XMVectorGetY(dir);
-	//float tymax = (max.y - XMVectorGetY(ori)) / XMVectorGetY(dir);
-
-	//if (tymin > tymax) {
-	//	this->swap(tymin, tymax);
-	//}
-
-	//if ((tmin > tymax) || (tymin > tmax)) {
-	//	return false;
-	//}
-
-	//if (tymin > tmin) {
-	//	tmin = tymin;
-	//}
-
-	//if (tymax < tmax) {
-	//	tmax = tymax;
-	//}
-
-	////Check Z
-	//float tzmin = (min.z - XMVectorGetZ(ori)) / XMVectorGetZ(dir);
-	//float tzmax = (max.z - XMVectorGetZ(ori)) / XMVectorGetZ(dir);
-
-	//if (tzmin > tzmax) {
-	//	this->swap(tzmin, tzmax);
-	//}
-
-	//if ((tmin > tzmax) || (tzmin > tmax)) {
-	//	return false;
-	//}
-
-	//if (tzmin > tmin) {
-	//	tmin = tzmin;
-	//}
-
-	//if (tzmax < tmax) {
-	//	tmax = tzmax;
-	//}
-
-	//// Return the distance
-	//if (tmin > 0) {
-	//	if (t == NULL || abs(tmin) < t) {
-	//		t = abs(tmin);
-	//	}
-	//	else {
-	//		return false;
-	//	}
-	//}
-	//else {
-	//	if (t == NULL || abs(tmax) < t) {
-	//		t = abs(tmax);
-	//	}
-	//	else {
-	//		return false;
-	//	}
-	//}
-
-	//return true;
 }
 
 void ModelHandler::swap(float& v1, float& v2) {
@@ -660,4 +588,12 @@ void ModelHandler::swap(float& v1, float& v2) {
 int ModelHandler::GetNrPickableModels()
 {
 	return this->models.size() - this->pickedModels;
+}
+
+void ModelHandler::resetSelectedModels()
+{
+	for (int i = 0; i < this->models.size(); i++) {
+		this->models.at(i)->SetModelSelectionState(false);
+		this->pickedModels = 0;
+	}
 }

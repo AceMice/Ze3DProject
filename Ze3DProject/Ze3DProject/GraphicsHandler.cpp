@@ -4,7 +4,7 @@ GraphicsHandler::GraphicsHandler()
 {
 	this->direct3DH = nullptr;
 	this->cameraH = nullptr;
-	this->shaderH = nullptr;
+	this->deferredShaderH = nullptr;
 	this->colorShaderH = nullptr;
 	this->modelWindow = nullptr;
 	this->shadowShaderH = nullptr;
@@ -12,7 +12,6 @@ GraphicsHandler::GraphicsHandler()
 	this->modelHandler = nullptr;
 	this->textHandler = nullptr;
 
-	this->rotY = 0.0f;
 	this->moveLight = 0.0f;
 	this->increase = true;
 	this->runTime = 0.0f;
@@ -48,7 +47,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	//Set the initial position of the camera
-	this->cameraH->SetPosition(0.0f, 0.0f, -20.0f);
+	this->cameraH->SetPosition(0.0f, 0.0f, -20.0f, true);
 	this->cameraH->GenerateBaseViewMatrix();
 
 	//Create the GroundModel Object
@@ -74,30 +73,47 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 
 	std::stringstream ss;
-	for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < 10; i++) {
 		
-		// Create the model2 object.
+		//Create the box objects
 		ss.str("");
 		ss << i;
-		std::string ogreName = "ogreFullG" + ss.str();
+		std::string boxName = "WoodBox" + ss.str();
 		ss.clear();
-		result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreFullG", ogreName, true);
+		result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "WoodBox", boxName, true);
 		if (!result)
 		{
-			MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
+			MessageBox(hwnd, L"this->modelHandler->CreateModelWoodBox", L"Error", MB_OK);
 			return false;
 		}
 
 	}
 
+	//Create the ogre
+	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreFullG", "ogreFullG", false);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
+		return false;
+	}
+
+
+	//Create the ogre
+	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "carSLS3", "carSLS3", false);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelHandler->CreateModelcarSLS3", L"Error", MB_OK);
+		return false;
+	}
+
 	// Create the deferred shader object.
-	this->shaderH = new ShaderHandler;
-	if (!this->shaderH) {
+	this->deferredShaderH = new DeferredShaderHandler;
+	if (!this->deferredShaderH) {
 		return false;
 	}
 
 	// Initialize the deferred shader object.
-	result = this->shaderH->Initialize(this->direct3DH->GetDevice(), hwnd);
+	result = this->deferredShaderH->Initialize(this->direct3DH->GetDevice(), hwnd);
 	if (!result) {
 		MessageBox(hwnd, L"this->shaderH->Initialize", L"Error", MB_OK);
 		return false;
@@ -152,15 +168,15 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	
 	float z = 0.0f;
 	float x = 0.0f;
-	for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < 10; i++) {
 		std::string ogreName;
 		ss.str("");
 		ss << i;
-		ogreName = "ogreFullG" + ss.str();
-		z = (i / 5 * 50) - 50;
-		x = ((i % 5) * 50) - 90;
-		modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-		modelWorld = XMMatrixTranslation(x + 200, -5.75f, z) * modelWorld;
+		ogreName = "WoodBox" + ss.str();
+		z = (i / 5 * 40) + 50;
+		x = ((i % 5) * 40) + 20;
+		modelWorld = XMMatrixScaling(0.25f, 0.25f, 0.25f);
+		modelWorld = XMMatrixTranslation(x, -6.5f, z) * modelWorld;
 		//modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
 		if (!this->modelHandler->UpdateModelWorldMatrix(ogreName, modelWorld)) {
 			return false;
@@ -169,12 +185,22 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		ss.clear();
 	}
 	
+
 	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(0, -5.75f, 10) * modelWorld;
 	modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
-	if (!this->modelHandler->UpdateModelWorldMatrix("ogreFullG19", modelWorld)) {
+	if (!this->modelHandler->UpdateModelWorldMatrix("ogreFullG", modelWorld)) {
 		return false;
 	}
 
+	modelWorld = XMMatrixScaling(4.25f, 4.25f, 4.25f);
+	modelWorld = XMMatrixTranslation(-1.5f, -0.5f, 2.5f) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("carSLS3", modelWorld)) {
+		return false;
+	}
+
+	modelWorld = XMMatrixTranslation(-30.0f, -4.0f, -40.0f);
+	this->groundModel->SetWorldMatrix(modelWorld);
 
 	XMMATRIX viewMatrix, projectionMatrix;
 	this->cameraH->GetBaseViewMatrix(viewMatrix);
@@ -206,16 +232,24 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	if (sentenceId == -1) {
 		return false;
 	}
-	sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 60);
+	sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 32);
 	if (sentenceId == -1) {
 		return false;
+	}
+	sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 16);
+	if (sentenceId == -1) {
+		return false;
+	}
+
+	if (!this->loadHighscore()) {
+		this->highscore = 1337;
 	}
 
 
 	return true;
 }
 
-bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
+bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 {
 	bool result;
 	XMMATRIX modelWorld;
@@ -223,40 +257,59 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 	XMMATRIX projM;
 	this->direct3DH->GetProjectionMatrix(projM);
 	
-	this->rotY += dTime / 800000;
-	
-	/*if (this->moveLight > 5.0f) {
+	if (this->moveLight > 35.0f) {
 		this->increase = false;
 	}
-	if (this->moveLight < -30.0f) {
+	if (this->moveLight < 0.0f) {
 		this->increase = true;
-	}*/
-	this->moveLight = -10.0f;
-	/*if (this->increase) {
+	}
+	//this->moveLight = -10.0f;
+	if (this->increase) {
 		this->moveLight += dTime / 80000;
 	}
 	else {
 		this->moveLight -= dTime / 80000;
-	}*/
-
-	
-
-	//Ground
-	GroundModel* tempGroundModel = this->groundModel;
-	if (tempGroundModel) {
-		modelWorld = XMMatrixTranslation(10.0f, -4.0f, 10.0f);
-		tempGroundModel->SetWorldMatrix(modelWorld);
 	}
+
+	if (this->runTime == -1) {
+		this->runTime = 0;
+	}
+	else {
+		this->runTime += dTime / 1000000;
+	}
+
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH, this->groundModel);	//Sending down the mesh to check if it and the camera intersect
+	
+	if (this->modelHandler->GetNrPickableModels() == 0) {
+		int playAgain;
+		std::wstring text;
+		if (this->runTime < this->highscore) {
+			this->highscore = (int)this->runTime;
+			this->saveHighscore();
+			text = L"You beat the game highscore with a time of " + std::to_wstring(this->highscore) + L", well painted!\nDo you want to play again?";
+			playAgain = MessageBox(hwnd, text.c_str(), L"Congratulations!", MB_YESNO);
+		}
+		else {
+			text = L"Good job, you painted the boxes in " + std::to_wstring((int)this->runTime) + L" seconds so not quite enough for a highscore!\nDo you want to play again?";
+			playAgain = MessageBox(hwnd, text.c_str(), L"Well done!", MB_YESNO);
+		}
+		
+		if (playAgain == 7) {
+			return false;
+		}
+		else {
+			this->runTime = -1;
+			this->modelHandler->resetSelectedModels();
+			this->cameraH->SetPosition(0.0f, 0.0f, -20.0f, true);
+		}
+	}
 
 	//Picking
-	if (inputH->IsKeyReleased(0x50)) {	//P
+	if (inputH->IsKeyReleased(69)) {	//E
 	
 		this->modelsLeft -= this->modelHandler->SelectModel(inputH->GetMouseViewPos(projM), this->cameraH);
 	}
-
-	this->runTime += dTime / 1000000;
 
 	std::string text = "Time: " + std::to_string((int)this->runTime);
 
@@ -267,21 +320,26 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH)
 
 	this->modelsLeft = this->modelHandler->GetNrPickableModels();
 
-	text = "Left to pick: " + std::to_string(this->modelsLeft);
+	text = "Left to paint: " + std::to_string(this->modelsLeft);
 
 	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 1, text, 50, 70, XMFLOAT3(1.0f, 0.0f, 0.0f));
 	if (!result) {
 		return false;
 
 	}
-	XMFLOAT3 mx; 
-	XMStoreFloat3(&mx, inputH->GetMouseViewPos(projM));
-	text = "MousePos: " + std::to_string(mx.x) + "x , " + std::to_string(mx.y) + "y, " + std::to_string(mx.z) + "z";
+
+	text = "Hightscore: " + std::to_string(this->highscore);
 
 	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 2, text, 50, 90, XMFLOAT3(1.0f, 0.0f, 0.0f));
 	if (!result) {
 		return false;
+	}
 
+	text = "FPS: " + std::to_string((int)(1000000/dTime));
+
+	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 3, text, 50, 30, XMFLOAT3(1.0f, 0.0f, 0.0f));
+	if (!result) {
+		return false;
 	}
 
 	result = this->Render();
@@ -304,6 +362,7 @@ bool GraphicsHandler::Render()
 	XMFLOAT4 difColor;
 	XMFLOAT4 specColor;
 	bool transparent;
+	bool picked;
 	XMVECTOR* modelBB;
 	bool renderModel = true;
 	int modelsRendered = 0;
@@ -313,14 +372,15 @@ bool GraphicsHandler::Render()
 	XMFLOAT4 camPos = XMFLOAT4(XMVectorGetX(camPosVec), XMVectorGetY(camPosVec), XMVectorGetZ(camPosVec), XMVectorGetW(camPosVec));
 	
 	//Create the view, and projection matrices based on light pos(25, 15, -6)
-	XMVECTOR lookAt = XMVectorSet(150.0f, 0.0f, 25.0f, 0.0f);
-	XMVECTOR lightPos = XMVectorSet(-25.0f, 75.0f, this->moveLight, 0.0f);
+	XMVECTOR lookAt = XMVectorSet(0.0f, 0.0f, 15.0f, 0.0f);
+	XMVECTOR lightPos = XMVectorSet(-40.0f, 50.0f, this->moveLight, 0.0f);
 	XMVECTOR lightUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	lightViewMatrix = XMMatrixLookAtLH(lightPos, lookAt, lightUp);
 
 	float fieldOfView = (float)XM_PI / 4.0f;
 	float screenAspect = 1.0f;
 	lightProjectionMatrix = XMMatrixPerspectiveFovLH(fieldOfView, screenAspect, 1.0f, 1000.0f);
+
 	//**DEFERRED RENDER**\\
 
 	//Clear the buffers to begin the scene
@@ -337,26 +397,24 @@ bool GraphicsHandler::Render()
 	
 	//Ground Render
 	
-		this->groundModel->GetWorldMatrix(worldMatrix);
+	this->groundModel->GetWorldMatrix(worldMatrix);
 
-		this->groundModel->Render(this->direct3DH->GetDeviceContext());
-		modelSubsets = this->groundModel->NrOfSubsets();
-		for (int j = 0; j < modelSubsets; j++) {
-			//Get all the nessecary information from the model
-			this->groundModel->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+	this->groundModel->Render(this->direct3DH->GetDeviceContext());
+	modelSubsets = this->groundModel->NrOfSubsets();
+	for (int j = 0; j < modelSubsets; j++) {
+		//Get all the nessecary information from the model
+		this->groundModel->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
 
-			//Render the model using the shader-handler
-			if (!transparent) {
-				result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-					worldMatrix, viewMatrix, projectionMatrix, this->groundModel->GetTexture(textureIndex),
-					this->groundModel->GetTexture(normMapIndex), difColor, specColor, false, camPos);
-				if (!result)
-				{
-					return false;
-				}
-
+		//Render the model using the shader-handler
+		if (!transparent) {
+			result = this->deferredShaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+				worldMatrix, viewMatrix, projectionMatrix, this->groundModel->GetTexture(textureIndex),
+				this->groundModel->GetTexture(normMapIndex), difColor, specColor, false, false, camPos);
+			if (!result)
+			{
+				return false;
 			}
-		
+		}
 	}
 
 	//Create the frustum
@@ -373,54 +431,31 @@ bool GraphicsHandler::Render()
 
 	for (int i = 0; i < models.size(); i++) {
 		models.at(i)->GetWorldMatrix(worldMatrix);
-		
-		
-		////Check against frustum
-		//if (this->models.at(i)->GethasBB()) {
-		//	//Get the world matrix from model
-		//	MVP = XMMatrixMultiply(worldMatrix, viewMatrix);
-
-		//	modelBB = this->models.at(i)->GetBouningBox(MVP);
-		//	renderModel = this->frustum->IntersectBB(modelBB);
-		//	delete[] modelBB;
-		//}
-		//else {
-		//	renderModel = true;
-		//}
-		
-		//if (renderModel) {
-			modelsRendered++;
-
 			
-			//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
-			models.at(i)->Render(this->direct3DH->GetDeviceContext());
+		//Put the model1 vertex and index buffers on the graphics pipeline to prepare them for drawing
+		models.at(i)->Render(this->direct3DH->GetDeviceContext());
 
-			//Draw all non transparent subsets
-			modelSubsets = models.at(i)->NrOfSubsets();
-			for (int j = 0; j < modelSubsets; j++) {
-				//Get all the nessecary information from the model
-				models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+		//Draw all non transparent subsets
+		modelSubsets = models.at(i)->NrOfSubsets();
+		for (int j = 0; j < modelSubsets; j++) {
+			//Get all the nessecary information from the model
+			models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent, picked);
 
-				//Render the model using the shader-handler
-				if (!transparent) {
-					result = this->shaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-						worldMatrix, viewMatrix, projectionMatrix, models.at(i)->GetTexture(textureIndex),
-						models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, camPos);
-					if (!result)
-					{
-						return false;
-					}
-
+			//Render the model using the shader-handler
+			if (!transparent) {
+				result = this->deferredShaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
+					worldMatrix, viewMatrix, projectionMatrix, models.at(i)->GetTexture(textureIndex),
+					models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, picked, camPos);
+				if (!result)
+				{
+					return false;
 				}
+				modelsRendered++;
 			}
-		//}
+		}
 		
 	}
 
-	if (modelsRendered  == 1) {
-		int lol = modelsRendered;
-	}
-	
 
 	//**SHADOW RENDER**\\
 
@@ -465,7 +500,7 @@ bool GraphicsHandler::Render()
 		modelSubsets = models.at(i)->NrOfSubsets();
 		for (int j = 0; j < modelSubsets; j++) {
 			//Get all the nessecary information from the model
-			models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent);
+			models.at(i)->GetSubsetInfo(j, indexStart, indexCount, textureIndex, normMapIndex, difColor, specColor, transparent, picked);
 
 			//Render the model using the shader-handler
 			if (!transparent) {
@@ -557,10 +592,10 @@ bool GraphicsHandler::Render()
 void GraphicsHandler::Shutdown()
 {
 	//Release the shaderHandler object
-	if (this->shaderH) {
-		this->shaderH->Shutdown();
-		delete this->shaderH;
-		this->shaderH = nullptr;
+	if (this->deferredShaderH) {
+		this->deferredShaderH->Shutdown();
+		delete this->deferredShaderH;
+		this->deferredShaderH = nullptr;
 	}
 
 	//Release the shaderHandler object
@@ -623,4 +658,41 @@ void GraphicsHandler::Shutdown()
 
 void GraphicsHandler::GetProjectionMatrix(XMMATRIX &projectionMatrix) {
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
+}
+
+bool GraphicsHandler::loadHighscore()
+{
+	std::ifstream file;
+	std::string line;
+	std::stringstream ss;
+	file.open("../Ze3DProject/Data/highscore.txt");
+	if (!file.is_open()) {
+		return false;
+	}
+
+	std::getline(file, line);
+	ss.str(line);
+	ss >> this->highscore;
+	ss.clear();
+
+	file.close();
+
+	return true;
+}
+
+bool GraphicsHandler::saveHighscore()
+{
+	std::ofstream file;
+	std::string line;
+	std::stringstream ss;
+	file.open("../Ze3DProject/Data/highscore.txt");
+	if (!file.is_open()) {
+		return false;
+	}
+
+	file << this->highscore;
+
+	file.close();
+	
+	return true;
 }
