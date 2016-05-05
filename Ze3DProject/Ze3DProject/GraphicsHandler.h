@@ -40,6 +40,10 @@ private:
 	float runTime;
 	int modelsLeft;
 	int highscore;
+	int modelsRendered;
+
+	XMMATRIX testViewMatrix;
+	bool testFrustum;
 
 	bool saveHighscore();
 	bool loadHighscore();

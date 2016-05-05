@@ -16,6 +16,7 @@ GraphicsHandler::GraphicsHandler()
 	this->increase = true;
 	this->runTime = 0.0f;
 	this->modelsLeft = 0;
+	this->testFrustum = false;
 }
 
 GraphicsHandler::~GraphicsHandler()
@@ -49,6 +50,12 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	//Set the initial position of the camera
 	this->cameraH->SetPosition(0.0f, 0.0f, -20.0f, true);
 	this->cameraH->GenerateBaseViewMatrix();
+
+	//Create the camera object
+	XMVECTOR lookAt = XMVectorSet(20.0f, 0.0f, 5.0f, 0.0f);
+	XMVECTOR camPos = XMVectorSet(0.0f, 50.0f, 0.0f, 0.0f);
+	XMVECTOR camUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	this->testViewMatrix = XMMatrixLookAtLH(camPos, lookAt, camUp);
 
 	//Create the GroundModel Object
 	tempGroundModel = new GroundModel;
@@ -201,7 +208,7 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	//Generate the models min max vertices and create the quadtree
 	this->modelHandler->GenerateModelsMinMaxVerts();
-	this->modelHandler->CreateQuadTree(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), 1);
+	this->modelHandler->CreateQuadTree(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), 4);
 
 	this->textHandler = new TextHandler;
 	if (!this->textHandler) {
@@ -228,6 +235,10 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 		return false;
 	}
 	sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 16);
+	if (sentenceId == -1) {
+		return false;
+	}
+	sentenceId = this->textHandler->CreateSentence(this->direct3DH->GetDevice(), 32);
 	if (sentenceId == -1) {
 		return false;
 	}
@@ -333,6 +344,22 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 		return false;
 	}
 
+	text = "Models rendered: " + std::to_string(this->modelsRendered);
+
+	result = this->textHandler->UpdateSentence(this->direct3DH->GetDeviceContext(), 4, text, 50, 110, XMFLOAT3(1.0f, 0.0f, 0.0f));
+	if (!result) {
+		return false;
+	}
+
+	if(inputH->IsKeyReleased(84)) { //T
+		if (this->testFrustum) {
+			this->testFrustum = false;
+		}
+		else {
+			this->testFrustum = true;
+		}
+	}
+
 	result = this->Render();
 	if (!result) {
 		return false;
@@ -343,7 +370,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 
 bool GraphicsHandler::Render()
 {
-	XMMATRIX worldMatrix, viewMatrix, lightViewMatrix, projectionMatrix, lightProjectionMatrix, orthoMatrix, MVP;
+	XMMATRIX worldMatrix, viewMatrix, lightViewMatrix, projectionMatrix, lightProjectionMatrix, orthoMatrix, renderViewMatrix;
 	bool result;
 	int indexCount;
 	int indexStart;
@@ -356,7 +383,7 @@ bool GraphicsHandler::Render()
 	bool picked;
 	XMVECTOR* modelBB;
 	bool renderModel = true;
-	int modelsRendered = 0;
+	this->modelsRendered = 0;
 	std::vector<Model*> models;
 
 	XMVECTOR camPosVec = this->cameraH->GetPosition();
@@ -383,6 +410,13 @@ bool GraphicsHandler::Render()
 	//Get the view, and projection matrices from the camera and d3d objects
 	this->cameraH->GetViewMatrix(viewMatrix);
 	this->direct3DH->GetProjectionMatrix(projectionMatrix);
+
+	if (this->testFrustum) {
+		renderViewMatrix = this->testViewMatrix;
+	}
+	else {
+		renderViewMatrix = viewMatrix;
+	}
 	
 	//Ground Render
 	
@@ -397,7 +431,7 @@ bool GraphicsHandler::Render()
 		//Render the model using the shader-handler
 		if (!transparent) {
 			result = this->deferredShaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-				worldMatrix, viewMatrix, projectionMatrix, this->groundModel->GetTexture(textureIndex),
+				worldMatrix, renderViewMatrix, projectionMatrix, this->groundModel->GetTexture(textureIndex),
 				this->groundModel->GetTexture(normMapIndex), difColor, specColor, false, false, camPos);
 			if (!result)
 			{
@@ -410,11 +444,11 @@ bool GraphicsHandler::Render()
 	this->frustum->CreateFrustum(SCREEN_DEPTH, viewMatrix, projectionMatrix);
 
 	//Get the models in node info
-	int path[2] = { 4, 0 };
+	int path[2] = { 3, 0 };
 	int levels = 1;
 	
-	models = this->modelHandler->GetModels();
-	//models = this->modelHandler->GetModelsInViewFrustum(this->frustum);
+	//models = this->modelHandler->GetModels();
+	models = this->modelHandler->GetModelsInViewFrustum(this->frustum);
 	//models = this->modelHandler->GetModelsInNode(path, levels);
 
 	for (int i = 0; i < models.size(); i++) {
@@ -432,7 +466,7 @@ bool GraphicsHandler::Render()
 			//Render the model using the shader-handler
 			if (!transparent) {
 				result = this->deferredShaderH->Render(this->direct3DH->GetDeviceContext(), indexCount, indexStart,
-					worldMatrix, viewMatrix, projectionMatrix, models.at(i)->GetTexture(textureIndex),
+					worldMatrix, renderViewMatrix, projectionMatrix, models.at(i)->GetTexture(textureIndex),
 					models.at(i)->GetTexture(normMapIndex), difColor, specColor, false, picked, camPos);
 				if (!result)
 				{
@@ -440,8 +474,9 @@ bool GraphicsHandler::Render()
 				}
 			}
 		}
-		modelsRendered++;
+		this->modelsRendered++;
 	}
+	
 
 
 	//**SHADOW RENDER**\\

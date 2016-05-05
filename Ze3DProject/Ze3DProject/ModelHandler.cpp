@@ -14,21 +14,21 @@ ModelHandler::~ModelHandler()
 //Create the corners of the bounding box based on min max vertices
 void ModelHandler::QuadNode::GetBoundBox(XMVECTOR* boundingBox)
 {
-	boundingBox[0] = XMVectorSet(this->minBox.x, this->maxBox.y, this->maxBox.z, 1.0f);
+	boundingBox[0] = XMVectorSet(this->minBox.x, this->maxBox.y, this->maxBox.z, 0.0f);
 
-	boundingBox[1] = XMVectorSet(this->minBox.x, this->maxBox.y, this->minBox.z, 1.0f);
+	boundingBox[1] = XMVectorSet(this->minBox.x, this->maxBox.y, this->minBox.z, 0.0f);
 
-	boundingBox[2] = XMVectorSet(this->maxBox.x, this->maxBox.y, this->minBox.z, 1.0f);
+	boundingBox[2] = XMVectorSet(this->maxBox.x, this->maxBox.y, this->minBox.z, 0.0f);
 
-	boundingBox[3] = XMVectorSet(this->maxBox.x, this->maxBox.y, this->maxBox.z, 1.0f);
+	boundingBox[3] = XMVectorSet(this->maxBox.x, this->maxBox.y, this->maxBox.z, 0.0f);
 
-	boundingBox[4] = XMVectorSet(this->minBox.x, this->minBox.y, this->maxBox.z, 1.0f);
+	boundingBox[4] = XMVectorSet(this->minBox.x, this->minBox.y, this->maxBox.z, 0.0f);
 
-	boundingBox[5] = XMVectorSet(this->minBox.x, this->minBox.y, this->minBox.z, 1.0f);
+	boundingBox[5] = XMVectorSet(this->minBox.x, this->minBox.y, this->minBox.z, 0.0f);
 
-	boundingBox[6] = XMVectorSet(this->maxBox.x, this->minBox.y, this->minBox.z, 1.0f);
+	boundingBox[6] = XMVectorSet(this->maxBox.x, this->minBox.y, this->minBox.z, 0.0f);
 
-	boundingBox[7] = XMVectorSet(this->maxBox.x, this->minBox.y, this->maxBox.z, 1.0f);
+	boundingBox[7] = XMVectorSet(this->maxBox.x, this->minBox.y, this->maxBox.z, 0.0f);
 
 	return;
 	
