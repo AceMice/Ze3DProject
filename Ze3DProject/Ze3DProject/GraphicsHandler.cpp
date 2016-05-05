@@ -52,8 +52,8 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	this->cameraH->GenerateBaseViewMatrix();
 
 	//Create the camera object
-	XMVECTOR lookAt = XMVectorSet(20.0f, 0.0f, 5.0f, 0.0f);
-	XMVECTOR camPos = XMVectorSet(0.0f, 50.0f, 0.0f, 0.0f);
+	XMVECTOR lookAt = XMVectorSet(18.0f, 0.0f, 5.0f, 0.0f);
+	XMVECTOR camPos = XMVectorSet(0.0f, 60.0f, 0.0f, 0.0f);
 	XMVECTOR camUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	this->testViewMatrix = XMMatrixLookAtLH(camPos, lookAt, camUp);
 
