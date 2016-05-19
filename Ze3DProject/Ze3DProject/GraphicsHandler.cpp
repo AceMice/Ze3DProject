@@ -91,6 +91,60 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	}
 
+	// Smalll game start
+
+
+	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "tank", "tank", false);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
+		return false;
+	}
+
+	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "Lazer", "Lazer", false);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
+		return false;
+	}
+
+	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "Gun", "Gun", false);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
+		return false;
+	}
+
+	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "sphere1", "sphere1", false);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
+		return false;
+	}
+
+	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "MeleeRobot", "MeleeRobot", false);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
+		return false;
+	}
+
+	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "Shuttle", "Shuttle", false);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
+		return false;
+	}
+
+	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "Grenade", "Grenade", false);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
+		return false;
+	}
+
+	// Small Game end
+
 	//Create the ogre
 	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "ogreFullG", "ogreFullG", false);
 	if (!result)
@@ -187,6 +241,64 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 	
 
+	// Small Game start
+
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(-150, 0.f, 10) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("tank", modelWorld)) {
+		return false;
+	}
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(-150, 0.f, 40) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("Lazer", modelWorld)) {
+		return false;
+	}
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(-150, 0.f, 70) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("Gun", modelWorld)) {
+		return false;
+	}
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(-150, 0.f, 10) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("sphere1", modelWorld)) {
+		return false;
+	}
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(-150, 0.f, 40) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("MeleeRobot", modelWorld)) {
+		return false;
+	}
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(-150, 0.f, 70) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("Shuttle", modelWorld)) {
+		return false;
+	}
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(-150, 0.f, 100) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("Grenade", modelWorld)) {
+		return false;
+	}
+
+
+
+	//Small Game end
+
+
+
 	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
 	modelWorld = XMMatrixTranslation(0, -5.75f, 10) * modelWorld;
 	modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
@@ -279,6 +391,36 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 	else {
 		this->runTime += dTime / 1000000;
 	}
+
+	//Small Game start
+	this->rot += dTime / 1000000;
+
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(-100, 0.f, 10) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("tank", modelWorld)) {
+		return false;
+	}
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(-100, 0.f, 40) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("Lazer", modelWorld)) {
+		return false;
+	}
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(-100, 0.f, 70) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("Gun", modelWorld)) {
+		return false;
+	}
+
+
+	//Small Game end
+
+
 
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH, this->groundModel);	//Sending down the mesh to check if it and the camera intersect
@@ -571,7 +713,7 @@ bool GraphicsHandler::Render()
 	this->direct3DH->SetZBuffer(true);
 
 
-	this->textHandler->Render(this->direct3DH->GetDeviceContext(), orthoMatrix);
+	//this->textHandler->Render(this->direct3DH->GetDeviceContext(), orthoMatrix);
 
 
 	//Display the rendered scene to screen

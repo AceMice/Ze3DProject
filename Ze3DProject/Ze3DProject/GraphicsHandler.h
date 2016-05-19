@@ -20,8 +20,13 @@ const bool VSYNC_ENABLED = false;
 const float SCREEN_DEPTH = 1000.0f;
 const float SCREEN_NEAR = 0.1f;
 
+//Small Game
+//float ROTATION = 0.0f;
+
+
 class GraphicsHandler {
 private:
+	float rot = 0.0f;
 	D3DHandler* direct3DH;
 	CameraHandler* cameraH;
 	GroundModel* groundModel;

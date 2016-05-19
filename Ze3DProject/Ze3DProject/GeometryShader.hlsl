@@ -20,7 +20,7 @@ struct PSInput
 [maxvertexcount(3)]
 void main( triangle GSInput input[3], inout TriangleStream< PSInput > output)
 {
-	bool cull = true;
+	bool cull = false;
 	float3 normal;
 
 	if (dot(input[0].normal, input[0].viewDir) >= 0.0f) {
