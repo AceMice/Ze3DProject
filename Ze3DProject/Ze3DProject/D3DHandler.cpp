@@ -48,7 +48,7 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 	D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
 	D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
 	D3D11_RASTERIZER_DESC rasterDesc;
-	D3D11_VIEWPORT viewport;
+	
 	float fieldOfView, screenAspect;
 	D3D11_TEXTURE2D_DESC renderTextureDesc;
 	D3D11_RENDER_TARGET_VIEW_DESC renderTargetViewDesc;
@@ -335,15 +335,16 @@ bool D3DHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd, bool v
 	this->deviceContext->RSSetState(this->rasterState);
 
 	//Setup the viewport
-	viewport.Width = (float)screenWidth;
-	viewport.Height = (float)screenHeight;
-	viewport.MinDepth = 0.0f;
-	viewport.MaxDepth = 1.0f;
-	viewport.TopLeftX = 0.0f;
-	viewport.TopLeftY = 0.0f;
+	ZeroMemory(&this->viewport, sizeof(this->viewport));
+	this->viewport.Width = (float)screenWidth;
+	this->viewport.Height = (float)screenHeight;
+	this->viewport.MinDepth = 0.0f;
+	this->viewport.MaxDepth = 1.0f;
+	this->viewport.TopLeftX = 0.0f;
+	this->viewport.TopLeftY = 0.0f;
 
 	//Create the viewport
-	this->deviceContext->RSSetViewports(1, &viewport);
+	this->deviceContext->RSSetViewports(1, &this->viewport);
 
 	//Setup projection matrix
 	//fieldOfView = 3.141592654f / 4.0f;
@@ -650,26 +651,25 @@ void D3DHandler::SetZBuffer(bool zBuffing)
 
 void D3DHandler::SetShadowViewport(bool shadowViewport)
 {
-	D3D11_VIEWPORT viewport;
+	D3D11_VIEWPORT tempViewport;
 
 	if (shadowViewport) {
 		//Setup the viewport
-		viewport.Width = 2048.0f;
-		viewport.Height = 2048.0f;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
+		tempViewport.Width = 2048.0f;
+		tempViewport.Height = 2048.0f;
+		tempViewport.MinDepth = 0.0f;
+		tempViewport.MaxDepth = 1.0f;
+		tempViewport.TopLeftX = 0.0f;
+		tempViewport.TopLeftY = 0.0f;
+
+
+		//Create the viewport
+		this->deviceContext->RSSetViewports(1, &tempViewport);
 	}
 	else {
-		viewport.Width = 800.0f;
-		viewport.Height = 600.0f;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
+			
+		//Create the viewport
+		this->deviceContext->RSSetViewports(1, &this->viewport);
 	}
-	
-	//Create the viewport
-	this->deviceContext->RSSetViewports(1, &viewport);
+
 }

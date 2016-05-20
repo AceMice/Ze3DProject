@@ -19,6 +19,8 @@ private:
 	int videoCardMemory;
 	char videoCardDescription[128];
 
+	D3D11_VIEWPORT viewport;
+
 	IDXGISwapChain* swapChain;
 	ID3D11Device* device;
 	ID3D11DeviceContext* deviceContext;

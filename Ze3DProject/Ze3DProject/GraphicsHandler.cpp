@@ -50,9 +50,9 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	//Set the initial position of the camera
 	this->cameraH->SetPosition(0.0f, 0.0f, -20.0f, true);
 	this->cameraH->GenerateBaseViewMatrix();
-
+	this->cameraH->SetPosition(-105.0f, 4.0f, 80.0f, true);
 	//Create the camera object
-	XMVECTOR lookAt = XMVectorSet(18.0f, 0.0f, 5.0f, 0.0f);
+	XMVECTOR lookAt = XMVectorSet(18.0f, 0.f, 5.0f, 0.0f);
 	XMVECTOR camPos = XMVectorSet(0.0f, 60.0f, 0.0f, 0.0f);
 	XMVECTOR camUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 	this->testViewMatrix = XMMatrixLookAtLH(camPos, lookAt, camUp);
@@ -73,22 +73,6 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	this->modelHandler = new ModelHandler;
 	if (!this->modelHandler) {
 		return false;
-	}
-
-	std::stringstream ss;
-	for (int i = 0; i < 10; i++) {
-		//Create the box objects
-		ss.str("");
-		ss << i;
-		std::string boxName = "WoodBox" + ss.str();
-		ss.clear();
-		result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "WoodBox", boxName, true);
-		if (!result)
-		{
-			MessageBox(hwnd, L"this->modelHandler->CreateModelWoodBox", L"Error", MB_OK);
-			return false;
-		}
-
 	}
 
 	// Smalll game start
@@ -137,6 +121,13 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 	}
 
 	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "Grenade", "Grenade", false);
+	if (!result)
+	{
+		MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
+		return false;
+	}
+
+	result = this->modelHandler->CreateModel(this->direct3DH->GetDevice(), this->direct3DH->GetDeviceContext(), "Stage1NoPlanet", "Stage1NoPlanet", false);
 	if (!result)
 	{
 		MessageBox(hwnd, L"this->modelHandler->CreateModelogreFullG", L"Error", MB_OK);
@@ -222,83 +213,6 @@ bool GraphicsHandler::Initialize(int screenWidth, int screenHeight, HWND hwnd)
 
 	XMMATRIX modelWorld;
 	
-	float z = 0.0f;
-	float x = 0.0f;
-	for (int i = 0; i < 10; i++) { //Move the 10 boxes created earlier
-		std::string boxName;
-		ss.str("");
-		ss << i;
-		boxName = "WoodBox" + ss.str();
-		z = (i / 5 * 40) + 50;
-		x = ((i % 5) * 40) + 20;
-		modelWorld = XMMatrixScaling(0.25f, 0.25f, 0.25f);
-		modelWorld = XMMatrixTranslation(x, -7.15f, z) * modelWorld;
-		if (!this->modelHandler->UpdateModelWorldMatrix(boxName, modelWorld)) {
-			return false;
-		}
-
-		ss.clear();
-	}
-	
-
-	// Small Game start
-
-
-	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	modelWorld = XMMatrixTranslation(-150, 0.f, 10) * modelWorld;
-	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
-	if (!this->modelHandler->UpdateModelWorldMatrix("tank", modelWorld)) {
-		return false;
-	}
-
-	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	modelWorld = XMMatrixTranslation(-150, 0.f, 40) * modelWorld;
-	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
-	if (!this->modelHandler->UpdateModelWorldMatrix("Lazer", modelWorld)) {
-		return false;
-	}
-
-	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	modelWorld = XMMatrixTranslation(-150, 0.f, 70) * modelWorld;
-	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
-	if (!this->modelHandler->UpdateModelWorldMatrix("Gun", modelWorld)) {
-		return false;
-	}
-
-	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	modelWorld = XMMatrixTranslation(-150, 0.f, 10) * modelWorld;
-	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
-	if (!this->modelHandler->UpdateModelWorldMatrix("sphere1", modelWorld)) {
-		return false;
-	}
-
-	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	modelWorld = XMMatrixTranslation(-150, 0.f, 40) * modelWorld;
-	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
-	if (!this->modelHandler->UpdateModelWorldMatrix("MeleeRobot", modelWorld)) {
-		return false;
-	}
-
-	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	modelWorld = XMMatrixTranslation(-150, 0.f, 70) * modelWorld;
-	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
-	if (!this->modelHandler->UpdateModelWorldMatrix("Shuttle", modelWorld)) {
-		return false;
-	}
-
-	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	modelWorld = XMMatrixTranslation(-150, 0.f, 100) * modelWorld;
-	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
-	if (!this->modelHandler->UpdateModelWorldMatrix("Grenade", modelWorld)) {
-		return false;
-	}
-
-
-
-	//Small Game end
-
-
-
 	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
 	modelWorld = XMMatrixTranslation(0, -5.75f, 10) * modelWorld;
 	modelWorld = XMMatrixRotationY(1.6f) * modelWorld;
@@ -392,31 +306,64 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 		this->runTime += dTime / 1000000;
 	}
 
-	//Small Game start
+	// Small Game start
 	this->rot += dTime / 1000000;
 
-
 	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	modelWorld = XMMatrixTranslation(-100, 0.f, 10) * modelWorld;
+	modelWorld = XMMatrixTranslation(0,0,0) * modelWorld;
 	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
 	if (!this->modelHandler->UpdateModelWorldMatrix("tank", modelWorld)) {
 		return false;
 	}
 
 	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	modelWorld = XMMatrixTranslation(-100, 0.f, 40) * modelWorld;
+	modelWorld = XMMatrixTranslation(0,0,0) * modelWorld;
 	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
 	if (!this->modelHandler->UpdateModelWorldMatrix("Lazer", modelWorld)) {
 		return false;
 	}
 
 	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
-	modelWorld = XMMatrixTranslation(-100, 0.f, 70) * modelWorld;
+	modelWorld = XMMatrixTranslation(0,0,0) * modelWorld;
 	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
 	if (!this->modelHandler->UpdateModelWorldMatrix("Gun", modelWorld)) {
 		return false;
 	}
 
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(-150, 1.5f, 130) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("sphere1", modelWorld)) {
+		return false;
+	}
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(0,0,0) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("MeleeRobot", modelWorld)) {
+		return false;
+	}
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(0,0,0) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("Shuttle", modelWorld)) {
+		return false;
+	}
+
+	//-150, 0.f, 130
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(0,0,0) * modelWorld;
+	modelWorld = XMMatrixRotationY(this->rot) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("Grenade", modelWorld)) {
+		return false;
+	}
+
+	modelWorld = XMMatrixScaling(0.7f, 0.7f, 0.7f);
+	modelWorld = XMMatrixTranslation(-150, 0.f, 130) * modelWorld;
+	if (!this->modelHandler->UpdateModelWorldMatrix("Stage1NoPlanet", modelWorld)) {
+		return false;
+	}
 
 	//Small Game end
 
@@ -425,7 +372,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 	//Generate the view matrix based on the camera's position
 	this->cameraH->Frame(dTime, inputH, this->groundModel);	//Sending down the mesh to check if it and the camera intersect
 	
-	if (this->modelHandler->GetNrPickableModels() == 0) {
+	/*if (this->modelHandler->GetNrPickableModels() == 0) {
 		int playAgain;
 		std::wstring text;
 		if (this->runTime < this->highscore) {
@@ -447,7 +394,7 @@ bool GraphicsHandler::Frame(float dTime, InputHandler* inputH, HWND hwnd)
 			this->modelHandler->resetSelectedModels();
 			this->cameraH->SetPosition(0.0f, 0.0f, -20.0f, true);
 		}
-	}
+	}*/
 
 	//Picking
 	if (inputH->IsKeyReleased(69)) {	//E

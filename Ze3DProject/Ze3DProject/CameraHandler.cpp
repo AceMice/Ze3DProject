@@ -95,7 +95,7 @@ void CameraHandler::updateCamera(float dt, InputHandler* inputH, GroundModel*mod
 
 void CameraHandler::Frame(float dt, InputHandler* inputH, GroundModel* model)
 {
-	XMVECTOR lookAt = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	XMVECTOR lookAt = XMVectorSet(0.0f, -0.25f, 1.0f, 0.0f);
 	XMVECTOR camRight = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
 	XMVECTOR camUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
